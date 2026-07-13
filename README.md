@@ -1,21 +1,29 @@
 # Comuna Agriș – Elementor widget plugin
 
-Ez a repository kizárólag a Comuna Agriș weboldal meglévő URL-jeinek megtartása mellett végzett Elementor Pro modernizáláshoz szükséges plugint és widgeteket tartalmazza.
+Ez a repository közvetlenül a WordPress `wp-content/plugins/` könyvtárába klónozható Elementor plugin. A cél a Comuna Agriș weboldal meglévő oldalainak és URL-jeinek megtartása melletti modernizálás.
 
-## Gyors telepítés
+## cPanel Git telepítés
 
-1. Töltsd le a [`comuna-agris-elementor.zip`](comuna-agris-elementor.zip) fájlt.
-2. WordPress adminban nyisd meg: **Bővítmények → Új hozzáadása → Bővítmény feltöltése**.
-3. Telepítsd és aktiváld az Elementor, Elementor Pro és Comuna Agriș Elementor Widgets bővítményeket.
-4. Az Elementor bal oldali paneljén megjelenik a **Comuna Agriș** kategória 24 külön widgettel.
-5. Kövesd a részletes [`comuna-agris-elementor/README-HU.md`](comuna-agris-elementor/README-HU.md) útmutatót.
+1. A cPanel **Git Version Control** felületén klónozd ezt a repositoryt ide:
+
+   `/home/comagris/dev.comunaagris.ro/wp-content/plugins/comuna-agris-elementor`
+
+2. WordPress adminban nyisd meg a **Bővítmények** oldalt.
+3. Aktiváld a **Comuna Agriș Elementor Widgets** plugint.
+4. Az Elementor paneljén megjelenik a **Comuna Agriș** kategória 24 külön widgettel.
+5. Kövesd a részletes [`README-HU.md`](README-HU.md) útmutatót.
+
+Későbbi frissítéshez normál commit és push után a cPanelben az **Update from Remote** gombot kell használni. A repository előzménye nem írható át force push-sal.
 
 ## A repository tartalma
 
 | Útvonal | Tartalom |
 |---|---|
-| `comuna-agris-elementor/` | A WordPress plugin teljes, szerkeszthető forráskódja |
-| `comuna-agris-elementor.zip` | Közvetlenül feltölthető WordPress plugin |
+| `comuna-agris-elementor.php` | A WordPress által közvetlenül felismerhető plugin főfájl |
+| `includes/` | Pluginbetöltés, dokumentumtípus és 24 Elementor widget |
+| `assets/` | Frontend és Elementor-szerkesztő CSS/JavaScript |
+| `readme.txt`, `uninstall.php` | WordPress metaadatok és biztonságos eltávolítás |
+| `README-HU.md` | Részletes magyar oldalépítési útmutató |
 | `README.md` | Rövid telepítési és tartalmi összefoglaló |
 | `.gitignore` | A helyi munkafájlok kizárási szabályai |
 

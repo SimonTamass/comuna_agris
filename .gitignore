@@ -5,11 +5,13 @@
 debug.log
 
 # Local redesign references – intentionally not part of the plugin repository
-/assets/
+/assets/css/styles.css
+/assets/js/main.js
 /output/
 /*.html
 /support.js
 /Comunaagris weboldal redesign/
+/comuna-agris-elementor.zip
 
 # OS/editor files
 .DS_Store
