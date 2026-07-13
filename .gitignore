@@ -1,0 +1,18 @@
+# Local tooling and transient files
+.agents/
+.codex/
+.thumbnail
+debug.log
+
+# Local redesign references – intentionally not part of the plugin repository
+/assets/
+/output/
+/*.html
+/support.js
+/Comunaagris weboldal redesign/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
