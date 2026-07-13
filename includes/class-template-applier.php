@@ -42,46 +42,41 @@ final class Template_Applier {
 			wp_die( esc_html__( 'Nu aveți permisiunea necesară.', 'comuna-agris' ) );
 		}
 
-		$page_id = isset( $_GET['post_id'] ) ? absint( $_GET['post_id'] ) : $this->find_home_ro_page();
-		$post    = $page_id ? get_post( $page_id ) : null;
-		$status   = isset( $_GET['agris_status'] ) ? sanitize_key( wp_unslash( $_GET['agris_status'] ) ) : '';
-		$backups  = $post ? $this->backups( (int) $post->ID ) : array();
-		$manifest = $post ? get_post_meta( (int) $post->ID, self::MANIFEST_META, true ) : array();
-		$routes   = $this->routes();
+		$page_id = isset( $_GET['post_id'] ) ? absint( $_GET['post_id'] ) : 0;
+		$status  = isset( $_GET['agris_status'] ) ? sanitize_key( wp_unslash( $_GET['agris_status'] ) ) : '';
+		$routes  = $this->routes();
+		$targets = $this->template_targets();
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Comuna Agriș rebuild', 'comuna-agris' ); ?></h1>
 			<?php if ( 'applied' === $status ) : ?>
-				<div class="notice notice-success"><p><?php esc_html_e( 'Șablonul Elementor pentru pagina de start RO a fost aplicat.', 'comuna-agris' ); ?></p></div>
+				<div class="notice notice-success"><p><?php esc_html_e( 'Șablonul Elementor a fost aplicat fără schimbarea adresei paginii.', 'comuna-agris' ); ?></p></div>
 			<?php elseif ( 'restored' === $status ) : ?>
 				<div class="notice notice-success"><p><?php esc_html_e( 'Ultima copie de siguranță a paginii a fost restaurată.', 'comuna-agris' ); ?></p></div>
 			<?php elseif ( 'error' === $status ) : ?>
 				<div class="notice notice-error"><p><?php esc_html_e( 'Operațiunea nu a putut fi finalizată. Pagina nu a fost modificată.', 'comuna-agris' ); ?></p></div>
 			<?php endif; ?>
 			<p><?php esc_html_e( 'Instrumentul păstrează ID-ul, titlul, limba, părintele, slugul și adresa URL. Înainte de fiecare aplicare salvează automat starea curentă.', 'comuna-agris' ); ?></p>
-			<table class="widefat striped" style="max-width:820px">
+			<table class="widefat striped" style="max-width:980px">
+				<thead><tr><th><?php esc_html_e( 'Șablon', 'comuna-agris' ); ?></th><th><?php esc_html_e( 'Pagină țintă', 'comuna-agris' ); ?></th><th><?php esc_html_e( 'Siguranță', 'comuna-agris' ); ?></th><th><?php esc_html_e( 'Acțiune', 'comuna-agris' ); ?></th></tr></thead>
 				<tbody>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Pagină țintă', 'comuna-agris' ); ?></th>
-						<td>
-							<?php if ( $post ) : ?>
-								<strong><?php echo esc_html( get_the_title( $post ) ); ?></strong>
-								<br><code><?php echo esc_html( get_permalink( $post ) ); ?></code>
-							<?php else : ?>
-								<?php esc_html_e( 'Nu am găsit automat pagina /ro/home-ro/. Adăugați parametrul post_id în URL.', 'comuna-agris' ); ?>
-							<?php endif; ?>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Acțiune', 'comuna-agris' ); ?></th>
+					<?php foreach ( $targets as $template => $target ) :
+						$post = $target['post_id'] ? get_post( $target['post_id'] ) : null;
+						$backups = $post ? $this->backups( (int) $post->ID ) : array();
+						$manifest = $post ? get_post_meta( (int) $post->ID, self::MANIFEST_META, true ) : array();
+						?>
+					<tr<?php echo $page_id && $post && $page_id === (int) $post->ID ? ' style="box-shadow:inset 4px 0 #2271b1"' : ''; ?>>
+						<th scope="row"><?php echo esc_html( $target['label'] ); ?></th>
+						<td><?php if ( $post ) : ?><strong><?php echo esc_html( get_the_title( $post ) ); ?></strong><br><code><?php echo esc_html( get_permalink( $post ) ); ?></code><?php else : ?><span style="color:#b32d2e"><?php esc_html_e( 'Pagina nu a fost găsită automat.', 'comuna-agris' ); ?></span><?php endif; ?></td>
+						<td><?php echo esc_html( sprintf( __( '%d copii disponibile', 'comuna-agris' ), count( $backups ) ) ); ?><?php if ( is_array( $manifest ) && ! empty( $manifest['applied_at'] ) ) : ?><br><small><?php echo esc_html( sprintf( __( 'Ultima aplicare: %s, versiunea %s', 'comuna-agris' ), $manifest['applied_at'], $manifest['version'] ?? '' ) ); ?></small><?php endif; ?></td>
 						<td>
 							<?php if ( $post && current_user_can( 'edit_post', $post->ID ) ) : ?>
 								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline-block;margin-right:8px">
 									<input type="hidden" name="action" value="agris_apply_template">
-									<input type="hidden" name="template" value="home_ro">
+									<input type="hidden" name="template" value="<?php echo esc_attr( $template ); ?>">
 									<input type="hidden" name="post_id" value="<?php echo (int) $post->ID; ?>">
 									<?php wp_nonce_field( self::NONCE_ACTION . '_' . (int) $post->ID ); ?>
-									<?php submit_button( __( 'Aplică indexul român Elementor', 'comuna-agris' ), 'primary', 'submit', false ); ?>
+									<?php submit_button( $target['button'], 'primary', 'submit', false ); ?>
 								</form>
 								<?php if ( $backups ) : ?>
 									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline-block">
@@ -91,15 +86,10 @@ final class Template_Applier {
 										<?php submit_button( __( 'Restaurează versiunea anterioară', 'comuna-agris' ), 'secondary', 'submit', false ); ?>
 									</form>
 								<?php endif; ?>
-							<?php else : ?>
-								<button class="button button-primary" disabled><?php esc_html_e( 'Aplică indexul român Elementor', 'comuna-agris' ); ?></button>
-							<?php endif; ?>
+							<?php else : ?><button class="button button-primary" disabled><?php echo esc_html( $target['button'] ); ?></button><?php endif; ?>
 						</td>
 					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Siguranță', 'comuna-agris' ); ?></th>
-						<td><?php echo esc_html( sprintf( __( '%d copii disponibile', 'comuna-agris' ), count( $backups ) ) ); ?><?php if ( is_array( $manifest ) && ! empty( $manifest['applied_at'] ) ) : ?><br><small><?php echo esc_html( sprintf( __( 'Ultima aplicare: %s, versiunea %s', 'comuna-agris' ), $manifest['applied_at'], $manifest['version'] ?? '' ) ); ?></small><?php endif; ?></td>
-					</tr>
+					<?php endforeach; ?>
 				</tbody>
 			</table>
 			<h2 style="margin-top:28px"><?php esc_html_e( 'Rute folosite de șablon', 'comuna-agris' ); ?></h2>
@@ -120,12 +110,13 @@ final class Template_Applier {
 			wp_die( esc_html__( 'Nu aveți permisiunea necesară.', 'comuna-agris' ) );
 		}
 
-		if ( 'home_ro' !== $template || $post_id !== $this->find_home_ro_page() ) {
+		$targets = $this->template_targets();
+		if ( ! isset( $targets[ $template ] ) || $post_id !== (int) $targets[ $template ]['post_id'] ) {
 			wp_safe_redirect( admin_url( 'tools.php?page=agris-rebuild&post_id=' . $post_id . '&agris_status=error' ) );
 			exit;
 		}
 
-		$result = $this->apply_home_ro( $post_id );
+		$result = $this->apply_template( $post_id, $template );
 		$status = is_wp_error( $result ) ? 'error' : 'applied';
 
 		wp_safe_redirect( admin_url( 'tools.php?page=agris-rebuild&post_id=' . $post_id . '&agris_status=' . $status ) );
@@ -143,16 +134,19 @@ final class Template_Applier {
 		exit;
 	}
 
-	private function apply_home_ro( int $post_id ) {
+	private function apply_template( int $post_id, string $template ) {
 		$post = get_post( $post_id );
 		if ( ! $post instanceof \WP_Post || 'page' !== $post->post_type ) {
 			return new \WP_Error( 'invalid_page', __( 'Pagina țintă nu este validă.', 'comuna-agris' ) );
 		}
 
 		$permalink_before = get_permalink( $post_id );
-		$this->save_backup( $post_id, 'before_home_ro' );
+		$this->save_backup( $post_id, 'before_' . $template );
 		wp_save_post_revision( $post_id );
-		$data = $this->home_ro_data();
+		$data = 'home_ro' === $template ? $this->home_ro_data() : ( 'mayor_ro' === $template ? $this->mayor_ro_data() : array() );
+		if ( ! $data ) {
+			return new \WP_Error( 'invalid_template', __( 'Șablonul solicitat nu este disponibil.', 'comuna-agris' ) );
+		}
 
 		$updated = wp_update_post(
 			array(
@@ -189,7 +183,7 @@ final class Template_Applier {
 			$post_id,
 			self::MANIFEST_META,
 			array(
-				'template'   => 'home_ro',
+				'template'   => $template,
 				'version'    => AGRIS_WIDGETS_VERSION,
 				'applied_at' => current_time( 'mysql' ),
 				'url'        => $permalink_before,
@@ -217,6 +211,47 @@ final class Template_Applier {
 		);
 
 		return $pages ? (int) $pages[0] : 0;
+	}
+
+	private function find_mayor_ro_page(): int {
+		return $this->find_ro_page( array( 'primar' ) );
+	}
+
+	private function find_ro_page( array $slugs ): int {
+		foreach ( $slugs as $slug ) {
+			$pages = get_posts(
+				array(
+					'name'             => $slug,
+					'post_type'        => 'page',
+					'post_status'      => array( 'publish', 'draft', 'private' ),
+					'posts_per_page'   => -1,
+					'suppress_filters' => false,
+				)
+			);
+			foreach ( $pages as $page ) {
+				$language  = function_exists( 'pll_get_post_language' ) ? pll_get_post_language( $page->ID, 'slug' ) : '';
+				$permalink = get_permalink( $page );
+				if ( 'ro' === $language || ( ! $language && str_contains( (string) wp_parse_url( $permalink, PHP_URL_PATH ), '/ro/' ) ) ) {
+					return (int) $page->ID;
+				}
+			}
+		}
+		return 0;
+	}
+
+	private function template_targets(): array {
+		return array(
+			'home_ro'  => array(
+				'label'   => __( 'Index român', 'comuna-agris' ),
+				'button'  => __( 'Aplică indexul român Elementor', 'comuna-agris' ),
+				'post_id' => $this->find_home_ro_page(),
+			),
+			'mayor_ro' => array(
+				'label'   => __( 'Pagina Primar', 'comuna-agris' ),
+				'button'  => __( 'Aplică pagina Primar Elementor', 'comuna-agris' ),
+				'post_id' => $this->find_mayor_ro_page(),
+			),
+		);
 	}
 
 	private function menu_id(): string {
@@ -351,6 +386,16 @@ final class Template_Applier {
 			}
 		}
 		return home_url( $fallback );
+	}
+
+	private function translated_url( int $post_id, string $language, string $fallback ): string {
+		if ( $post_id && function_exists( 'pll_get_post' ) ) {
+			$translated_id = (int) pll_get_post( $post_id, $language );
+			if ( $translated_id && 'publish' === get_post_status( $translated_id ) ) {
+				return get_permalink( $translated_id );
+			}
+		}
+		return $fallback;
 	}
 
 	private function id( string $seed ): string {
@@ -601,6 +646,144 @@ final class Template_Applier {
 						)
 					),
 					$this->widget( 'accessibility-widget', 'agris-accessibility', array( 'title' => 'Accesibilitate', 'position' => 'right' ) ),
+				),
+				array( 'content_width' => 'full' )
+			),
+		);
+	}
+
+	private function mayor_ro_data(): array {
+		$menu_id = $this->menu_id();
+		$routes  = $this->routes();
+		$mayor_hu = $this->translated_url( $this->find_mayor_ro_page(), 'hu', $routes['home_hu'] );
+
+		return array(
+			$this->container(
+				'mayor-header',
+				array(
+					$this->widget(
+						'mayor-header-widget',
+						'agris-site-header',
+						array(
+							'official_text'  => 'Site oficial al Primăriei Comunei Agriș, județul Satu Mare, România',
+							'trust_text'     => 'Conexiune securizată',
+							'mail_url'       => $this->link( 'mailto:primaria@comunaagris.ro' ),
+							'logo'           => $this->media(),
+							'brand_title'    => 'Comuna Agriș',
+							'brand_subtitle' => 'Primăria Comunei Agriș',
+							'home_url'       => $this->link( $routes['home_ro'] ),
+							'menu_id'        => $menu_id,
+							'cta_text'       => 'Monitorul Oficial',
+							'cta_link'       => $this->link( $routes['monitor'] ),
+							'sticky'         => 'yes',
+							'language_items' => $this->repeater( 'mayor-lang', array(
+								array( 'code' => 'RO', 'label' => 'Română', 'url' => $this->link( $routes['mayor'] ) ),
+								array( 'code' => 'HU', 'label' => 'Magyar', 'url' => $this->link( $mayor_hu ) ),
+							) ),
+						)
+					),
+					$this->widget( 'mayor-search-modal', 'agris-search-box' ),
+				),
+				array( 'content_width' => 'full' )
+			),
+			$this->container(
+				'mayor-hero',
+				array(
+					$this->widget(
+						'mayor-hero-widget',
+						'agris-page-hero',
+						array(
+							'kicker'        => 'Conducerea primăriei',
+							'title'         => 'Primarul Comunei Agriș',
+							'description'   => 'Date de contact, informații publice și programul de audiențe al primarului.',
+							'parent_label'  => 'Acasă',
+							'parent_link'   => $this->link( $routes['home_ro'] ),
+							'current_label' => 'Primar',
+							'background'    => $this->media(),
+						)
+					),
+				),
+				array( 'content_width' => 'full' )
+			),
+			$this->container(
+				'mayor-profile',
+				array(
+					$this->widget(
+						'mayor-profile-widget',
+						'agris-person-profile',
+						array(
+							'photo'    => $this->media(),
+							'role'     => 'Primar',
+							'name'     => 'Szabo Elek',
+							'subtitle' => 'Primarul Comunei Agriș',
+							'bio'      => '<p><strong>Data nașterii:</strong> 03.10.1963</p><p>Primarul reprezintă comuna în relația cu cetățenii și coordonează activitatea administrației publice locale.</p>',
+							'phone'    => '0261 878 111',
+							'email'    => 'primar@comunaagris.ro',
+							'office'   => 'Luni 9:00–11:00 · Joi 9:00–11:00',
+						)
+					),
+				),
+				array( 'padding' => array( 'unit' => 'px', 'top' => '70', 'right' => '0', 'bottom' => '36', 'left' => '0', 'isLinked' => false ) )
+			),
+			$this->container(
+				'mayor-schedule',
+				array(
+					$this->widget(
+						'mayor-schedule-widget',
+						'agris-schedule-grid',
+						array(
+							'kicker'      => 'Program audiențe',
+							'title'       => 'Întâlniri cu cetățenii',
+							'description' => 'Pentru o organizare mai bună, vă recomandăm să confirmați telefonic audiența.',
+							'items_list'  => $this->repeater( 'mayor-schedule-items', array(
+								array( 'icon' => 'LU', 'title' => 'Luni', 'time' => '09:00–11:00' ),
+								array( 'icon' => 'JO', 'title' => 'Joi', 'time' => '09:00–11:00' ),
+							) ),
+						)
+					),
+				),
+				array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '70', 'left' => '0', 'isLinked' => false ) )
+			),
+			$this->container(
+				'mayor-cta',
+				array(
+					$this->widget(
+						'mayor-cta-widget',
+						'agris-cta-banner',
+						array(
+							'kicker'      => 'Relații cu cetățenii',
+							'title'       => 'Aveți nevoie de informații suplimentare?',
+							'description' => 'Contactați Primăria Comunei Agriș pentru programări și informații administrative.',
+							'image'       => $this->media(),
+							'button_text' => 'Date de contact',
+							'button_link' => $this->link( $routes['contact'] ),
+						)
+					),
+				)
+			),
+			$this->container(
+				'mayor-footer',
+				array(
+					$this->widget(
+						'mayor-footer-widget',
+						'agris-site-footer',
+						array(
+							'title'       => 'Comuna Agriș',
+							'subtitle'    => 'Primăria Comunei Agriș',
+							'description' => 'Portal oficial pentru cetățeni, documente publice și comunicări administrative.',
+							'links'       => $this->repeater( 'mayor-footer-links', array(
+								array( 'column' => 'Primăria', 'label' => 'Conducere', 'url' => $this->link( $routes['mayor'] ) ),
+								array( 'column' => 'Primăria', 'label' => 'Consiliul Local', 'url' => $this->link( $routes['council'] ) ),
+								array( 'column' => 'Informații publice', 'label' => 'Anunțuri', 'url' => $this->link( $routes['announcements'] ) ),
+								array( 'column' => 'Informații publice', 'label' => 'Monitorul Oficial', 'url' => $this->link( $routes['monitor'] ) ),
+							) ),
+							'phone'       => '0261 878 112',
+							'email'       => 'primaria@comunaagris.ro',
+							'address'     => 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, Satu Mare',
+							'copyright'   => 'Toate drepturile rezervate Comuna Agriș.',
+						)
+					),
+					$this->widget( 'mayor-accessibility-widget', 'agris-accessibility', array( 'title' => 'Accesibilitate', 'position' => 'right' ) ),
 				),
 				array( 'content_width' => 'full' )
 			),

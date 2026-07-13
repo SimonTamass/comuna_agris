@@ -10,7 +10,7 @@ Ez a plugin a mellékelt statikus redesign teljes, moduláris WordPress/Elemento
 4. Megjelenés → Menük alatt készítsd el a főmenüt; ezt a Header widget legördülőjében válaszd ki.
 5. Elementor → Theme Builder alatt hozd létre a globális sablonokat.
 
-Az `1.1.0` verzió első telepítése után a további kiadások a WordPress **Bővítmények** oldalán frissíthetők. Az **Eszközök → Comuna Agriș rebuild** oldal minden automatikus Elementor-átépítés előtt mentést készít, és lehetőséget ad az előző állapot visszaállítására.
+Az `1.1.0` vagy újabb verzió telepítése után a további kiadások a WordPress **Bővítmények** oldalán frissíthetők. Az **Eszközök → Comuna Agriș rebuild** oldal minden automatikus Elementor-átépítés előtt mentést készít, és lehetőséget ad az előző állapot visszaállítására. Az `1.2.0` verziótól ugyanitt a meglévő román **Primar** oldal is egyetlen szerveroldali művelettel, az eredeti URL megtartásával építhető át.
 
 ## Theme Builder – ajánlott sablonok
 
