@@ -127,7 +127,9 @@
 .agris-service-card > i { position: absolute; right: 20px; bottom: 15px; color: var(--agris-brand); font-style: normal; font-size: 1.3rem; opacity: 0; transform: translateX(-8px); transition: .2s; }
 .agris-service-card:hover > i { opacity: 1; transform: none; }
 .agris-content-media { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: clamp(35px, 6vw, 80px); font-family: var(--agris-body); }
+.agris-content-media.has-no-media { grid-template-columns: minmax(0, 820px); }
 .agris-content-media.is-left > div:first-child { order: 2; }
+.agris-content-media.has-no-media.is-left > div:first-child { order: 0; }
 .agris-richtext { margin-top: 21px; color: var(--agris-muted); font-size: 1.06rem; line-height: 1.72; }
 .agris-media-frame { min-height: 390px; overflow: hidden; border-radius: var(--agris-radius-lg); background: var(--agris-brand-soft); box-shadow: var(--agris-shadow); }
 .agris-media-frame img { width: 100%; height: 100%; min-height: 390px; object-fit: cover; }

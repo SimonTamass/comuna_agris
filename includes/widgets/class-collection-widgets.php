@@ -62,6 +62,20 @@ final class Document_Library extends Base {
 	protected function register_controls(): void {
 		$this->start_controls_section( 'content', array( 'label' => __( 'Dokumentumtár', 'comuna-agris' ) ) );
 		$this->common_heading_controls( 'Documente', 'Bibliotecă publică' );
+		$this->add_control(
+			'source',
+			array(
+				'label'   => __( 'Adatforrás', 'comuna-agris' ),
+				'type'    => Controls_Manager::SELECT,
+				'options' => array(
+					'automatic'      => __( 'Automatikus: meglévő tartalom', 'comuna-agris' ),
+					'agris_document' => __( 'Documente tartalomtípus', 'comuna-agris' ),
+					'legacy_posts'   => __( 'Meglévő bejegyzések és kategóriák', 'comuna-agris' ),
+				),
+				'default' => 'automatic',
+			)
+		);
+		$this->add_control( 'legacy_keywords', array( 'label' => __( 'Dokumentumkategória kulcsszavak', 'comuna-agris' ), 'type' => Controls_Manager::TEXT, 'default' => 'hotarari,anunt,convocator,proiect,buget,declaratii,document', 'condition' => array( 'source!' => 'agris_document' ) ) );
 		$this->add_control( 'count', array( 'label' => __( 'Dokumentumok száma', 'comuna-agris' ), 'type' => Controls_Manager::NUMBER, 'default' => 12, 'min' => 1, 'max' => 100 ) );
 		$this->add_control( 'columns', array( 'label' => __( 'Oszlopok', 'comuna-agris' ), 'type' => Controls_Manager::SELECT, 'options' => array( '2' => '2', '3' => '3' ), 'default' => '3' ) );
 		$this->add_control( 'show_filters', array( 'label' => __( 'Szűrők', 'comuna-agris' ), 'type' => Controls_Manager::SWITCHER, 'default' => 'yes', 'return_value' => 'yes' ) );
@@ -70,10 +84,91 @@ final class Document_Library extends Base {
 	}
 	protected function render(): void {
 		$s = $this->get_settings_for_display();
-		$q = new WP_Query( array( 'post_type' => 'agris_document', 'posts_per_page' => (int) $s['count'], 'post_status' => 'publish', 'orderby' => 'date', 'order' => 'DESC' ) );
-		$terms = get_terms( array( 'taxonomy' => 'agris_document_category', 'hide_empty' => true ) );
-		?><section class="agris-document-library"><?php $this->render_heading( $s ); ?><div class="agris-library-tools"><?php if ( 'yes' === $s['show_filters'] && ! is_wp_error( $terms ) ) : ?><div class="agris-filters"><button class="is-active" data-agris-filter="all"><?php esc_html_e( 'Toate', 'comuna-agris' ); ?></button><?php foreach ( $terms as $term ) : ?><button data-agris-filter="<?php echo esc_attr( $term->slug ); ?>"><?php echo esc_html( $term->name ); ?></button><?php endforeach; ?></div><?php endif; ?><?php if ( 'yes' === $s['show_search'] ) : ?><label class="agris-library-search"><span class="screen-reader-text"><?php esc_html_e( 'Caută document', 'comuna-agris' ); ?></span><input type="search" data-agris-doc-search placeholder="<?php esc_attr_e( 'Caută în documente…', 'comuna-agris' ); ?>"></label><?php endif; ?></div><div class="agris-grid agris-grid-<?php echo esc_attr( $s['columns'] ); ?>" data-agris-filter-items><?php
-		if ( $q->have_posts() ) { while ( $q->have_posts() ) { $q->the_post(); $post_terms = wp_get_post_terms( get_the_ID(), 'agris_document_category' ); $slugs = wp_list_pluck( $post_terms, 'slug' ); $file = get_post_meta( get_the_ID(), 'agris_file_url', true ); $url = $file ?: get_permalink(); $icon = get_post_meta( get_the_ID(), 'agris_document_icon', true ) ?: 'PDF'; ?><a class="agris-doc-card" data-agris-category="<?php echo esc_attr( implode( ' ', $slugs ) ); ?>" data-agris-title="<?php echo esc_attr( strtolower( get_the_title() ) ); ?>" href="<?php echo esc_url( $url ); ?>"><b><?php echo esc_html( $icon ); ?></b><span><strong><?php the_title(); ?></strong><small><?php echo esc_html( get_the_date() ); ?></small></span></a><?php } } else { echo '<div class="agris-empty">' . esc_html__( 'Adăugați documente din meniul Documente al WordPress.', 'comuna-agris' ) . '</div>'; }
+		$source = $s['source'] ?? 'automatic';
+		if ( 'automatic' === $source ) {
+			$counts = wp_count_posts( 'agris_document' );
+			$source = $counts && ! empty( $counts->publish ) ? 'agris_document' : 'legacy_posts';
+		}
+
+		$args = array(
+			'post_type'           => 'agris_document' === $source ? 'agris_document' : 'post',
+			'posts_per_page'      => (int) $s['count'],
+			'post_status'         => 'publish',
+			'orderby'             => 'date',
+			'order'               => 'DESC',
+			'ignore_sticky_posts' => true,
+		);
+
+		if ( 'legacy_posts' === $source ) {
+			$category_ids = $this->legacy_category_ids( (string) ( $s['legacy_keywords'] ?? '' ) );
+			if ( $category_ids ) {
+				$args['category__in'] = $category_ids;
+			}
+		}
+
+		$q = new WP_Query( $args );
+		$terms = $this->query_terms( $q, $source );
+		?><section class="agris-document-library"><?php $this->render_heading( $s ); ?><div class="agris-library-tools"><?php if ( 'yes' === $s['show_filters'] && $terms ) : ?><div class="agris-filters"><button class="is-active" data-agris-filter="all"><?php esc_html_e( 'Toate', 'comuna-agris' ); ?></button><?php foreach ( $terms as $term ) : ?><button data-agris-filter="<?php echo esc_attr( $term['slug'] ); ?>"><?php echo esc_html( $term['name'] ); ?></button><?php endforeach; ?></div><?php endif; ?><?php if ( 'yes' === $s['show_search'] ) : ?><label class="agris-library-search"><span class="screen-reader-text"><?php esc_html_e( 'Caută document', 'comuna-agris' ); ?></span><input type="search" data-agris-doc-search placeholder="<?php esc_attr_e( 'Caută în documente…', 'comuna-agris' ); ?>"></label><?php endif; ?></div><div class="agris-grid agris-grid-<?php echo esc_attr( $s['columns'] ); ?>" data-agris-filter-items><?php
+		if ( $q->have_posts() ) {
+			while ( $q->have_posts() ) {
+				$q->the_post();
+				$post_id = get_the_ID();
+				$post_terms = 'agris_document' === $source ? wp_get_post_terms( $post_id, 'agris_document_category' ) : get_the_category( $post_id );
+				$post_terms = is_wp_error( $post_terms ) ? array() : $post_terms;
+				$slugs = wp_list_pluck( $post_terms, 'slug' );
+				$file = 'agris_document' === $source ? get_post_meta( $post_id, 'agris_file_url', true ) : '';
+				$url = $file ?: get_permalink( $post_id );
+				$icon = 'agris_document' === $source ? get_post_meta( $post_id, 'agris_document_icon', true ) : $this->legacy_icon( get_the_title( $post_id ), $slugs );
+				$icon = $icon ?: 'DOC';
+				?><a class="agris-doc-card" data-agris-category="<?php echo esc_attr( implode( ' ', $slugs ) ); ?>" data-agris-title="<?php echo esc_attr( strtolower( get_the_title( $post_id ) ) ); ?>" href="<?php echo esc_url( $url ); ?>"><b><?php echo esc_html( $icon ); ?></b><span><strong><?php echo esc_html( get_the_title( $post_id ) ); ?></strong><small><?php echo esc_html( get_the_date( '', $post_id ) ); ?></small></span></a><?php
+			}
+		} else {
+			echo '<div class="agris-empty">' . esc_html__( 'Nu există încă documente publicate pentru această selecție.', 'comuna-agris' ) . '</div>';
+		}
 		wp_reset_postdata(); ?></div><div class="agris-no-results" hidden><?php esc_html_e( 'Nu am găsit documente.', 'comuna-agris' ); ?></div></section><?php
+	}
+
+	private function legacy_category_ids( string $raw_keywords ): array {
+		$keywords = array_values( array_filter( array_map( 'sanitize_title', explode( ',', $raw_keywords ) ) ) );
+		if ( ! $keywords ) {
+			return array();
+		}
+
+		$ids = array();
+		$categories = get_categories( array( 'hide_empty' => true ) );
+		foreach ( $categories as $category ) {
+			$haystack = sanitize_title( $category->slug . '-' . $category->name );
+			foreach ( $keywords as $keyword ) {
+				if ( str_contains( $haystack, $keyword ) ) {
+					$ids[] = (int) $category->term_id;
+					break;
+				}
+			}
+		}
+		return array_values( array_unique( $ids ) );
+	}
+
+	private function query_terms( WP_Query $query, string $source ): array {
+		$terms = array();
+		foreach ( $query->posts as $post ) {
+			$post_terms = 'agris_document' === $source ? wp_get_post_terms( $post->ID, 'agris_document_category' ) : get_the_category( $post->ID );
+			if ( is_wp_error( $post_terms ) ) {
+				continue;
+			}
+			foreach ( $post_terms as $term ) {
+				$terms[ $term->slug ] = array( 'slug' => $term->slug, 'name' => $term->name );
+			}
+		}
+		return array_values( $terms );
+	}
+
+	private function legacy_icon( string $title, array $slugs ): string {
+		$value = sanitize_title( $title . '-' . implode( '-', $slugs ) );
+		if ( str_contains( $value, 'hotarar' ) ) { return 'HCL'; }
+		if ( str_contains( $value, 'anunt' ) ) { return 'AN'; }
+		if ( str_contains( $value, 'buget' ) ) { return 'BUG'; }
+		if ( str_contains( $value, 'convocator' ) || str_contains( $value, 'proiect' ) ) { return 'PH'; }
+		if ( str_contains( $value, 'declarat' ) ) { return 'DEC'; }
+		return 'DOC';
 	}
 }

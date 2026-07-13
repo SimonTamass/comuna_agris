@@ -27,7 +27,9 @@ final class Plugin {
 
 		if ( is_admin() ) {
 			require_once AGRIS_WIDGETS_PATH . 'includes/class-template-applier.php';
+			require_once AGRIS_WIDGETS_PATH . 'includes/class-github-updater.php';
 			new Template_Applier();
+			new Github_Updater();
 		}
 
 		if ( did_action( 'elementor/loaded' ) ) {

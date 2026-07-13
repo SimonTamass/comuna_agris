@@ -13,7 +13,7 @@ Ez a repository közvetlenül a WordPress `wp-content/plugins/` könyvtárába k
 4. Az Elementor paneljén megjelenik a **Comuna Agriș** kategória 24 külön widgettel.
 5. Kövesd a részletes [`README-HU.md`](README-HU.md) útmutatót.
 
-Későbbi frissítéshez normál commit és push után a cPanelben az **Update from Remote** gombot kell használni. A repository előzménye nem írható át force push-sal.
+A `1.1.0` verzió telepítése után a későbbi GitHub-kiadások a WordPress **Bővítmények** oldalán normál frissítésként jelennek meg. Így a cPanel Git frissítésére csak ehhez az egyszeri átálláshoz van szükség. A szerveren a plugin fájljait nem szabad kézzel szerkeszteni.
 
 ## A repository tartalma
 
@@ -39,6 +39,9 @@ Későbbi frissítéshez normál commit és push után a cPanelben az **Update f
 - AJAX kapcsolatfelvételi űrlap nonce-, honeypot- és rate-limit védelemmel
 - keresési modal és akadálymentesítési panel
 - mobil, tablet és desktop megjelenés
+- szerveroldali Elementor sablonalkalmazás automatikus mentéssel és visszaállítással
+- a meglévő WordPress oldalakból feloldott permalinkek, kézzel beírt új slugok nélkül
+- WordPress adminból telepíthető GitHub-verziófrissítések
 
 ## Fejlesztői ellenőrzések
 
