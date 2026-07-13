@@ -25,6 +25,11 @@ final class Plugin {
 		add_action( 'wp_ajax_nopriv_agris_contact', array( $this, 'handle_contact' ) );
 		add_action( 'admin_notices', array( $this, 'dependency_notice' ) );
 
+		if ( is_admin() ) {
+			require_once AGRIS_WIDGETS_PATH . 'includes/class-template-applier.php';
+			new Template_Applier();
+		}
+
 		if ( did_action( 'elementor/loaded' ) ) {
 			$this->boot_elementor();
 		} else {
