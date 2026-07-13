@@ -1,84 +1,28 @@
-# Comuna Agriș – Elementor widget plugin
-
-Ez a plugin a mellékelt statikus redesign teljes, moduláris WordPress/Elementor újraépítéséhez készült. Aktiválás után az Elementor bal oldali paneljén megjelenik a **Comuna Agriș** kategória 24 külön widgettel.
+# Comuna Agriș – használati útmutató
 
 ## Telepítés
 
-1. WordPress admin → **Bővítmények → Új hozzáadása → Bővítmény feltöltése**.
-2. Töltsd fel a `comuna-agris-elementor.zip` fájlt, majd aktiváld.
-3. Az **Elementor** és az **Elementor Pro** legyen aktív.
-4. Megjelenés → Menük alatt készítsd el a főmenüt; ezt a Header widget legördülőjében válaszd ki.
-5. Elementor → Theme Builder alatt hozd létre a globális sablonokat.
+1. A cPanel **Git Version Control** felületén klónozd a `https://github.com/SimonTamass/comuna_agris.git` repository `main` ágát ide:
 
-Az `1.1.0` vagy újabb verzió telepítése után a további kiadások a WordPress **Bővítmények** oldalán frissíthetők. Az **Eszközök → Comuna Agriș rebuild** oldal minden automatikus Elementor-átépítés előtt mentést készít, és lehetőséget ad az előző állapot visszaállítására. Az `1.2.0` verziótól ugyanitt a meglévő román **Primar** oldal is egyetlen szerveroldali művelettel, az eredeti URL megtartásával építhető át.
+   `/home/comagris/dev.comunaagris.ro/wp-content/plugins/comunaagris_plugin`
 
-## Theme Builder – ajánlott sablonok
+2. WordPress admin → **Bővítmények** alatt aktiváld a **Comuna Agriș Elementor Widgets** plugint.
+3. Az Elementor és az Elementor Pro legyen aktív.
 
-| Sablon | Widgetek | Megjelenési feltétel |
-|---|---|---|
-| Header | `01 · Header complet` | Entire Site |
-| Footer | `02 · Footer complet` + `03 · Accesibilitate` + `24 · Kereső / keresési modal` | Entire Site |
-| Blog/kategória | `05 · Hero belső oldal` + `22 · Blog / kategória archívum` | All Archives / Post Categories |
-| Egyedi bejegyzés | `23 · Egyedi blogbejegyzés` | All Posts |
-| Dokumentum archívum | `05 · Hero belső oldal` + `21 · Dinamikus dokumentumtár` | Documents Archive |
+## Frissítés
 
-A Header és Footer sablonban az Elementor oldalbeállításainál kapcsold ki a téma saját fejlécét/láblécét, vagy használj Elementor-kompatibilis könnyű témát.
+A plugint kizárólag a cPanel **Git Version Control** felületéről frissítsd. A plugin nem használ saját GitHub/WordPress frissítőt, ezért nem nevezi át és nem cseréli le a `comunaagris_plugin` könyvtárat.
 
-## Oldalak újraépítési sorrendje
+## Oldalak biztonságos átépítése
 
-### Nyitóoldal
+Az **Eszközök → Comuna Agriș rebuild** oldal szerveroldalon alkalmazza az Elementor-sablonokat. Minden művelet előtt automatikus mentés készül. A rendszer ellenőrzi, hogy az oldal permalinkje változatlan maradt-e; eltérés esetén automatikusan visszaállítja az előző állapotot.
 
-1. `04 · Hero nyitóoldal`
-2. `06 · Szekció fejléc` + `07 · Szolgáltatások rács`
-3. `06 · Szekció fejléc` + `19 · Dinamikus hírek`
-4. `06 · Szekció fejléc` + `20 · Kézi dokumentumkártyák` a kiemelt HCL-ekhez
-5. `08 · Tartalom + kép` a község bemutatásához
-6. `06 · Szekció fejléc` + `07 · Szolgáltatások rács` a Monitorul Oficial kategóriáihoz
-7. `15 · CTA / intézményi banner` a SIPOCĂ sávhoz
+Az átépítés nem hoz létre új oldalt, és nem módosítja a meglévő oldal ID-ját, nyelvét, szülőjét vagy slugját.
 
-### Comuna / bemutatkozó belső oldalak
+## Elementor widgetek
 
-`05 · Hero belső oldal`, majd minden témához külön `08 · Tartalom + kép`. A kapcsolódó aloldalak és dokumentumok oldalsávjához `12 · Linklista / oldalsáv` használható.
+A 24 widget az Elementor bal oldali paneljén, a **Comuna Agriș** kategóriában található. A készlet tartalmaz globális headert és footert, keresőt, akadálymentesítést, hero elemeket, tartalmi blokkokat, szolgáltatásokat, vezetői profilt, fogadóórákat, tanácstagokat, kapcsolati elemeket, galériát, adattáblát, híreket, dokumentumtárat, blogarchívumot és egyedi bejegyzéssablont.
 
-### Primăria
+## URL-szabály
 
-`05 · Hero belső oldal` → `09 · Vezetői profil` → `10 · Fogadóórák` → `07 · Szolgáltatások rács` a részlegekhez.
-
-### Consiliul Local
-
-`05 · Hero belső oldal` → `18 · Statisztika / megoszlás` → `11 · Helyi tanács` → `17 · Adattábla / nyilvántartás` → `21 · Dinamikus dokumentumtár` vagy `20 · Kézi dokumentumkártyák`.
-
-### Informații publice / Monitorul Oficial
-
-A hivatalos fájlokat a WordPress **Documente** menüjében add hozzá, rendeld őket dokumentumkategóriához, és töltsd ki a fájl URL-jét. Az oldalon a `21 · Dinamikus dokumentumtár` automatikusan szűrhető kártyákként jeleníti meg őket. A galériás részekhez a `16 · Fotógaléria`, a tételes nyilvántartásokhoz a `17 · Adattábla / nyilvántartás` használható.
-
-### Kapcsolat
-
-`05 · Hero belső oldal` → `13 · Kapcsolati adatok` → `14 · Kapcsolati űrlap`. Az űrlap WordPress `wp_mail()` küldést használ, nonce-védelemmel, honeypottal és percenkénti IP-limitálással. Éles oldalon SMTP plugin beállítása ajánlott.
-
-## Szerkesztési elvek
-
-- Minden listás widget Elementor Repeater mezőkkel szerkeszthető.
-- A hírek és archívumok valódi WordPress bejegyzéseket kérdeznek le.
-- A dokumentumtár külön tartalomtípust és hierarchikus kategóriákat használ.
-- A fejléc valódi WordPress menüt jelenít meg, ezért a navigációt egy helyen kell karbantartani.
-- A widgetek mobilon automatikusan egyoszloposak, a header mobilmenüre vált.
-- A plugin színrendszere CSS-változókon alapul. Elementor Pro egyedi CSS-ben a `:root` változók felülírhatók: `--agris-brand`, `--agris-ink`, `--agris-bg`, `--agris-radius`, `--agris-max`.
-- A képekhez mindig adj értelmes alternatív szöveget a Médiatárban.
-
-## Dokumentum mezők
-
-Új dokumentum létrehozásakor:
-
-1. Adj címet és rövid kivonatot.
-2. Válassz egy vagy több dokumentumkategóriát.
-3. Töltsd fel a PDF/DOCX fájlt a Médiatárba.
-4. Másold a fájl URL-jét a **Fișierul documentului** dobozba.
-5. Adj rövid jelölést, például `PDF`, `HCL`, `AN`, `PV` vagy `FIN`.
-
-## Biztonság és karbantartás
-
-- A kimenetek escape-elve vannak, az Elementor gazdag szöveg csak WordPress által engedélyezett HTML-t ad ki.
-- A kapcsolatfelvétel WordPress nonce-ot és szerveroldali validációt használ.
-- A plugin eltávolításkor nem törli a dokumentumokat; így tartalom nem vész el véletlenül.
-- Frissítés előtt készíts adatbázis- és `wp-content` mentést.
+Új slug vagy új helyettesítő oldal nem készülhet. A meglévő publikus útvonalakat kell helyben modernizálni, beleértve a történetileg elírt, de már használt URL-eket is.
