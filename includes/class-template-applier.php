@@ -44,6 +44,7 @@ final class Template_Applier {
 
 		$page_id = isset( $_GET['post_id'] ) ? absint( $_GET['post_id'] ) : 0;
 		$status  = isset( $_GET['agris_status'] ) ? sanitize_key( wp_unslash( $_GET['agris_status'] ) ) : '';
+		$error_code = isset( $_GET['agris_error'] ) ? sanitize_key( wp_unslash( $_GET['agris_error'] ) ) : '';
 		$routes  = $this->routes();
 		$targets = $this->template_targets();
 		?>
@@ -54,7 +55,7 @@ final class Template_Applier {
 			<?php elseif ( 'restored' === $status ) : ?>
 				<div class="notice notice-success"><p><?php esc_html_e( 'Ultima copie de siguranță a paginii a fost restaurată.', 'comuna-agris' ); ?></p></div>
 			<?php elseif ( 'error' === $status ) : ?>
-				<div class="notice notice-error"><p><?php esc_html_e( 'Operațiunea nu a putut fi finalizată. Pagina nu a fost modificată.', 'comuna-agris' ); ?></p></div>
+				<div class="notice notice-error"><p><?php esc_html_e( 'Operațiunea nu a putut fi finalizată. Pagina nu a fost modificată.', 'comuna-agris' ); ?><?php if ( $error_code ) : ?> <code><?php echo esc_html( $error_code ); ?></code><?php endif; ?></p></div>
 			<?php endif; ?>
 			<p><?php esc_html_e( 'Instrumentul păstrează ID-ul, titlul, limba, părintele, slugul și adresa URL. Înainte de fiecare aplicare salvează automat starea curentă.', 'comuna-agris' ); ?></p>
 			<table class="widefat striped" style="max-width:980px">
@@ -116,10 +117,11 @@ final class Template_Applier {
 			exit;
 		}
 
-		$result = $this->apply_template( $post_id, $template );
-		$status = is_wp_error( $result ) ? 'error' : 'applied';
+		$result     = $this->apply_template( $post_id, $template );
+		$status     = is_wp_error( $result ) ? 'error' : 'applied';
+		$error_code = is_wp_error( $result ) ? sanitize_key( $result->get_error_code() ) : '';
 
-		wp_safe_redirect( admin_url( 'tools.php?page=agris-rebuild&post_id=' . $post_id . '&agris_status=' . $status ) );
+		wp_safe_redirect( admin_url( 'tools.php?page=agris-rebuild&post_id=' . $post_id . '&agris_status=' . $status . ( $error_code ? '&agris_error=' . rawurlencode( $error_code ) : '' ) ) );
 		exit;
 	}
 
@@ -140,13 +142,18 @@ final class Template_Applier {
 			return new \WP_Error( 'invalid_page', __( 'Pagina țintă nu este validă.', 'comuna-agris' ) );
 		}
 
-		$permalink_before = get_permalink( $post_id );
-		$this->save_backup( $post_id, 'before_' . $template );
-		wp_save_post_revision( $post_id );
 		$data = 'home_ro' === $template ? $this->home_ro_data() : ( 'mayor_ro' === $template ? $this->mayor_ro_data() : array() );
 		if ( ! $data ) {
 			return new \WP_Error( 'invalid_template', __( 'Șablonul solicitat nu este disponibil.', 'comuna-agris' ) );
 		}
+		$encoded_data = wp_json_encode( $data );
+		if ( false === $encoded_data ) {
+			return new \WP_Error( 'elementor_json_failed', __( 'Datele Elementor nu au putut fi codificate.', 'comuna-agris' ) );
+		}
+
+		$permalink_before = get_permalink( $post_id );
+		$this->save_backup( $post_id, 'before_' . $template );
+		wp_save_post_revision( $post_id );
 
 		$updated = wp_update_post(
 			array(
@@ -165,7 +172,7 @@ final class Template_Applier {
 		update_post_meta( $post_id, '_elementor_version', defined( 'ELEMENTOR_VERSION' ) ? ELEMENTOR_VERSION : '3.33.0' );
 		update_post_meta( $post_id, '_elementor_page_settings', array( 'hide_title' => 'yes' ) );
 		update_post_meta( $post_id, '_wp_page_template', 'elementor_canvas' );
-		update_post_meta( $post_id, '_elementor_data', wp_slash( wp_json_encode( $data ) ) );
+		update_post_meta( $post_id, '_elementor_data', wp_slash( $encoded_data ) );
 
 		delete_post_meta( $post_id, '_elementor_css' );
 
