@@ -93,13 +93,20 @@ final class Github_Updater {
 				),
 			)
 		);
-		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			return null;
+		$data = array();
+		if ( ! is_wp_error( $response ) && 200 === wp_remote_retrieve_response_code( $response ) ) {
+			$data = json_decode( wp_remote_retrieve_body( $response ), true );
 		}
 
-		$data = json_decode( wp_remote_retrieve_body( $response ), true );
 		$tag = sanitize_text_field( $data['tag_name'] ?? '' );
 		$package = esc_url_raw( $data['zipball_url'] ?? '' );
+		$notes = sanitize_textarea_field( $data['body'] ?? '' );
+		if ( ! $tag || ! $package ) {
+			$tag_data = $this->latest_tag();
+			$tag = $tag_data['tag'] ?? '';
+			$package = $tag_data['package'] ?? '';
+			$notes = __( 'Verziózott GitHub kiadás.', 'comuna-agris' );
+		}
 		if ( ! $tag || ! $package ) {
 			return null;
 		}
@@ -107,9 +114,44 @@ final class Github_Updater {
 		$release = array(
 			'version' => ltrim( $tag, 'vV' ),
 			'package' => $package,
-			'notes'   => sanitize_textarea_field( $data['body'] ?? '' ),
+			'notes'   => $notes,
 		);
 		set_site_transient( self::CACHE_KEY, $release, 6 * HOUR_IN_SECONDS );
 		return $release;
+	}
+
+	private function latest_tag(): array {
+		$response = wp_remote_get(
+			'https://api.github.com/repos/' . self::REPOSITORY . '/tags?per_page=100',
+			array(
+				'timeout' => 10,
+				'headers' => array(
+					'Accept'     => 'application/vnd.github+json',
+					'User-Agent' => 'Comuna-Agris-WordPress/' . AGRIS_WIDGETS_VERSION,
+				),
+			)
+		);
+		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			return array();
+		}
+
+		$tags = json_decode( wp_remote_retrieve_body( $response ), true );
+		$latest = array();
+		foreach ( is_array( $tags ) ? $tags : array() as $tag ) {
+			$name = sanitize_text_field( $tag['name'] ?? '' );
+			$version = ltrim( $name, 'vV' );
+			if ( ! $name || ! preg_match( '/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/', $version ) ) {
+				continue;
+			}
+			if ( ! $latest || version_compare( $version, $latest['version'], '>' ) ) {
+				$latest = array(
+					'tag'     => $name,
+					'version' => $version,
+					'package' => esc_url_raw( $tag['zipball_url'] ?? '' ),
+				);
+			}
+		}
+
+		return $latest;
 	}
 }
