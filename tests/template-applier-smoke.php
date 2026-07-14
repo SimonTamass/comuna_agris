@@ -30,8 +30,13 @@ if ( preg_match( '/letter-spacing:\s*-/', $css ) || ! str_contains( $css, 'font-
 	exit( 1 );
 }
 
-if ( ! str_contains( $plugin, "AGRIS_WIDGETS_VERSION', '1.4.1'" ) ) {
+if ( ! str_contains( $plugin, "AGRIS_WIDGETS_VERSION', '1.4.2'" ) ) {
 	fwrite( STDERR, "Plugin version was not bumped.\n" );
+	exit( 1 );
+}
+
+if ( ! str_contains( $applier, 'function normalize_legacy_content' ) || ! str_contains( $applier, 'function gallery_items' ) ) {
+	fwrite( STDERR, "Legacy content conversion is incomplete.\n" );
 	exit( 1 );
 }
 

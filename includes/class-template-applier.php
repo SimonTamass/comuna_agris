@@ -666,6 +666,53 @@ final class Template_Applier {
 		return '<p>Conținutul acestei pagini este în curs de actualizare.</p>';
 	}
 
+	private function normalize_legacy_content( string $content ): string {
+		$content = preg_replace( '/\[(?:\/?)[a-zA-Z][a-zA-Z0-9_-]*(?:\s[^\]]*)?\]/u', '', $content ) ?? $content;
+		$content = preg_replace( '/<h1(\s[^>]*)?>/i', '<h2$1>', $content ) ?? $content;
+		$content = preg_replace( '/<\/h1>/i', '</h2>', $content ) ?? $content;
+		$content = preg_replace( '/<p>\s*(?:&nbsp;)?\s*<\/p>/i', '', $content ) ?? $content;
+		$content = trim( $content );
+		return '' !== wp_strip_all_tags( $content ) ? $content : '<p>Conținutul acestei pagini este în curs de actualizare.</p>';
+	}
+
+	private function legacy_category_slug( string $content ): string {
+		if ( preg_match( '/\[masonry_blog[^\]]*category=["\']([^"\']+)["\']/i', $content, $matches ) ) {
+			return sanitize_title( $matches[1] );
+		}
+		return '';
+	}
+
+	private function gallery_items( \WP_Post $page, string $category_slug ): array {
+		$attachments = get_attached_media( 'image', $page->ID );
+		if ( $category_slug ) {
+			$category = get_category_by_slug( $category_slug );
+			if ( $category ) {
+				foreach ( get_posts( array( 'post_type' => 'post', 'post_status' => 'publish', 'posts_per_page' => 100, 'category' => $category->term_id ) ) as $post ) {
+					$thumbnail_id = (int) get_post_thumbnail_id( $post->ID );
+					if ( $thumbnail_id ) {
+						$attachments[ $thumbnail_id ] = get_post( $thumbnail_id );
+						continue;
+					}
+					foreach ( get_attached_media( 'image', $post->ID ) as $attachment ) {
+						$attachments[ $attachment->ID ] = $attachment;
+					}
+				}
+			}
+		}
+
+		$items = array();
+		foreach ( $attachments as $attachment ) {
+			if ( ! $attachment instanceof \WP_Post ) {
+				continue;
+			}
+			$url = (string) wp_get_attachment_image_url( $attachment->ID, 'large' );
+			if ( $url ) {
+				$items[] = array( 'image' => array( 'id' => $attachment->ID, 'url' => $url ), 'caption' => wp_get_attachment_caption( $attachment->ID ) ?: get_the_title( $attachment ) );
+			}
+		}
+		return $items;
+	}
+
 	private function generic_page_data( \WP_Post $page, string $type ): array {
 		$routes = $this->routes();
 		$menu_id = $this->menu_id();
@@ -682,6 +729,8 @@ final class Template_Applier {
 		$hu_url = $this->translated_url( $page->ID, 'hu', $routes['home_hu'] );
 		$thumbnail_id = (int) get_post_thumbnail_id( $page->ID );
 		$image = $thumbnail_id ? array( 'id' => $thumbnail_id, 'url' => (string) wp_get_attachment_image_url( $thumbnail_id, 'large' ) ) : $this->media();
+		$source_content = $this->original_page_content( $page );
+		$legacy_category = $this->legacy_category_slug( $source_content );
 
 		$data = array(
 			$this->container(
@@ -727,13 +776,22 @@ final class Template_Applier {
 					'kicker' => $label[0],
 					'title' => 'Informații complete',
 					'description' => $description,
-					'content' => $this->original_page_content( $page ),
+					'content' => $this->normalize_legacy_content( $source_content ),
 					'image' => $image,
 					'image_side' => 'right',
 				) ) ),
 				array( 'padding' => array( 'unit' => 'px', 'top' => '72', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) )
 			),
 		);
+
+		if ( 'contact' === $page->post_name ) {
+			$data[] = $this->container( $seed . '-contact-details', array( $this->widget( $seed . '-contact-details-widget', 'agris-contact-details', array(
+				'kicker' => 'Contact', 'title' => 'Primăria Comunei Agriș', 'description' => 'Date oficiale de contact și program de lucru.', 'address' => 'Agriș, str. Csury Balint, nr. 68, Satu Mare', 'phone' => '0261 878 112', 'email' => 'primaria@comunaagris.ro', 'hours' => 'Luni–Vineri: 8:00–16:00', 'map_embed' => $this->link(),
+			) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '36', 'left' => '0', 'isLinked' => false ) ) );
+			$data[] = $this->container( $seed . '-contact-form', array( $this->widget( $seed . '-contact-form-widget', 'agris-contact-form', array(
+				'kicker' => 'Mesaj', 'title' => 'Trimiteți-ne un mesaj', 'description' => 'Completați formularul, iar instituția vă va răspunde în cel mai scurt timp.', 'recipient' => 'primaria@comunaagris.ro', 'button_text' => 'Trimite mesajul', 'privacy_text' => 'Datele sunt folosite exclusiv pentru a răspunde solicitării.',
+			) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		}
 
 		if ( 'documents' === $type && preg_match( '/monitor|informatii|document|hotarar|anunt|formular/', $page->post_name ) ) {
 			$data[] = $this->container( $seed . '-library', array( $this->widget( $seed . '-library-widget', 'agris-document-library', array(
@@ -742,13 +800,14 @@ final class Template_Applier {
 		}
 
 		if ( 'galleries' === $type ) {
-			$gallery_items = array();
-			foreach ( get_attached_media( 'image', $page->ID ) as $attachment ) {
-				$gallery_items[] = array( 'image' => array( 'id' => $attachment->ID, 'url' => (string) wp_get_attachment_image_url( $attachment->ID, 'large' ) ), 'caption' => wp_get_attachment_caption( $attachment->ID ) ?: get_the_title( $attachment ) );
-			}
+			$gallery_items = $this->gallery_items( $page, $legacy_category ?: $page->post_name );
 			if ( $gallery_items ) {
 				$data[] = $this->container( $seed . '-gallery', array( $this->widget( $seed . '-gallery-widget', 'agris-photo-gallery', array( 'kicker' => 'Galerie', 'title' => get_the_title( $page ), 'description' => $description, 'items_list' => $this->repeater( $seed . '-images', $gallery_items ), 'columns' => '3' ) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+			} elseif ( $legacy_category ) {
+				$data[] = $this->container( $seed . '-gallery-posts', array( $this->widget( $seed . '-gallery-posts-widget', 'agris-news-grid', array( 'post_type' => 'post', 'category' => $legacy_category, 'count' => 24, 'columns' => '3', 'orderby' => 'date', 'show_excerpt' => 'no' ) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
 			}
+		} elseif ( $legacy_category ) {
+			$data[] = $this->container( $seed . '-legacy-posts', array( $this->widget( $seed . '-legacy-posts-widget', 'agris-news-grid', array( 'post_type' => 'post', 'category' => $legacy_category, 'count' => 24, 'columns' => '3', 'orderby' => 'date', 'show_excerpt' => 'yes' ) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
 		}
 
 		$data[] = $this->container( $seed . '-cta', array( $this->widget( $seed . '-cta-widget', 'agris-cta-banner', array(
