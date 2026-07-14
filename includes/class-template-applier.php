@@ -244,7 +244,7 @@ final class Template_Applier {
 			return new \WP_Error( 'invalid_page', __( 'Pagina țintă nu este validă.', 'comuna-agris' ) );
 		}
 
-		$data = 'home_ro' === $template ? $this->home_ro_data() : ( 'mayor_ro' === $template ? $this->mayor_ro_data() : array() );
+		$data = 'home_ro' === $template ? $this->home_ro_data( $post ) : ( 'mayor_ro' === $template ? $this->mayor_ro_data( $post ) : array() );
 		if ( ! $data ) {
 			return new \WP_Error( 'invalid_template', __( 'Șablonul solicitat nu este disponibil.', 'comuna-agris' ) );
 		}
@@ -605,6 +605,188 @@ final class Template_Applier {
 		);
 	}
 
+	private function media_item_from_id( int $attachment_id, string $origin ): ?array {
+		if ( ! $attachment_id || ! wp_attachment_is_image( $attachment_id ) ) {
+			return null;
+		}
+		$url = (string) wp_get_attachment_image_url( $attachment_id, 'full' );
+		if ( ! $url ) {
+			return null;
+		}
+		return array(
+			'image'   => array( 'id' => $attachment_id, 'url' => $url ),
+			'caption' => wp_get_attachment_caption( $attachment_id ) ?: get_the_title( $attachment_id ),
+			'_origin' => $origin,
+		);
+	}
+
+	private function media_item_from_url( string $url, string $origin ): ?array {
+		$url = esc_url_raw( html_entity_decode( trim( $url, " \t\n\r\0\x0B\\\"'()" ), ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
+		if ( ! $url || ! preg_match( '/\.(?:avif|gif|jpe?g|png|svg|webp)(?:\?.*)?$/i', $url ) ) {
+			return null;
+		}
+		$attachment_id = (int) attachment_url_to_postid( $url );
+		$item = $attachment_id ? $this->media_item_from_id( $attachment_id, $origin ) : null;
+		if ( $item ) {
+			return $item;
+		}
+		return array(
+			'image'   => array( 'id' => '', 'url' => $url ),
+			'caption' => '',
+			'_origin' => $origin,
+		);
+	}
+
+	private function shortcode_media_ids( string $attributes ): array {
+		$ids = array();
+		if ( preg_match_all( '/(?:^|\s)(?:attach_images|background_image|bg_image|image|images|ids)\s*=\s*(["\'])(.*?)\1/is', $attributes, $matches ) ) {
+			foreach ( $matches[2] as $value ) {
+				if ( preg_match_all( '/\d+/', $value, $numbers ) ) {
+					foreach ( $numbers[0] as $number ) {
+						$ids[] = (int) $number;
+					}
+				}
+			}
+		}
+		return array_values( array_unique( array_filter( $ids ) ) );
+	}
+
+	private function legacy_media_ids( string $content ): array {
+		$ids = $this->shortcode_media_ids( $content );
+		if ( preg_match_all( '/\bwp-image-(\d+)\b/i', $content, $matches ) ) {
+			$ids = array_merge( $ids, array_map( 'intval', $matches[1] ) );
+		}
+		return array_values( array_unique( array_filter( $ids ) ) );
+	}
+
+	private function is_background_media_id( string $content, int $attachment_id ): bool {
+		return (bool) preg_match( '/(?:background_image|bg_image)\s*=\s*(["\'])[^"\']*\b' . $attachment_id . '\b[^"\']*\1/i', $content );
+	}
+
+	private function legacy_media_urls( string $content ): array {
+		$content = str_replace( '\\/', '/', html_entity_decode( $content, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
+		if ( ! preg_match_all( '#https?://[^\s"\'<>\\)]+/wp-content/uploads/[^\s"\'<>\\)]+#i', $content, $matches ) ) {
+			return array();
+		}
+		return array_values( array_unique( $matches[0] ) );
+	}
+
+	private function slider_aliases( string $content ): array {
+		$aliases = array();
+		if ( preg_match_all( '/\[rev_slider\b([^\]]*)\]/i', $content, $matches ) ) {
+			foreach ( $matches[1] as $attributes ) {
+				if ( preg_match( '/\balias\s*=\s*(["\'])([^"\']+)\1/i', $attributes, $alias ) ) {
+					$aliases[] = sanitize_key( $alias[2] );
+				} elseif ( preg_match( '/^\s+([a-z0-9_-]+)/i', $attributes, $alias ) ) {
+					$aliases[] = sanitize_key( $alias[1] );
+				}
+			}
+		}
+		return array_values( array_unique( array_filter( $aliases ) ) );
+	}
+
+	private function slider_media_items( string $content ): array {
+		$aliases = $this->slider_aliases( $content );
+		if ( ! $aliases ) {
+			return array();
+		}
+		global $wpdb;
+		if ( ! isset( $wpdb ) ) {
+			return array();
+		}
+		$sliders_table = $wpdb->prefix . 'revslider_sliders';
+		$slides_table = $wpdb->prefix . 'revslider_slides';
+		$items = array();
+		foreach ( $aliases as $alias ) {
+			// Slider Revolution stores legacy v5 module and slide media in these two tables.
+			$slider = $wpdb->get_row( $wpdb->prepare( "SELECT id, params FROM {$sliders_table} WHERE alias = %s LIMIT 1", $alias ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			if ( ! is_array( $slider ) ) {
+				continue;
+			}
+			$payloads = array( (string) ( $slider['params'] ?? '' ) );
+			$slides = $wpdb->get_results( $wpdb->prepare( "SELECT params, layers FROM {$slides_table} WHERE slider_id = %d ORDER BY slide_order ASC", (int) $slider['id'] ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			foreach ( (array) $slides as $slide ) {
+				$payloads[] = (string) ( $slide['params'] ?? '' );
+				$payloads[] = (string) ( $slide['layers'] ?? '' );
+			}
+			foreach ( $this->legacy_media_urls( implode( "\n", $payloads ) ) as $url ) {
+				$item = $this->media_item_from_url( $url, 'slider' );
+				if ( $item ) {
+					$items[] = $item;
+				}
+			}
+		}
+		return $items;
+	}
+
+	private function legacy_media_items( \WP_Post $page, string $content ): array {
+		$items = array();
+		$seen = array();
+		$add = static function ( ?array $item ) use ( &$items, &$seen ): void {
+			if ( ! $item ) {
+				return;
+			}
+			$id = (int) ( $item['image']['id'] ?? 0 );
+			$url = (string) ( $item['image']['url'] ?? '' );
+			$key = $id ? 'id:' . $id : 'url:' . strtolower( strtok( $url, '?' ) ?: $url );
+			if ( isset( $seen[ $key ] ) ) {
+				return;
+			}
+			$seen[ $key ] = true;
+			$items[] = $item;
+		};
+
+		$featured_id = (int) get_post_thumbnail_id( $page->ID );
+		$add( $this->media_item_from_id( $featured_id, 'featured' ) );
+		foreach ( $this->slider_media_items( $content ) as $item ) {
+			$add( $item );
+		}
+		foreach ( $this->legacy_media_ids( $content ) as $attachment_id ) {
+			$origin = str_contains( $content, 'wp-image-' . $attachment_id ) ? 'inline' : ( $this->is_background_media_id( $content, $attachment_id ) ? 'background' : 'shortcode' );
+			$add( $this->media_item_from_id( $attachment_id, $origin ) );
+		}
+		foreach ( $this->legacy_media_urls( $content ) as $url ) {
+			$origin = preg_match( '/<img\b[^>]*(?:src|data-src)=["\'][^"\']*' . preg_quote( basename( strtok( $url, '?' ) ?: $url ), '/' ) . '/i', $content ) ? 'inline' : 'source-url';
+			$add( $this->media_item_from_url( $url, $origin ) );
+		}
+		foreach ( get_attached_media( 'image', $page->ID ) as $attachment ) {
+			$add( $attachment instanceof \WP_Post ? $this->media_item_from_id( $attachment->ID, 'attached' ) : null );
+		}
+		return $items;
+	}
+
+	private function public_media_items( array $items ): array {
+		return array_map(
+			static fn( array $item ): array => array( 'image' => $item['image'], 'caption' => $item['caption'] ?? '' ),
+			$items
+		);
+	}
+
+	private function primary_media( array $items ): array {
+		foreach ( $items as $item ) {
+			if ( in_array( $item['_origin'] ?? '', array( 'background', 'featured', 'slider', 'source-url' ), true ) ) {
+				return $item['image'];
+			}
+		}
+		return $this->media();
+	}
+
+	private function unplaced_media_items( array $items, string $normalized_content, array $primary ): array {
+		$unused = array();
+		foreach ( $items as $item ) {
+			$id = (int) ( $item['image']['id'] ?? 0 );
+			$url = (string) ( $item['image']['url'] ?? '' );
+			if ( ( $id && $id === (int) ( $primary['id'] ?? 0 ) ) || ( $url && $url === (string) ( $primary['url'] ?? '' ) ) ) {
+				continue;
+			}
+			if ( ( $id && str_contains( $normalized_content, 'wp-image-' . $id ) ) || ( $url && str_contains( $normalized_content, basename( strtok( $url, '?' ) ?: $url ) ) ) ) {
+				continue;
+			}
+			$unused[] = $item;
+		}
+		return $this->public_media_items( $unused );
+	}
+
 	private function repeater( string $seed, array $items ): array {
 		foreach ( $items as $index => $item ) {
 			$items[ $index ]['_id'] = substr( md5( $seed . '-' . $index ), 0, 7 );
@@ -666,16 +848,59 @@ final class Template_Applier {
 		return '<p>Conținutul acestei pagini este în curs de actualizare.</p>';
 	}
 
+	private function legacy_image_markup( array $ids, bool $gallery = false ): string {
+		if ( ! function_exists( 'wp_get_attachment_image' ) ) {
+			return '';
+		}
+		$images = '';
+		foreach ( array_unique( array_filter( array_map( 'intval', $ids ) ) ) as $attachment_id ) {
+			$image = wp_get_attachment_image( $attachment_id, 'large', false, array( 'loading' => 'lazy' ) );
+			if ( ! $image ) {
+				continue;
+			}
+			$caption = wp_get_attachment_caption( $attachment_id );
+			$images .= '<figure class="agris-legacy-media">' . $image . ( $caption ? '<figcaption>' . esc_html( $caption ) . '</figcaption>' : '' ) . '</figure>';
+		}
+		return $gallery && $images ? '<div class="agris-legacy-gallery">' . $images . '</div>' : $images;
+	}
+
+	private function expand_legacy_media_shortcodes( string $content ): string {
+		$content = preg_replace_callback(
+			'/\[vc_single_image\b([^\]]*)\](?:\[\/vc_single_image\])?/i',
+			fn( array $matches ): string => $this->legacy_image_markup( $this->shortcode_media_ids( $matches[1] ) ),
+			$content
+		) ?? $content;
+		$content = preg_replace_callback(
+			'/\[(?:vc_gallery|gallery)\b([^\]]*)\](?:\[\/(?:vc_gallery|gallery)\])?/i',
+			fn( array $matches ): string => $this->legacy_image_markup( $this->shortcode_media_ids( $matches[1] ), true ),
+			$content
+		) ?? $content;
+		return $content;
+	}
+
 	private function normalize_legacy_content( string $content ): string {
 		if ( str_contains( $content, 'agris-header-wrap' ) || str_contains( $content, 'elementor-widget-agris-site-header' ) ) {
 			$content = $this->extract_nested_richtext( $content );
 		}
+		$content = $this->expand_legacy_media_shortcodes( $content );
+		$protected_media = array();
+		$content = preg_replace_callback(
+			'/\[\/?(?:audio|caption|embed|playlist|video)\b[^\]]*\]/i',
+			static function ( array $matches ) use ( &$protected_media ): string {
+				$key = '<!--agris-protected-media-' . count( $protected_media ) . '-->';
+				$protected_media[ $key ] = $matches[0];
+				return $key;
+			},
+			$content
+		) ?? $content;
 		$content = preg_replace( '/\[(?:\/?)[a-zA-Z][a-zA-Z0-9_-]*(?:\s[^\]]*)?\]/u', '', $content ) ?? $content;
+		$content = strtr( $content, $protected_media );
 		$content = preg_replace( '/<h1(\s[^>]*)?>/i', '<h2$1>', $content ) ?? $content;
 		$content = preg_replace( '/<\/h1>/i', '</h2>', $content ) ?? $content;
 		$content = preg_replace( '/<p>\s*(?:&nbsp;)?\s*<\/p>/i', '', $content ) ?? $content;
 		$content = trim( $content );
-		return '' !== wp_strip_all_tags( $content ) ? $content : '<p>Conținutul acestei pagini este în curs de actualizare.</p>';
+		$has_media = (bool) preg_match( '/<(?:audio|figure|iframe|img|video)\b/i', $content );
+		return '' !== wp_strip_all_tags( $content ) || $has_media ? $content : '<p>Conținutul acestei pagini este în curs de actualizare.</p>';
 	}
 
 	private function extract_nested_richtext( string $content ): string {
@@ -713,35 +938,38 @@ final class Template_Applier {
 		return '';
 	}
 
-	private function gallery_items( \WP_Post $page, string $category_slug ): array {
-		$attachments = get_attached_media( 'image', $page->ID );
+	private function gallery_items( \WP_Post $page, string $category_slug, string $source_content = '' ): array {
+		$items = $this->legacy_media_items( $page, $source_content );
+		$seen = array();
+		foreach ( $items as $item ) {
+			$id = (int) ( $item['image']['id'] ?? 0 );
+			$url = (string) ( $item['image']['url'] ?? '' );
+			$seen[ $id ? 'id:' . $id : 'url:' . strtolower( $url ) ] = true;
+		}
 		if ( $category_slug ) {
 			$category = get_category_by_slug( $category_slug );
 			if ( $category ) {
 				foreach ( get_posts( array( 'post_type' => 'post', 'post_status' => 'publish', 'posts_per_page' => 100, 'category' => $category->term_id ) ) as $post ) {
 					$thumbnail_id = (int) get_post_thumbnail_id( $post->ID );
 					if ( $thumbnail_id ) {
-						$attachments[ $thumbnail_id ] = get_post( $thumbnail_id );
+						$item = $this->media_item_from_id( $thumbnail_id, 'category' );
+						if ( $item && ! isset( $seen[ 'id:' . $thumbnail_id ] ) ) {
+							$seen[ 'id:' . $thumbnail_id ] = true;
+							$items[] = $item;
+						}
 						continue;
 					}
 					foreach ( get_attached_media( 'image', $post->ID ) as $attachment ) {
-						$attachments[ $attachment->ID ] = $attachment;
+						$item = $attachment instanceof \WP_Post ? $this->media_item_from_id( $attachment->ID, 'category' ) : null;
+						if ( $item && ! isset( $seen[ 'id:' . $attachment->ID ] ) ) {
+							$seen[ 'id:' . $attachment->ID ] = true;
+							$items[] = $item;
+						}
 					}
 				}
 			}
 		}
-
-		$items = array();
-		foreach ( $attachments as $attachment ) {
-			if ( ! $attachment instanceof \WP_Post ) {
-				continue;
-			}
-			$url = (string) wp_get_attachment_image_url( $attachment->ID, 'large' );
-			if ( $url ) {
-				$items[] = array( 'image' => array( 'id' => $attachment->ID, 'url' => $url ), 'caption' => wp_get_attachment_caption( $attachment->ID ) ?: get_the_title( $attachment ) );
-			}
-		}
-		return $items;
+		return $this->public_media_items( $items );
 	}
 
 	private function generic_page_data( \WP_Post $page, string $type ): array {
@@ -758,9 +986,11 @@ final class Template_Applier {
 		$excerpt = trim( wp_strip_all_tags( (string) $page->post_excerpt ) );
 		$description = $excerpt ?: $label[1];
 		$hu_url = $this->translated_url( $page->ID, 'hu', $routes['home_hu'] );
-		$thumbnail_id = (int) get_post_thumbnail_id( $page->ID );
-		$image = $thumbnail_id ? array( 'id' => $thumbnail_id, 'url' => (string) wp_get_attachment_image_url( $thumbnail_id, 'large' ) ) : $this->media();
 		$source_content = $this->original_page_content( $page );
+		$media_items = $this->legacy_media_items( $page, $source_content );
+		$image = $this->primary_media( $media_items );
+		$normalized_content = $this->normalize_legacy_content( $source_content );
+		$unplaced_media = $this->unplaced_media_items( $media_items, $normalized_content, $image );
 		$legacy_category = $this->legacy_category_slug( $source_content );
 
 		$data = array(
@@ -807,7 +1037,7 @@ final class Template_Applier {
 					'kicker' => $label[0],
 					'title' => 'Informații complete',
 					'description' => $description,
-					'content' => $this->normalize_legacy_content( $source_content ),
+					'content' => $normalized_content,
 					'image' => $image,
 					'image_side' => 'right',
 				) ) ),
@@ -831,7 +1061,7 @@ final class Template_Applier {
 		}
 
 		if ( 'galleries' === $type ) {
-			$gallery_items = $this->gallery_items( $page, $legacy_category ?: $page->post_name );
+			$gallery_items = $this->gallery_items( $page, $legacy_category ?: $page->post_name, $source_content );
 			if ( $gallery_items ) {
 				$data[] = $this->container( $seed . '-gallery', array( $this->widget( $seed . '-gallery-widget', 'agris-photo-gallery', array( 'kicker' => 'Galerie', 'title' => get_the_title( $page ), 'description' => $description, 'items_list' => $this->repeater( $seed . '-images', $gallery_items ), 'columns' => '3' ) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
 			} elseif ( $legacy_category ) {
@@ -839,6 +1069,9 @@ final class Template_Applier {
 			}
 		} elseif ( $legacy_category ) {
 			$data[] = $this->container( $seed . '-legacy-posts', array( $this->widget( $seed . '-legacy-posts-widget', 'agris-news-grid', array( 'post_type' => 'post', 'category' => $legacy_category, 'count' => 24, 'columns' => '3', 'orderby' => 'date', 'show_excerpt' => 'yes' ) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		}
+		if ( 'galleries' !== $type && $unplaced_media ) {
+			$data[] = $this->container( $seed . '-media', array( $this->widget( $seed . '-media-widget', 'agris-photo-gallery', array( 'kicker' => 'Media', 'title' => 'Imagini și materiale media', 'description' => $description, 'items_list' => $this->repeater( $seed . '-media-items', $unplaced_media ), 'columns' => count( $unplaced_media ) > 2 ? '3' : '2' ) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
 		}
 
 		$data[] = $this->container( $seed . '-cta', array( $this->widget( $seed . '-cta-widget', 'agris-cta-banner', array(
@@ -862,9 +1095,19 @@ final class Template_Applier {
 		return $data;
 	}
 
-	private function home_ro_data(): array {
+	private function home_ro_data( \WP_Post $page ): array {
 		$menu_id = $this->menu_id();
 		$routes  = $this->routes();
+		$source_content = $this->original_page_content( $page );
+		$media_items = $this->legacy_media_items( $page, $source_content );
+		$hero_background = $this->primary_media( $media_items );
+		$cta_image = $this->media();
+		foreach ( $media_items as $item ) {
+			if ( ! in_array( $item['_origin'] ?? '', array( 'featured', 'slider' ), true ) ) {
+				$cta_image = $item['image'];
+				break;
+			}
+		}
 
 		return array(
 			$this->container(
@@ -909,7 +1152,7 @@ final class Template_Applier {
 							'primary_link'   => $this->link( $routes['monitor'] ),
 							'secondary_text' => 'Contact rapid',
 							'secondary_link' => $this->link( $routes['contact'] ),
-							'background'     => $this->media(),
+							'background'     => $hero_background,
 							'show_search'    => 'yes',
 							'updates_title'  => 'Noutăți din portal',
 							'updates_items'  => $this->repeater( 'updates', array(
@@ -1018,7 +1261,7 @@ final class Template_Applier {
 							'kicker'      => 'Participare publică',
 							'title'       => 'Aveți nevoie de informații sau documente?',
 							'description' => 'Contactați primăria sau consultați Monitorul Oficial local pentru cele mai noi documente.',
-							'image'       => $this->media(),
+							'image'       => $cta_image,
 							'button_text' => 'Contact',
 							'button_link' => $this->link( $routes['contact'] ),
 						)
@@ -1056,9 +1299,12 @@ final class Template_Applier {
 		);
 	}
 
-	private function mayor_ro_data(): array {
+	private function mayor_ro_data( \WP_Post $page ): array {
 		$menu_id = $this->menu_id();
 		$routes  = $this->routes();
+		$source_content = $this->original_page_content( $page );
+		$media_items = $this->legacy_media_items( $page, $source_content );
+		$mayor_photo = $media_items ? $media_items[0]['image'] : $this->media();
 		$mayor_hu = $this->translated_url( $this->find_mayor_ro_page(), 'hu', $routes['home_hu'] );
 
 		return array(
@@ -1103,7 +1349,7 @@ final class Template_Applier {
 							'parent_label'  => 'Acasă',
 							'parent_link'   => $this->link( $routes['home_ro'] ),
 							'current_label' => 'Primar',
-							'background'    => $this->media(),
+							'background'    => $mayor_photo,
 						)
 					),
 				),
@@ -1116,7 +1362,7 @@ final class Template_Applier {
 						'mayor-profile-widget',
 						'agris-person-profile',
 						array(
-							'photo'    => $this->media(),
+							'photo'    => $mayor_photo,
 							'role'     => 'Primar',
 							'name'     => 'Szabo Elek',
 							'subtitle' => 'Primarul Comunei Agriș',

@@ -143,6 +143,17 @@
 .agris-content-media.is-left > div:first-child { order: 2; }
 .agris-content-media.has-no-media.is-left > div:first-child { order: 0; }
 .agris-richtext { margin-top: 21px; color: var(--agris-muted); font-size: 1.06rem; line-height: 1.72; }
+.agris-richtext::after { display: table; clear: both; content: ""; }
+.agris-richtext img, .agris-richtext video, .agris-richtext iframe { max-width: 100%; height: auto; }
+.agris-richtext img { border-radius: var(--agris-radius); }
+.agris-richtext .alignleft { float: left; margin: 6px 24px 18px 0; }
+.agris-richtext .alignright { float: right; margin: 6px 0 18px 24px; }
+.agris-richtext .aligncenter { display: block; margin: 20px auto; }
+.agris-legacy-media { margin: 20px 0; }
+.agris-legacy-media figcaption { margin-top: 7px; color: var(--agris-muted); font-size: .86rem; }
+.agris-legacy-gallery { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; margin-block: 24px; }
+.agris-legacy-gallery .agris-legacy-media { margin: 0; }
+.agris-legacy-gallery img { width: 100%; aspect-ratio: 4/3; object-fit: cover; }
 .agris-media-frame { min-height: 390px; overflow: hidden; border-radius: var(--agris-radius-lg); background: var(--agris-brand-soft); box-shadow: var(--agris-shadow); }
 .agris-media-frame img { width: 100%; height: 100%; min-height: 390px; object-fit: cover; }
 .agris-person { overflow: hidden; border: 1px solid var(--agris-line); border-radius: var(--agris-radius-lg); background: #fff; box-shadow: 0 10px 28px rgba(15,47,31,.06); font-family: var(--agris-body); }
@@ -206,6 +217,9 @@ body.agris-high-contrast { --agris-ink:#000;--agris-muted:#222;--agris-line:#000
   .agris-page-hero { padding-block: 42px 50px; }
   .agris-media-frame,
   .agris-media-frame img { min-height: 260px; }
+  .agris-richtext .alignleft,
+  .agris-richtext .alignright { float: none; display: block; margin: 20px auto; }
+  .agris-legacy-gallery { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
