@@ -52,6 +52,7 @@ final class Template_Applier {
 		$page_id = isset( $_GET['post_id'] ) ? absint( $_GET['post_id'] ) : 0;
 		$status  = isset( $_GET['agris_status'] ) ? sanitize_key( wp_unslash( $_GET['agris_status'] ) ) : '';
 		$error_code = isset( $_GET['agris_error'] ) ? sanitize_key( wp_unslash( $_GET['agris_error'] ) ) : '';
+		$error_summary = isset( $_GET['agris_error_summary'] ) ? sanitize_text_field( wp_unslash( $_GET['agris_error_summary'] ) ) : '';
 		$group_done = isset( $_GET['agris_group'] ) ? sanitize_key( wp_unslash( $_GET['agris_group'] ) ) : '';
 		$group_ok = isset( $_GET['agris_ok'] ) ? absint( $_GET['agris_ok'] ) : 0;
 		$group_failed = isset( $_GET['agris_failed'] ) ? absint( $_GET['agris_failed'] ) : 0;
@@ -70,6 +71,7 @@ final class Template_Applier {
 			<?php endif; ?>
 			<?php if ( $group_done ) : ?><div class="notice <?php echo $group_failed ? 'notice-warning' : 'notice-success'; ?>"><p><?php echo esc_html( sprintf( __( 'Grupul %1$s: %2$d pagini reconstruite, %3$d erori. URL-urile au fost verificate individual.', 'comuna-agris' ), $group_done, $group_ok, $group_failed ) ); ?></p></div><?php endif; ?>
 			<?php if ( $all_done ) : ?><div class="notice <?php echo $group_failed ? 'notice-warning' : 'notice-success'; ?>"><p><?php echo esc_html( sprintf( 'Reconstrucție completă: %1$d pagini reconstruite, %2$d erori. Fiecare adresă URL a fost verificată.', $group_ok, $group_failed ) ); ?></p></div><?php endif; ?>
+			<?php if ( $error_summary ) : ?><div class="notice notice-info"><p><?php echo esc_html( 'Coduri de eroare: ' . $error_summary ); ?></p></div><?php endif; ?>
 			<p><?php esc_html_e( 'Instrumentul păstrează ID-ul, titlul, limba, părintele, slugul și adresa URL. Înainte de fiecare aplicare salvează automat starea curentă.', 'comuna-agris' ); ?></p>
 			<table class="widefat striped" style="max-width:980px">
 				<thead><tr><th><?php esc_html_e( 'Șablon', 'comuna-agris' ); ?></th><th><?php esc_html_e( 'Pagină țintă', 'comuna-agris' ); ?></th><th><?php esc_html_e( 'Siguranță', 'comuna-agris' ); ?></th><th><?php esc_html_e( 'Acțiune', 'comuna-agris' ); ?></th></tr></thead>
@@ -201,10 +203,14 @@ final class Template_Applier {
 
 		$ok = 0;
 		$failed = 0;
+		$error_codes = array();
 		foreach ( $this->template_targets() as $template => $target ) {
 			$post_id = (int) $target['post_id'];
-			if ( ! $post_id || ! current_user_can( 'edit_post', $post_id ) || is_wp_error( $this->apply_template( $post_id, $template ) ) ) {
+			$result = $post_id && current_user_can( 'edit_post', $post_id ) ? $this->apply_template( $post_id, $template ) : new \WP_Error( 'permission_denied' );
+			if ( is_wp_error( $result ) ) {
 				++$failed;
+				$code = $result->get_error_code();
+				$error_codes[ $code ] = ( $error_codes[ $code ] ?? 0 ) + 1;
 			} else {
 				++$ok;
 			}
@@ -213,18 +219,22 @@ final class Template_Applier {
 		foreach ( $this->published_ro_pages() as $page ) {
 			if ( ! current_user_can( 'edit_post', $page->ID ) ) {
 				++$failed;
+				$error_codes['permission_denied'] = ( $error_codes['permission_denied'] ?? 0 ) + 1;
 				continue;
 			}
 			$type = $this->classify_page( $page );
 			$result = $this->write_elementor_page( $page, 'page_' . $type, $this->generic_page_data( $page, $type ) );
 			if ( is_wp_error( $result ) ) {
 				++$failed;
+				$code = $result->get_error_code();
+				$error_codes[ $code ] = ( $error_codes[ $code ] ?? 0 ) + 1;
 			} else {
 				++$ok;
 			}
 		}
 
-		wp_safe_redirect( admin_url( 'tools.php?page=agris-rebuild&agris_all=1&agris_ok=' . $ok . '&agris_failed=' . $failed ) );
+		$summary = implode( ', ', array_map( static fn( $code, $count ): string => $code . ':' . $count, array_keys( $error_codes ), $error_codes ) );
+		wp_safe_redirect( admin_url( 'tools.php?page=agris-rebuild&agris_all=1&agris_ok=' . $ok . '&agris_failed=' . $failed . '&agris_error_summary=' . rawurlencode( $summary ) ) );
 		exit;
 	}
 
@@ -255,18 +265,6 @@ final class Template_Applier {
 		}
 		$this->save_backup( $post_id, 'before_' . $template );
 		wp_save_post_revision( $post_id );
-
-		$updated = wp_update_post(
-			array(
-				'ID'           => $post_id,
-				'post_content' => '',
-			),
-			true
-		);
-		if ( is_wp_error( $updated ) ) {
-			$this->restore_latest( $post_id );
-			return $updated;
-		}
 
 		update_post_meta( $post_id, '_elementor_edit_mode', 'builder' );
 		update_post_meta( $post_id, '_elementor_template_type', 'wp-page' );

@@ -30,8 +30,13 @@ if ( preg_match( '/letter-spacing:\s*-/', $css ) || ! str_contains( $css, 'font-
 	exit( 1 );
 }
 
-if ( ! str_contains( $plugin, "AGRIS_WIDGETS_VERSION', '1.4.0'" ) ) {
+if ( ! str_contains( $plugin, "AGRIS_WIDGETS_VERSION', '1.4.1'" ) ) {
 	fwrite( STDERR, "Plugin version was not bumped.\n" );
+	exit( 1 );
+}
+
+if ( str_contains( $applier, "'post_content' => ''" ) ) {
+	fwrite( STDERR, "Bulk rebuild must preserve legacy post content.\n" );
 	exit( 1 );
 }
 
