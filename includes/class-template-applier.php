@@ -878,10 +878,44 @@ final class Template_Applier {
 		return $content;
 	}
 
+	private function legacy_shortcode_attributes( string $attributes ): array {
+		$parsed = array();
+		if ( preg_match_all( '/([a-zA-Z][a-zA-Z0-9_-]*)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s\]]+))/', $attributes, $matches, PREG_SET_ORDER ) ) {
+			foreach ( $matches as $match ) {
+				$parsed[ strtolower( $match[1] ) ] = html_entity_decode( $match[2] ?: ( $match[3] ?: $match[4] ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+			}
+		}
+		return $parsed;
+	}
+
+	private function expand_legacy_link_shortcodes( string $content ): string {
+		$content = preg_replace_callback(
+			'/\[(?:otw_shortcode_button|otw-button)\b([^\]]*)\](.*?)\[\/(?:otw_shortcode_button|otw-button)\]/is',
+			function ( array $matches ): string {
+				$attributes = $this->legacy_shortcode_attributes( $matches[1] );
+				$url = (string) ( $attributes['href'] ?? $attributes['link'] ?? '' );
+				return $url ? '<a class="agris-legacy-button" href="' . esc_url( $url ) . '">' . wp_kses_post( $matches[2] ) . '</a>' : $matches[2];
+			},
+			$content
+		) ?? $content;
+		$content = preg_replace_callback(
+			'/\[(?:button|qode_button)\b([^\]]*)\](?:\[\/(?:button|qode_button)\])?/i',
+			function ( array $matches ): string {
+				$attributes = $this->legacy_shortcode_attributes( $matches[1] );
+				$url = (string) ( $attributes['link'] ?? $attributes['href'] ?? '' );
+				$text = (string) ( $attributes['text'] ?? $attributes['title'] ?? $url );
+				return $url ? '<a class="agris-legacy-button" href="' . esc_url( $url ) . '">' . esc_html( $text ) . '</a>' : esc_html( $text );
+			},
+			$content
+		) ?? $content;
+		return $content;
+	}
+
 	private function normalize_legacy_content( string $content ): string {
 		if ( str_contains( $content, 'agris-header-wrap' ) || str_contains( $content, 'elementor-widget-agris-site-header' ) ) {
 			$content = $this->extract_nested_richtext( $content );
 		}
+		$content = $this->expand_legacy_link_shortcodes( $content );
 		$content = $this->expand_legacy_media_shortcodes( $content );
 		$protected_media = array();
 		$content = preg_replace_callback(
@@ -931,11 +965,39 @@ final class Template_Applier {
 		return $html;
 	}
 
-	private function legacy_category_slug( string $content ): string {
-		if ( preg_match( '/\[masonry_blog[^\]]*category=["\']([^"\']+)["\']/i', $content, $matches ) ) {
-			return sanitize_title( $matches[1] );
+	private function legacy_post_queries( string $content ): array {
+		if ( ! preg_match_all( '/\[(masonry_blog|latest_post)\b([^\]]*)\]/i', $content, $matches, PREG_SET_ORDER ) ) {
+			return array();
 		}
-		return '';
+
+		$queries = array();
+		foreach ( $matches as $match ) {
+			$attributes = $this->legacy_shortcode_attributes( $match[2] );
+			$category = trim( (string) ( $attributes['category'] ?? '' ) );
+			if ( ! $category ) {
+				continue;
+			}
+			$categories = array_filter( array_map( 'sanitize_title', preg_split( '/\s*,\s*/', $category ) ?: array() ) );
+			$count = (int) ( $attributes['number_of_posts'] ?? 0 );
+			if ( 'latest_post' === strtolower( $match[1] ) ) {
+				$columns = max( 1, (int) ( $attributes['number_of_colums'] ?? $attributes['number_of_columns'] ?? 3 ) );
+				$rows = max( 1, (int) ( $attributes['number_of_rows'] ?? 1 ) );
+				$count = $columns * $rows;
+			}
+			$queries[] = array(
+				'category'     => implode( ',', $categories ),
+				'count'        => $count ?: 6,
+				'columns'      => min( 4, max( 2, (int) ( $attributes['number_of_colums'] ?? $attributes['number_of_columns'] ?? 3 ) ) ),
+				'orderby'      => strtolower( (string) ( $attributes['order_by'] ?? 'date' ) ),
+				'show_excerpt' => 'yes',
+			);
+		}
+		return $queries;
+	}
+
+	private function legacy_category_slug( string $content ): string {
+		$queries = $this->legacy_post_queries( $content );
+		return (string) ( $queries[0]['category'] ?? '' );
 	}
 
 	private function gallery_items( \WP_Post $page, string $category_slug, string $source_content = '' ): array {
@@ -984,14 +1046,14 @@ final class Template_Applier {
 		);
 		$label = $labels[ $type ] ?? $labels['community'];
 		$excerpt = trim( wp_strip_all_tags( (string) $page->post_excerpt ) );
-		$description = $excerpt ?: $label[1];
+		$description = $excerpt;
 		$hu_url = $this->translated_url( $page->ID, 'hu', $routes['home_hu'] );
 		$source_content = $this->original_page_content( $page );
 		$media_items = $this->legacy_media_items( $page, $source_content );
 		$image = $this->primary_media( $media_items );
 		$normalized_content = $this->normalize_legacy_content( $source_content );
 		$unplaced_media = $this->unplaced_media_items( $media_items, $normalized_content, $image );
-		$legacy_category = $this->legacy_category_slug( $source_content );
+		$legacy_queries = $this->legacy_post_queries( $source_content );
 
 		$data = array(
 			$this->container(
@@ -1034,49 +1096,31 @@ final class Template_Applier {
 			$this->container(
 				$seed . '-content',
 				array( $this->widget( $seed . '-content-widget', 'agris-content-media', array(
-					'kicker' => $label[0],
-					'title' => 'Informații complete',
-					'description' => $description,
+					'kicker' => '',
+					'title' => '',
+					'description' => '',
 					'content' => $normalized_content,
-					'image' => $image,
+					'image' => array( 'id' => 0, 'url' => '' ),
 					'image_side' => 'right',
 				) ) ),
 				array( 'padding' => array( 'unit' => 'px', 'top' => '72', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) )
 			),
 		);
 
-		if ( 'contact' === $page->post_name ) {
-			$data[] = $this->container( $seed . '-contact-details', array( $this->widget( $seed . '-contact-details-widget', 'agris-contact-details', array(
-				'kicker' => 'Contact', 'title' => 'Primăria Comunei Agriș', 'description' => 'Date oficiale de contact și program de lucru.', 'address' => 'Agriș, str. Csury Balint, nr. 68, Satu Mare', 'phone' => '0261 878 112', 'email' => 'primaria@comunaagris.ro', 'hours' => 'Luni–Vineri: 8:00–16:00', 'map_embed' => $this->link(),
-			) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '36', 'left' => '0', 'isLinked' => false ) ) );
-			$data[] = $this->container( $seed . '-contact-form', array( $this->widget( $seed . '-contact-form-widget', 'agris-contact-form', array(
-				'kicker' => 'Mesaj', 'title' => 'Trimiteți-ne un mesaj', 'description' => 'Completați formularul, iar instituția vă va răspunde în cel mai scurt timp.', 'recipient' => 'primaria@comunaagris.ro', 'button_text' => 'Trimite mesajul', 'privacy_text' => 'Datele sunt folosite exclusiv pentru a răspunde solicitării.',
-			) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
-		}
-
-		if ( 'documents' === $type && preg_match( '/monitor|informatii|document|hotarar|anunt|formular/', $page->post_name ) ) {
-			$data[] = $this->container( $seed . '-library', array( $this->widget( $seed . '-library-widget', 'agris-document-library', array(
-				'kicker' => 'Documente', 'title' => 'Documente publice recente', 'description' => 'Căutare rapidă în documentele publicate de instituție.', 'source' => 'automatic', 'count' => 12, 'columns' => '3', 'show_filters' => 'yes', 'show_search' => 'yes',
-			) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
-		}
-
 		if ( 'galleries' === $type ) {
-			$gallery_items = $this->gallery_items( $page, $legacy_category ?: $page->post_name, $source_content );
+			$gallery_items = $this->gallery_items( $page, '', $source_content );
 			if ( $gallery_items ) {
 				$data[] = $this->container( $seed . '-gallery', array( $this->widget( $seed . '-gallery-widget', 'agris-photo-gallery', array( 'kicker' => 'Galerie', 'title' => get_the_title( $page ), 'description' => $description, 'items_list' => $this->repeater( $seed . '-images', $gallery_items ), 'columns' => '3' ) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
-			} elseif ( $legacy_category ) {
-				$data[] = $this->container( $seed . '-gallery-posts', array( $this->widget( $seed . '-gallery-posts-widget', 'agris-news-grid', array( 'post_type' => 'post', 'category' => $legacy_category, 'count' => 24, 'columns' => '3', 'orderby' => 'date', 'show_excerpt' => 'no' ) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
 			}
-		} elseif ( $legacy_category ) {
-			$data[] = $this->container( $seed . '-legacy-posts', array( $this->widget( $seed . '-legacy-posts-widget', 'agris-news-grid', array( 'post_type' => 'post', 'category' => $legacy_category, 'count' => 24, 'columns' => '3', 'orderby' => 'date', 'show_excerpt' => 'yes' ) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		}
+		foreach ( $legacy_queries as $query_index => $query ) {
+			$data[] = $this->container( $seed . '-legacy-posts-' . $query_index, array( $this->widget( $seed . '-legacy-posts-widget-' . $query_index, 'agris-news-grid', array(
+				'post_type' => 'post', 'category' => $query['category'], 'count' => $query['count'], 'columns' => $query['columns'], 'orderby' => $query['orderby'], 'show_excerpt' => $query['show_excerpt'], 'show_category' => 'yes', 'show_date' => 'yes',
+			) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
 		}
 		if ( 'galleries' !== $type && $unplaced_media ) {
 			$data[] = $this->container( $seed . '-media', array( $this->widget( $seed . '-media-widget', 'agris-photo-gallery', array( 'kicker' => 'Media', 'title' => 'Imagini și materiale media', 'description' => $description, 'items_list' => $this->repeater( $seed . '-media-items', $unplaced_media ), 'columns' => count( $unplaced_media ) > 2 ? '3' : '2' ) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
 		}
-
-		$data[] = $this->container( $seed . '-cta', array( $this->widget( $seed . '-cta-widget', 'agris-cta-banner', array(
-			'kicker' => 'Relații cu cetățenii', 'title' => 'Aveți nevoie de informații suplimentare?', 'description' => 'Contactați Primăria Comunei Agriș pentru informații oficiale și asistență.', 'image' => $this->media(), 'button_text' => 'Contact', 'button_link' => $this->link( $routes['contact'] ),
-		) ) ) );
 		$data[] = $this->container( $seed . '-footer', array(
 			$this->widget( $seed . '-footer-widget', 'agris-site-footer', array(
 				'title' => 'Comuna Agriș', 'subtitle' => 'Primăria Comunei Agriș', 'description' => 'Portal oficial pentru cetățeni, documente publice și comunicări administrative.',
@@ -1105,6 +1149,9 @@ final class Template_Applier {
 		$hero_background = $hero_item ? $hero_item['image'] : $this->primary_media( $media_items );
 		$cta_item = $this->media_item_from_id( 4295, 'shortcode' );
 		$cta_image = $cta_item ? $cta_item['image'] : $this->media();
+		$history_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2018/07/ikon.7.png', 'slider' ) : null;
+		$location_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2018/07/ikon.8.png', 'slider' ) : null;
+		$monuments_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2018/07/ikon.6.png', 'slider' ) : null;
 
 		return array(
 			$this->container(
@@ -1142,27 +1189,22 @@ final class Template_Applier {
 						'hero-widget',
 						'agris-home-hero',
 						array(
-							'eyebrow'        => 'Ghișeul este deschis · Luni-Vineri 8:00-16:00',
-							'title'          => 'Servicii publice transparente pentru Comuna Agriș.',
-							'description'    => 'Portal modern pentru documente, formulare, hotărâri, anunțuri oficiale și informații utile pentru cetățeni.',
-							'primary_text'   => 'Vezi documentele',
-							'primary_link'   => $this->link( $routes['monitor'] ),
-							'secondary_text' => 'Contact rapid',
-							'secondary_link' => $this->link( $routes['contact'] ),
+							'eyebrow'        => '',
+							'title'          => 'Bine ați venit',
+							'description'    => '',
+							'primary_text'   => '',
+							'primary_link'   => $this->link(),
+							'secondary_text' => '',
+							'secondary_link' => $this->link(),
 							'background'     => $hero_background,
-							'show_search'    => 'yes',
-							'updates_title'  => 'Noutăți din portal',
-							'updates_items'  => $this->repeater( 'updates', array(
-								array( 'day' => 'AN', 'title' => 'Anunțuri publice', 'meta' => 'Actualizate periodic', 'url' => $this->link( $routes['announcements'] ) ),
-								array( 'day' => 'HCL', 'title' => 'Hotărâri Consiliul Local', 'meta' => 'Arhivă și documente', 'url' => $this->link( $routes['decisions'] ) ),
-								array( 'day' => 'DOC', 'title' => 'Documente administrative', 'meta' => 'Formulare și registre', 'url' => $this->link( $routes['monitor'] ) ),
-							) ),
+							'show_search'    => '',
+							'updates_title'  => '',
+							'updates_items'  => array(),
 						)
 					),
 				),
 				array( 'content_width' => 'full' )
 			),
-			$this->section( 'services-head', 'Servicii', 'Cum vă putem ajuta', 'Acces rapid către cele mai căutate servicii ale primăriei.' ),
 			$this->container(
 				'services',
 				array(
@@ -1170,12 +1212,11 @@ final class Template_Applier {
 						'services-widget',
 						'agris-services-grid',
 						array(
-							'columns'    => '4',
+							'columns'    => '3',
 							'items_list' => $this->repeater( 'services', array(
-								array( 'icon' => 'TAX', 'title' => 'Taxe și impozite', 'description' => 'Informații pentru plăți, evidențe fiscale și program.', 'url' => $this->link( $routes['taxes'] ) ),
-								array( 'icon' => 'DOC', 'title' => 'Formulare', 'description' => 'Documente tipizate și cereri pentru cetățeni.', 'url' => $this->link( $routes['forms'] ) ),
-								array( 'icon' => 'URB', 'title' => 'Urbanism', 'description' => 'Certificate, autorizații și informații urbanistice.', 'url' => $this->link( $routes['urbanism'] ) ),
-								array( 'icon' => 'AGR', 'title' => 'Registru agricol', 'description' => 'Servicii și evidențe pentru gospodării și terenuri.', 'url' => $this->link( $routes['agricultural'] ) ),
+								array( 'icon' => '', 'image' => $history_item['image'] ?? array(), 'title' => 'Istoria Comunei', 'description' => '', 'url' => $this->link( $this->page_url( array( 'istoria-comunei' ), '/ro/istoria-comunei/' ) ) ),
+								array( 'icon' => '', 'image' => $location_item['image'] ?? array(), 'title' => 'Localizarea comunei', 'description' => '', 'url' => $this->link( $this->page_url( array( 'localizarea-comuna' ), '/ro/localizarea-comuna/' ) ) ),
+								array( 'icon' => '', 'image' => $monuments_item['image'] ?? array(), 'title' => 'Monumente istorice', 'description' => '', 'url' => $this->link( $this->page_url( array( 'monumente-istorice' ), '/ro/monumente-istorice/' ) ) ),
 							) ),
 						)
 					),
@@ -1184,7 +1225,7 @@ final class Template_Applier {
 					'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '70', 'left' => '0', 'isLinked' => false ),
 				)
 			),
-			$this->section( 'news-head', 'Actualități', 'Noutăți și anunțuri', 'Cele mai recente comunicări publicate de Primăria Comunei Agriș.', 'Toate noutățile', $routes['announcements'] ),
+			$this->section( 'news-head', '', 'Anunturi', '', 'Mai multe știri', $routes['announcements'] ),
 			$this->container(
 				'news',
 				array(
@@ -1193,11 +1234,13 @@ final class Template_Applier {
 						'agris-news-grid',
 						array(
 							'post_type'    => 'post',
-							'category'     => '',
-							'count'        => 3,
+							'category'     => 'anunturi',
+							'count'        => 6,
 							'columns'      => '3',
 							'orderby'      => 'date',
 							'show_excerpt' => 'yes',
+							'show_category'=> '',
+							'show_date'    => '',
 						)
 					),
 				),
@@ -1205,22 +1248,22 @@ final class Template_Applier {
 					'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '70', 'left' => '0', 'isLinked' => false ),
 				)
 			),
-			$this->section( 'docs-head', 'Transparență', 'Documente publice', 'Hotărâri, anunțuri și documente administrative într-o bibliotecă filtrabilă.' ),
+			$this->section( 'reports-head', '', 'Dare-de-seama', '' ),
 			$this->container(
-				'documents',
+				'reports',
 				array(
 					$this->widget(
-						'documents-widget',
-						'agris-document-library',
+						'reports-widget',
+						'agris-news-grid',
 						array(
-							'kicker'       => 'Documente',
-							'title'        => 'Bibliotecă publică',
-							'description'  => 'Căutați rapid documentele publicate de instituție.',
-							'count'        => 9,
-							'columns'      => '3',
-							'show_filters' => 'yes',
-							'show_search'  => 'yes',
-							'source'       => 'automatic',
+							'post_type'     => 'post',
+							'category'      => 'dare-de-seama',
+							'count'         => 6,
+							'columns'       => '3',
+							'orderby'       => 'date',
+							'show_excerpt'  => 'yes',
+							'show_category' => '',
+							'show_date'     => '',
 						)
 					),
 				),
@@ -1228,19 +1271,22 @@ final class Template_Applier {
 					'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '80', 'left' => '0', 'isLinked' => false ),
 				)
 			),
+			$this->section( 'decisions-head', '', 'Hotarari-ale-consiului-local', '' ),
 			$this->container(
-				'about',
+				'decisions',
 				array(
 					$this->widget(
-						'about-widget',
-						'agris-content-media',
+						'decisions-widget',
+						'agris-news-grid',
 						array(
-							'kicker'     => 'Comuna',
-							'title'      => 'Agriș, comunitate cu administrație aproape de cetățeni',
-							'description'=> 'Informații locale, servicii publice și comunicare instituțională într-un singur portal.',
-							'content'    => '<p>Comuna Agriș își publică online informațiile importante pentru ca locuitorii să găsească rapid documentele, anunțurile și datele de contact necesare.</p><p>Noua structură Elementor permite actualizarea fiecărei secțiuni separat, fără schimbarea adreselor existente ale paginilor.</p>',
-							'image'      => $this->media(),
-							'image_side' => 'right',
+							'post_type'     => 'post',
+							'category'      => 'hotarari-ale-consiului-local-2026,hotarari-ale-consiului-local-2025',
+							'count'         => 6,
+							'columns'       => '3',
+							'orderby'       => 'date',
+							'show_excerpt'  => 'yes',
+							'show_category' => '',
+							'show_date'     => 'yes',
 						)
 					),
 				),
@@ -1255,12 +1301,12 @@ final class Template_Applier {
 						'cta-widget',
 						'agris-cta-banner',
 						array(
-							'kicker'      => 'Participare publică',
-							'title'       => 'Aveți nevoie de informații sau documente?',
-							'description' => 'Contactați primăria sau consultați Monitorul Oficial local pentru cele mai noi documente.',
+							'kicker'      => '',
+							'title'       => '',
+							'description' => '',
 							'image'       => $cta_image,
-							'button_text' => 'Contact',
-							'button_link' => $this->link( $routes['contact'] ),
+							'button_text' => '',
+							'button_link' => $this->link(),
 						)
 					),
 				)
@@ -1340,9 +1386,9 @@ final class Template_Applier {
 						'mayor-hero-widget',
 						'agris-page-hero',
 						array(
-							'kicker'        => 'Conducerea primăriei',
-							'title'         => 'Primarul Comunei Agriș',
-							'description'   => 'Date de contact, informații publice și programul de audiențe al primarului.',
+							'kicker'        => '',
+							'title'         => 'Primar',
+							'description'   => '',
 							'parent_label'  => 'Acasă',
 							'parent_link'   => $this->link( $routes['home_ro'] ),
 							'current_label' => 'Primar',
@@ -1362,8 +1408,8 @@ final class Template_Applier {
 							'photo'    => $mayor_photo,
 							'role'     => 'Primar',
 							'name'     => 'Szabo Elek',
-							'subtitle' => 'Primarul Comunei Agriș',
-							'bio'      => '<p><strong>Data nașterii:</strong> 03.10.1963</p><p>Primarul reprezintă comuna în relația cu cetățenii și coordonează activitatea administrației publice locale.</p>',
+							'subtitle' => '',
+							'bio'      => '<p><strong>Data nașterii:</strong> 03.10.1963</p>',
 							'phone'    => '0261 878 111',
 							'email'    => 'primar@comunaagris.ro',
 							'office'   => 'Luni 9:00–11:00 · Joi 9:00–11:00',
@@ -1371,42 +1417,6 @@ final class Template_Applier {
 					),
 				),
 				array( 'padding' => array( 'unit' => 'px', 'top' => '70', 'right' => '0', 'bottom' => '36', 'left' => '0', 'isLinked' => false ) )
-			),
-			$this->container(
-				'mayor-schedule',
-				array(
-					$this->widget(
-						'mayor-schedule-widget',
-						'agris-schedule-grid',
-						array(
-							'kicker'      => 'Program audiențe',
-							'title'       => 'Întâlniri cu cetățenii',
-							'description' => 'Pentru o organizare mai bună, vă recomandăm să confirmați telefonic audiența.',
-							'items_list'  => $this->repeater( 'mayor-schedule-items', array(
-								array( 'icon' => 'LU', 'title' => 'Luni', 'time' => '09:00–11:00' ),
-								array( 'icon' => 'JO', 'title' => 'Joi', 'time' => '09:00–11:00' ),
-							) ),
-						)
-					),
-				),
-				array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '70', 'left' => '0', 'isLinked' => false ) )
-			),
-			$this->container(
-				'mayor-cta',
-				array(
-					$this->widget(
-						'mayor-cta-widget',
-						'agris-cta-banner',
-						array(
-							'kicker'      => 'Relații cu cetățenii',
-							'title'       => 'Aveți nevoie de informații suplimentare?',
-							'description' => 'Contactați Primăria Comunei Agriș pentru programări și informații administrative.',
-							'image'       => $this->media(),
-							'button_text' => 'Date de contact',
-							'button_link' => $this->link( $routes['contact'] ),
-						)
-					),
-				)
 			),
 			$this->container(
 				'mayor-footer',

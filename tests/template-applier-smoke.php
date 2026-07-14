@@ -30,7 +30,7 @@ if ( preg_match( '/letter-spacing:\s*-/', $css ) || ! str_contains( $css, 'font-
 	exit( 1 );
 }
 
-if ( ! str_contains( $plugin, "AGRIS_WIDGETS_VERSION', '1.6.1'" ) ) {
+if ( ! str_contains( $plugin, "AGRIS_WIDGETS_VERSION', '1.7.0'" ) ) {
 	fwrite( STDERR, "Plugin version was not bumped.\n" );
 	exit( 1 );
 }
@@ -38,6 +38,20 @@ if ( ! str_contains( $plugin, "AGRIS_WIDGETS_VERSION', '1.6.1'" ) ) {
 if ( ! str_contains( $applier, 'function normalize_legacy_content' ) || ! str_contains( $applier, 'function gallery_items' ) ) {
 	fwrite( STDERR, "Legacy content conversion is incomplete.\n" );
 	exit( 1 );
+}
+
+foreach ( array( 'Bine ați venit', "'category'     => 'anunturi'", "'category'      => 'dare-de-seama'", 'hotarari-ale-consiului-local-2026,hotarari-ale-consiului-local-2025', '2018/07/ikon.7.png', '2018/07/ikon.8.png', '2018/07/ikon.6.png', 'function expand_legacy_link_shortcodes', 'function legacy_post_queries' ) as $needle ) {
+	if ( ! str_contains( $applier, $needle ) ) {
+		fwrite( STDERR, "Missing original-content parity contract: {$needle}.\n" );
+		exit( 1 );
+	}
+}
+
+foreach ( array( 'Servicii publice transparente pentru Comuna Agriș.', "'mayor-schedule'", "'mayor-cta'", "'documents-widget'", "'contact-form-widget'" ) as $needle ) {
+	if ( str_contains( $applier, $needle ) ) {
+		fwrite( STDERR, "Unrelated generated content remains: {$needle}.\n" );
+		exit( 1 );
+	}
 }
 
 if ( str_contains( $applier, "'post_content' => ''" ) ) {
