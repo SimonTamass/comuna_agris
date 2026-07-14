@@ -30,7 +30,7 @@ if ( preg_match( '/letter-spacing:\s*-/', $css ) || ! str_contains( $css, 'font-
 	exit( 1 );
 }
 
-if ( ! str_contains( $plugin, "AGRIS_WIDGETS_VERSION', '1.7.0'" ) ) {
+if ( ! str_contains( $plugin, "AGRIS_WIDGETS_VERSION', '1.7.1'" ) ) {
 	fwrite( STDERR, "Plugin version was not bumped.\n" );
 	exit( 1 );
 }
@@ -40,7 +40,7 @@ if ( ! str_contains( $applier, 'function normalize_legacy_content' ) || ! str_co
 	exit( 1 );
 }
 
-foreach ( array( 'Bine ați venit', "'category'     => 'anunturi'", "'category'      => 'dare-de-seama'", 'hotarari-ale-consiului-local-2026,hotarari-ale-consiului-local-2025', '2018/07/ikon.7.png', '2018/07/ikon.8.png', '2018/07/ikon.6.png', 'function expand_legacy_link_shortcodes', 'function legacy_post_queries' ) as $needle ) {
+foreach ( array( 'Bine ați venit', "'category'     => 'anunturi'", "'category'      => 'dare-de-seama'", 'hotarari-ale-consiului-local-2026,hotarari-ale-consiului-local-2025', "'title' => 'Stare civilă'", "'title' => 'Asistență socială'", "'title' => 'Legea 17'", "'title' => 'APIA'", 'function expand_legacy_link_shortcodes', 'function legacy_post_queries' ) as $needle ) {
 	if ( ! str_contains( $applier, $needle ) ) {
 		fwrite( STDERR, "Missing original-content parity contract: {$needle}.\n" );
 		exit( 1 );
@@ -52,6 +52,14 @@ foreach ( array( 'Servicii publice transparente pentru Comuna Agriș.', "'mayor-
 		fwrite( STDERR, "Unrelated generated content remains: {$needle}.\n" );
 		exit( 1 );
 	}
+}
+
+$services_start = strpos( $applier, "'items_list' => \$this->repeater( 'services'" );
+$services_end = false !== $services_start ? strpos( $applier, "\n\t\t\t\t\t\t\t) ),", $services_start ) : false;
+$services_block = false !== $services_start && false !== $services_end ? substr( $applier, $services_start, $services_end - $services_start ) : '';
+if ( 8 !== substr_count( $services_block, "array( 'icon' =>" ) ) {
+	fwrite( STDERR, "Homepage must preserve exactly eight frequent-service cards.\n" );
+	exit( 1 );
 }
 
 if ( str_contains( $applier, "'post_content' => ''" ) ) {

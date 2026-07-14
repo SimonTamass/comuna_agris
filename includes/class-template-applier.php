@@ -1149,9 +1149,6 @@ final class Template_Applier {
 		$hero_background = $hero_item ? $hero_item['image'] : $this->primary_media( $media_items );
 		$cta_item = $this->media_item_from_id( 4295, 'shortcode' );
 		$cta_image = $cta_item ? $cta_item['image'] : $this->media();
-		$history_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2018/07/ikon.7.png', 'slider' ) : null;
-		$location_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2018/07/ikon.8.png', 'slider' ) : null;
-		$monuments_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2018/07/ikon.6.png', 'slider' ) : null;
 
 		return array(
 			$this->container(
@@ -1205,6 +1202,7 @@ final class Template_Applier {
 				),
 				array( 'content_width' => 'full' )
 			),
+			$this->section( 'services-head', 'Acces rapid', 'Servicii frecvente', '', 'Toate informațiile', $routes['monitor'] ),
 			$this->container(
 				'services',
 				array(
@@ -1212,11 +1210,16 @@ final class Template_Applier {
 						'services-widget',
 						'agris-services-grid',
 						array(
-							'columns'    => '3',
+							'columns'    => '4',
 							'items_list' => $this->repeater( 'services', array(
-								array( 'icon' => '', 'image' => $history_item['image'] ?? array(), 'title' => 'Istoria Comunei', 'description' => '', 'url' => $this->link( $this->page_url( array( 'istoria-comunei' ), '/ro/istoria-comunei/' ) ) ),
-								array( 'icon' => '', 'image' => $location_item['image'] ?? array(), 'title' => 'Localizarea comunei', 'description' => '', 'url' => $this->link( $this->page_url( array( 'localizarea-comuna' ), '/ro/localizarea-comuna/' ) ) ),
-								array( 'icon' => '', 'image' => $monuments_item['image'] ?? array(), 'title' => 'Monumente istorice', 'description' => '', 'url' => $this->link( $this->page_url( array( 'monumente-istorice' ), '/ro/monumente-istorice/' ) ) ),
+								array( 'icon' => 'TVA', 'title' => 'Taxe și impozite', 'description' => 'Informații pentru contribuabili și plăți locale.', 'url' => $this->link( $routes['taxes'] ) ),
+								array( 'icon' => 'PDF', 'title' => 'Formulare tipizate', 'description' => 'Cereri și documente administrative utile.', 'url' => $this->link( $routes['forms'] ) ),
+								array( 'icon' => 'URB', 'title' => 'Urbanism', 'description' => 'Certificate de urbanism și autorizații de construire.', 'url' => $this->link( $routes['urbanism'] ) ),
+								array( 'icon' => 'AGR', 'title' => 'Registru agricol', 'description' => 'Date și servicii pentru gospodării și terenuri.', 'url' => $this->link( $routes['agricultural'] ) ),
+								array( 'icon' => 'SC', 'title' => 'Stare civilă', 'description' => 'Acte, certificate și proceduri de stare civilă.', 'url' => $this->link( $this->page_url( array( 'stare-civila' ), '/ro/stare-civila/' ) ) ),
+								array( 'icon' => 'AS', 'title' => 'Asistență socială', 'description' => 'Sprijin și programe pentru comunitate.', 'url' => $this->link( $this->page_url( array( 'asistenta-sociala' ), '/ro/asistenta-sociala/' ) ) ),
+								array( 'icon' => 'L17', 'title' => 'Legea 17', 'description' => 'Oferte de vânzare și legislație aferentă.', 'url' => $this->link( home_url( '/ro/category/legea17/' ) ) ),
+								array( 'icon' => 'APIA', 'title' => 'APIA', 'description' => 'Informații agricole și comunicări publice.', 'url' => $this->link( home_url( '/ro/category/apia/' ) ) ),
 							) ),
 						)
 					),
