@@ -44,14 +44,18 @@ final class Site_Header extends Base {
 	protected function render(): void {
 		$s = $this->get_settings_for_display();
 		$current = $s['language_items'][0] ?? array( 'code' => 'RO', 'label' => 'Română' );
+		$current_code = strtolower( sanitize_key( $current['code'] ?? 'ro' ) );
+		$current_flag = in_array( $current_code, array( 'ro', 'hu' ), true ) ? $current_code : 'ro';
+		$nav_id = 'agris-main-nav-' . $this->get_id();
+		$lang_id = 'agris-lang-menu-' . $this->get_id();
 		?>
-		<div class="agris-header-wrap <?php echo 'yes' === $s['sticky'] ? 'is-sticky' : ''; ?>">
+		<div id="top" class="agris-header-wrap <?php echo 'yes' === $s['sticky'] ? 'is-sticky' : ''; ?>">
 			<a class="agris-skip-link" href="#main-content"><?php esc_html_e( 'Sari la conținut', 'comuna-agris' ); ?></a>
 			<div class="agris-govbar"><div class="agris-shell agris-govbar-inner">
 				<div class="agris-official"><span class="agris-flag agris-flag-ro" aria-hidden="true"><i></i><i></i><i></i></span><span><?php echo esc_html( $s['official_text'] ); ?></span><?php if ( $s['trust_text'] ) : ?><span class="agris-trust"><?php echo esc_html( $s['trust_text'] ); ?></span><?php endif; ?></div>
 				<div class="agris-gov-actions"><?php if ( ! empty( $s['mail_url']['url'] ) ) : ?><a <?php echo self::link_attrs( $s['mail_url'] ); ?>>Mail</a><?php endif; ?>
-					<div class="agris-lang"><button type="button" class="agris-lang-trigger" aria-expanded="false"><span class="agris-flag agris-flag-ro"><i></i><i></i><i></i></span><?php echo esc_html( $current['code'] ); ?></button>
-						<div class="agris-lang-menu"><?php foreach ( $s['language_items'] as $item ) : ?><a <?php echo self::link_attrs( $item['url'] ); ?>><strong><?php echo esc_html( $item['code'] ); ?></strong><?php echo esc_html( $item['label'] ); ?></a><?php endforeach; ?></div>
+					<div class="agris-lang"><button type="button" class="agris-lang-trigger" aria-expanded="false" aria-controls="<?php echo esc_attr( $lang_id ); ?>"><span class="agris-flag agris-flag-<?php echo esc_attr( $current_flag ); ?>" aria-hidden="true"><i></i><i></i><i></i></span><?php echo esc_html( $current['code'] ); ?></button>
+						<div id="<?php echo esc_attr( $lang_id ); ?>" class="agris-lang-menu"><?php foreach ( $s['language_items'] as $item ) : ?><?php $flag = strtolower( sanitize_key( $item['code'] ?? 'ro' ) ); ?><a <?php echo self::link_attrs( $item['url'] ); ?>><span class="agris-flag agris-flag-<?php echo esc_attr( in_array( $flag, array( 'ro', 'hu' ), true ) ? $flag : 'ro' ); ?>" aria-hidden="true"><i></i><i></i><i></i></span><strong><?php echo esc_html( $item['code'] ); ?></strong><?php echo esc_html( $item['label'] ); ?></a><?php endforeach; ?></div>
 					</div>
 				</div>
 			</div></div>
@@ -60,7 +64,7 @@ final class Site_Header extends Base {
 					<?php if ( ! empty( $s['logo']['id'] ) ) : ?><span class="agris-brand-logo"><?php echo Group_Control_Image_Size::get_attachment_image_html( $s, 'logo', 'logo' ); ?></span><?php else : ?><span class="agris-brand-mark">CA</span><?php endif; ?>
 					<span><strong><?php echo esc_html( $s['brand_title'] ); ?></strong><small><?php echo esc_html( $s['brand_subtitle'] ); ?></small></span>
 				</a>
-				<nav class="agris-main-nav" aria-label="<?php esc_attr_e( 'Navigație principală', 'comuna-agris' ); ?>">
+				<nav id="<?php echo esc_attr( $nav_id ); ?>" class="agris-main-nav" aria-label="<?php esc_attr_e( 'Navigație principală', 'comuna-agris' ); ?>">
 				<?php
 				if ( $s['menu_id'] ) {
 					wp_nav_menu( array( 'menu' => (int) $s['menu_id'], 'container' => false, 'menu_class' => 'agris-menu', 'fallback_cb' => false, 'depth' => 2 ) );
@@ -69,7 +73,7 @@ final class Site_Header extends Base {
 				}
 				?>
 				</nav>
-				<div class="agris-header-actions"><button class="agris-icon-button" type="button" data-agris-search aria-label="<?php esc_attr_e( 'Caută', 'comuna-agris' ); ?>">⌕</button><?php if ( $s['cta_text'] ) : ?><a class="agris-button agris-button-primary" <?php echo self::link_attrs( $s['cta_link'] ); ?>><?php echo esc_html( $s['cta_text'] ); ?></a><?php endif; ?><button class="agris-icon-button agris-nav-toggle" type="button" aria-expanded="false" aria-label="<?php esc_attr_e( 'Deschide meniul', 'comuna-agris' ); ?>">☰</button></div>
+				<div class="agris-header-actions"><button class="agris-icon-button" type="button" data-agris-search aria-label="<?php esc_attr_e( 'Caută', 'comuna-agris' ); ?>" title="<?php esc_attr_e( 'Caută', 'comuna-agris' ); ?>"><span class="dashicons dashicons-search" aria-hidden="true"></span></button><?php if ( $s['cta_text'] ) : ?><a class="agris-button agris-button-primary" <?php echo self::link_attrs( $s['cta_link'] ); ?>><?php echo esc_html( $s['cta_text'] ); ?></a><?php endif; ?><button class="agris-icon-button agris-nav-toggle" type="button" aria-expanded="false" aria-controls="<?php echo esc_attr( $nav_id ); ?>" aria-label="<?php esc_attr_e( 'Deschide meniul', 'comuna-agris' ); ?>" title="<?php esc_attr_e( 'Meniu', 'comuna-agris' ); ?>"><span class="dashicons dashicons-menu-alt3" aria-hidden="true"></span></button></div>
 			</div></header>
 		</div>
 		<?php

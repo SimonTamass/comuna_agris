@@ -854,6 +854,7 @@ final class Template_Applier {
 					array( 'column' => 'Informații publice', 'label' => 'Monitorul Oficial', 'url' => $this->link( $routes['monitor'] ) ),
 				) ),
 				'phone' => '0261 878 112', 'email' => 'primaria@comunaagris.ro', 'address' => 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, Satu Mare', 'copyright' => 'Toate drepturile rezervate Comuna Agriș.',
+				'contact_url' => $this->link( $routes['contact'] ), 'monitor_url' => $this->link( $routes['monitor'] ),
 			) ),
 			$this->widget( $seed . '-accessibility', 'agris-accessibility', array( 'title' => 'Accesibilitate', 'position' => 'right' ) ),
 		), array( 'content_width' => 'full' ) );
@@ -1044,6 +1045,8 @@ final class Template_Applier {
 							'email'       => 'primaria@comunaagris.ro',
 							'address'     => 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, Satu Mare',
 							'copyright'   => 'Toate drepturile rezervate Comuna Agriș.',
+							'contact_url' => $this->link( $routes['contact'] ),
+							'monitor_url' => $this->link( $routes['monitor'] ),
 						)
 					),
 					$this->widget( 'accessibility-widget', 'agris-accessibility', array( 'title' => 'Accesibilitate', 'position' => 'right' ) ),
@@ -1182,6 +1185,8 @@ final class Template_Applier {
 							'email'       => 'primaria@comunaagris.ro',
 							'address'     => 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, Satu Mare',
 							'copyright'   => 'Toate drepturile rezervate Comuna Agriș.',
+							'contact_url' => $this->link( $routes['contact'] ),
+							'monitor_url' => $this->link( $routes['monitor'] ),
 						)
 					),
 					$this->widget( 'mayor-accessibility-widget', 'agris-accessibility', array( 'title' => 'Accesibilitate', 'position' => 'right' ) ),

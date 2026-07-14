@@ -42,56 +42,66 @@
 /* Header */
 .agris-skip-link { position: fixed; z-index: 999999; top: -80px; left: 16px; padding: 10px 16px; border-radius: 8px; background: var(--agris-cyan); color: var(--agris-ink); font-weight: 800; }
 .agris-skip-link:focus { top: 16px; }
-.agris-header-wrap { position: relative; z-index: 100; font-family: var(--agris-body); }
+.agris-header-wrap { position: relative; z-index: 800; font-family: var(--agris-body); }
 .agris-header-wrap.is-sticky { position: sticky; top: 0; }
 .admin-bar .agris-header-wrap.is-sticky { top: 32px; }
-.agris-govbar { background: var(--agris-ink); color: #bfccca; font-size: .79rem; }
-.agris-govbar-inner { min-height: 35px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-.agris-official, .agris-gov-actions, .agris-lang-trigger { display: flex; align-items: center; gap: 9px; }
+.agris-govbar { border-bottom: 1px solid rgba(255,255,255,.08); background: var(--agris-ink); color: #b9c6d8; font-size: .8rem; }
+.agris-govbar-inner { min-height: 34px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.agris-official, .agris-gov-actions, .agris-lang-trigger { display: flex; align-items: center; gap: 8px; }
 .agris-govbar a { color: var(--agris-cyan); text-decoration: none; }
-.agris-trust { padding: 3px 9px; border: 1px solid rgba(184,244,194,.26); border-radius: 99px; background: rgba(184,244,194,.1); color: var(--agris-cyan); font-weight: 800; }
-.agris-flag { width: 19px; height: 13px; display: inline-flex; overflow: hidden; border-radius: 2px; box-shadow: 0 0 0 1px rgba(255,255,255,.2); }
+.agris-trust { padding: 2px 9px; border: 1px solid rgba(184,244,194,.28); border-radius: 999px; background: rgba(184,244,194,.1); color: var(--agris-cyan); font-size: .74rem; font-weight: 700; }
+.agris-flag { width: 18px; height: 12px; display: inline-flex; overflow: hidden; border-radius: 2px; box-shadow: 0 0 0 1px rgba(255,255,255,.2); }
 .agris-flag i { flex: 1; }
 .agris-flag-ro i:nth-child(1) { background: #002b7f; }.agris-flag-ro i:nth-child(2) { background: #fcd116; }.agris-flag-ro i:nth-child(3) { background: #ce1126; }
+.agris-flag-hu { flex-direction: column; }.agris-flag-hu i:nth-child(1) { background: #ce2939; }.agris-flag-hu i:nth-child(2) { background: #fff; }.agris-flag-hu i:nth-child(3) { background: #477050; }
 .agris-lang { position: relative; }
-.agris-lang-trigger { padding: 4px 10px; border: 1px solid rgba(255,255,255,.16); border-radius: 99px; background: rgba(255,255,255,.06); color: #fff; font-weight: 800; cursor: pointer; }
-.agris-lang-menu { position: absolute; z-index: 10; top: calc(100% + 8px); right: 0; width: 190px; display: none; padding: 6px; border: 1px solid var(--agris-line); border-radius: 9px; background: #fff; box-shadow: var(--agris-shadow); }
+.agris-lang-trigger { padding: 4px 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 999px; background: rgba(255,255,255,.06); color: #fff; font-size: .78rem; font-weight: 700; cursor: pointer; }
+.agris-lang-menu { position: absolute; z-index: 1000; top: calc(100% + 8px); right: 0; min-width: 180px; display: none; padding: 6px; border: 1px solid var(--agris-line); border-radius: var(--agris-radius); background: #fff; box-shadow: var(--agris-shadow); }
 .agris-lang.is-open .agris-lang-menu { display: grid; }
-.agris-lang-menu a { display: flex; gap: 10px; padding: 9px; border-radius: 7px; color: var(--agris-ink); }
+.agris-lang-menu a { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--agris-radius); color: var(--agris-ink); font-size: .88rem; font-weight: 700; }
 .agris-lang-menu a:hover { background: var(--agris-brand-soft); }
-.agris-site-header { background: rgba(255,255,255,.95); border-bottom: 1px solid var(--agris-line); backdrop-filter: blur(14px); }
-.agris-header-inner { min-height: 79px; display: flex; align-items: center; gap: 28px; }
-.agris-brand { display: inline-flex; align-items: center; gap: 12px; color: var(--agris-ink) !important; text-decoration: none !important; }
-.agris-brand-mark, .agris-brand-logo { width: 50px; height: 50px; display: grid; place-items: center; flex: 0 0 auto; overflow: hidden; border-radius: 12px; background: linear-gradient(145deg, var(--agris-brand-dark), var(--agris-brand)); color: #fff; box-shadow: 0 9px 20px rgba(27,94,32,.22); font: 900 1rem/1 var(--agris-heading); }
-.agris-brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+.agris-site-header { border-bottom: 1px solid var(--agris-line); background: rgba(255,255,255,.92); backdrop-filter: blur(14px); }
+.agris-header-inner { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.agris-brand { min-width: 220px; display: inline-flex; align-items: center; gap: 13px; color: var(--agris-ink) !important; text-decoration: none !important; }
+.agris-brand-mark, .agris-brand-logo { width: 50px; height: 50px; display: grid; place-items: center; flex: 0 0 auto; overflow: hidden; border-radius: 12px; background: linear-gradient(145deg, #0d3b18, var(--agris-brand)); color: #fff; box-shadow: 0 8px 22px rgba(27,94,32,.25); font: 800 1.05rem/1 var(--agris-heading); }
+.agris-brand-logo img { width: 42px; height: 42px; object-fit: contain; }
 .agris-brand strong, .agris-brand small { display: block; }
-.agris-brand strong { font: 800 1.12rem/1.2 var(--agris-heading); }
-.agris-brand small { margin-top: 4px; color: #718096; font: 800 .68rem/1 var(--agris-body); letter-spacing: .1em; text-transform: uppercase; }
+.agris-brand strong { font: 800 1.08rem/1.1 var(--agris-heading); letter-spacing: 0; }
+.agris-brand small { margin-top: 3px; color: var(--agris-muted); font: 700 .74rem/1 var(--agris-body); letter-spacing: .08em; text-transform: uppercase; }
 .agris-main-nav { margin-left: auto; }
 .agris-menu, .agris-menu ul { margin: 0; padding: 0; list-style: none; }
 .agris-menu { display: flex; align-items: center; gap: 2px; }
 .agris-menu > li { position: relative; }
-.agris-menu > li > a { display: flex; min-height: 44px; align-items: center; padding: 10px 11px; border-radius: 8px; color: var(--agris-ink); font-weight: 800; text-decoration: none; }
+.agris-menu > li > a { min-height: 40px; display: flex; align-items: center; gap: 5px; padding: 9px 12px; border-radius: var(--agris-radius); color: var(--agris-ink-soft); font-size: .94rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.agris-menu > .lang-item { display: none; }
 .agris-menu > li.current-menu-item > a, .agris-menu > li.current-menu-ancestor > a, .agris-menu > li > a:hover { background: var(--agris-brand-soft); color: var(--agris-brand); }
-.agris-menu .sub-menu { position: absolute; top: 100%; left: 0; min-width: 230px; display: none; padding: 7px; border: 1px solid var(--agris-line); border-radius: 10px; background: #fff; box-shadow: var(--agris-shadow); }
+.agris-menu .sub-menu { position: absolute; top: calc(100% + 8px); left: 0; min-width: 250px; display: none; padding: 8px; border: 1px solid var(--agris-line); border-radius: var(--agris-radius); background: #fff; box-shadow: var(--agris-shadow); }
 .agris-menu li:hover > .sub-menu, .agris-menu li:focus-within > .sub-menu { display: grid; }
-.agris-menu .sub-menu a { display: block; padding: 9px 10px; border-radius: 7px; color: var(--agris-ink); text-decoration: none; }
+.agris-menu .sub-menu a { display: block; padding: 9px 10px; border-radius: var(--agris-radius); color: var(--agris-ink-soft); font-size: .92rem; font-weight: 650; text-decoration: none; }
 .agris-menu .sub-menu a:hover { background: var(--agris-brand-soft); }
-.agris-header-actions { display: flex; align-items: center; gap: 9px; }
-.agris-icon-button { width: 42px; height: 42px; display: grid; place-items: center; border: 0; border-radius: 8px; background: #f1f5f9; color: var(--agris-ink); font-size: 1.25rem; cursor: pointer; }
+.agris-header-actions { display: flex; align-items: center; gap: 8px; }
+.agris-header-actions .agris-button { min-height: 42px; white-space: nowrap; }
+.agris-icon-button { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid transparent; border-radius: var(--agris-radius); background: #f1f5f9; color: var(--agris-ink-soft); cursor: pointer; }
+.agris-icon-button:hover { border-color: #d6dee8; background: #e8edf4; }
+.agris-icon-button .dashicons { width: 20px; height: 20px; font-size: 20px; }
 .agris-nav-toggle { display: none; }
 
 /* Footer */
-.agris-footer { background: var(--agris-ink); color: #b9c6c2; font-family: var(--agris-body); }
-.agris-footer-grid { display: grid; grid-template-columns: 1.25fr repeat(3, 1fr); gap: 38px; padding-block: 55px 38px; }
+.agris-footer { background: var(--agris-ink); color: #b9c6d8; font-family: var(--agris-body); }
+.agris-footer-grid { display: grid; grid-template-columns: 1.2fr repeat(3, 1fr); gap: 34px; padding-block: 54px 38px; }
 .agris-footer .agris-brand strong, .agris-footer .agris-brand small { color: #fff; }
-.agris-footer-brand p { max-width: 340px; line-height: 1.65; }
-.agris-footer h2 { margin: 0 0 16px; color: #6f8580; font: 900 .75rem/1 var(--agris-body); letter-spacing: .11em; text-transform: uppercase; }
+.agris-footer-brand { max-width: 330px; }
+.agris-footer-brand p { line-height: 1.65; }
+.agris-footer h2 { margin: 0 0 14px; color: #5b6e88; font: 900 .78rem/1 var(--agris-body); letter-spacing: .1em; text-transform: uppercase; }
 .agris-footer-links, .agris-footer-contact { display: grid; gap: 9px; }
-.agris-footer a { color: #bdcbc7; text-decoration: none; }
+.agris-footer a { color: #b9c6d8; text-decoration: none; }
 .agris-footer a:hover { color: var(--agris-cyan); }
 .agris-footer-contact p { margin: 4px 0 0; }
-.agris-footer-bottom { display: flex; justify-content: space-between; gap: 20px; padding-block: 18px; border-top: 1px solid rgba(255,255,255,.08); color: #718781; font-size: .84rem; }
+.agris-footer-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; padding-block: 18px; border-top: 1px solid rgba(255,255,255,.08); color: #5b6e88; font-size: .85rem; }
+.agris-footer-bottom nav { display: flex; align-items: center; gap: 8px; }
+.agris-footer-bottom nav > span { color: rgba(185,198,216,.45); }
+.agris-back-to-top { width: 36px; height: 36px; display: grid; place-items: center; margin-left: 6px; border: 1px solid rgba(255,255,255,.12); border-radius: var(--agris-radius); }
+.agris-back-to-top .dashicons { width: 18px; height: 18px; font-size: 18px; }
 
 /* Heroes */
 .agris-home-hero { position: relative; min-height: 690px; isolation: isolate; overflow: hidden; background: var(--agris-ink); color: #fff; font-family: var(--agris-body); }
@@ -174,12 +184,12 @@
 .agris-a11y { position: fixed; z-index: 9999; right: 20px; bottom: 20px; font-family: var(--agris-body); }.agris-a11y-left { right: auto; left: 20px; }.agris-floating { display: grid; justify-items: end; gap: 9px; }.agris-floating button { width: 52px; height: 52px; border: 0; border-radius: 50%; background: var(--agris-brand); color: #fff; box-shadow: 0 10px 28px rgba(27,94,32,.3); font-weight: 900; cursor: pointer; }.agris-floating button + button { display: none; width: 45px; height: 45px; border: 1px solid var(--agris-line); background: #fff; color: var(--agris-brand); }.agris-floating button + button.is-visible { display: block; }.agris-a11y-panel { position: absolute; right: 0; bottom: 65px; width: min(340px,calc(100vw - 40px)); padding: 20px; border: 1px solid var(--agris-line); border-radius: var(--agris-radius-lg); background: #fff; box-shadow: var(--agris-shadow); }.agris-a11y-left .agris-a11y-panel { right: auto; left: 0; }.agris-a11y-panel h2 { margin: 0 0 10px; color: var(--agris-ink); font: 800 1.05rem var(--agris-heading); }.agris-a11y-row { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid #eef2f0; }.agris-a11y-row button:not(.agris-switch) { width: 30px; height: 30px; margin: 2px; border: 1px solid var(--agris-line); border-radius: 7px; background: #fff; color: var(--agris-brand); font-weight: 900; cursor: pointer; }.agris-a11y-row strong { min-width: 48px; display: inline-block; text-align: center; }.agris-switch { width: 43px; height: 25px; padding: 3px; border: 0; border-radius: 99px; background: #cbd5e1; cursor: pointer; }.agris-switch i { width: 19px; height: 19px; display: block; border-radius: 50%; background: #fff; transition: .2s; }.agris-switch.is-on { background: var(--agris-brand); }.agris-switch.is-on i { transform: translateX(18px); }
 body.agris-high-contrast { --agris-ink:#000;--agris-muted:#222;--agris-line:#000;--agris-brand:#005a38;--agris-bg:#fff; }.agris-grayscale { filter: grayscale(1); }.agris-underline a { text-decoration: underline !important; }
 
-@media (max-width: 1100px) {
+@media (max-width: 1040px) {
   .agris-nav-toggle { display: grid; }.agris-main-nav { position: absolute; top: calc(100% + 8px); left: 24px; right: 24px; display: none; padding: 10px; border: 1px solid var(--agris-line); border-radius: var(--agris-radius); background: #fff; box-shadow: var(--agris-shadow); }.agris-main-nav.is-open { display: block; }.agris-menu { display: grid; }.agris-menu > li > a { width: 100%; }.agris-menu .sub-menu { position: static; display: grid; padding-left: 16px; border: 0; box-shadow: none; }.agris-hero-grid { grid-template-columns: 1fr; gap: 35px; }.agris-hero-panel { align-self: auto; margin: 0; }.agris-grid-4 { grid-template-columns: repeat(2,minmax(0,1fr)); }.agris-footer-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.agris-content-media, .agris-contact-layout { grid-template-columns: 1fr; }.agris-content-media.is-left > div:first-child { order: 0; }
 }
 @media (max-width: 782px) { .admin-bar .agris-header-wrap.is-sticky { top: 46px; } }
 @media (max-width: 720px) {
-  .agris-shell { width: min(var(--agris-max), calc(100% - 28px)); }.agris-govbar-inner { align-items: flex-start; flex-direction: column; gap: 6px; padding-block: 8px; }.agris-trust { display: none; }.agris-header-inner { min-height: 68px; gap: 10px; }.agris-brand strong { font-size: .94rem; }.agris-brand small { display: none; }.agris-brand-mark, .agris-brand-logo { width: 44px; height: 44px; }.agris-header-actions > .agris-button { display: none; }.agris-main-nav { left: 14px; right: 14px; }.agris-home-hero, .agris-hero-grid { min-height: 650px; }.agris-hero-grid { padding-block: 55px; }.agris-home-hero h1 { font-size: clamp(2.8rem,14vw,4.4rem); }.agris-hero-search, .agris-search-dialog form { grid-template-columns: 1fr; }.agris-page-hero { padding-block: 45px 52px; }.agris-section-heading { align-items: flex-start; flex-direction: column; }.agris-grid-2, .agris-grid-3, .agris-grid-4, .agris-form-two, .agris-gallery { grid-template-columns: 1fr; }.agris-media-frame, .agris-media-frame img { min-height: 280px; }.agris-person-photo { min-height: 280px; }.agris-footer-grid { grid-template-columns: 1fr; padding-top: 42px; }.agris-footer-bottom { flex-direction: column; }.agris-library-tools { align-items: stretch; flex-direction: column; }.agris-library-search input { width: 100%; min-width: 0; }.agris-cta { align-items: flex-start; flex-direction: column; }.agris-cta-image { width: 100%; flex-basis: auto; }.agris-single-layout { grid-template-columns: 1fr; gap: 30px; }.agris-share { position: static; }.agris-a11y { right: 14px; bottom: 14px; }
+  .agris-shell { width: min(var(--agris-max), calc(100% - 28px)); }.agris-govbar-inner { align-items: flex-start; flex-direction: column; gap: 6px; padding-block: 8px; }.agris-trust { display: none; }.agris-header-inner { min-height: 68px; gap: 10px; }.agris-brand { min-width: 0; }.agris-brand strong { font-size: .94rem; }.agris-brand small { display: none; }.agris-brand-mark, .agris-brand-logo { width: 44px; height: 44px; }.agris-header-actions > .agris-button { display: none; }.agris-main-nav { left: 14px; right: 14px; }.agris-home-hero, .agris-hero-grid { min-height: 650px; }.agris-hero-grid { padding-block: 55px; }.agris-home-hero h1 { font-size: clamp(2.8rem,14vw,4.4rem); }.agris-hero-search, .agris-search-dialog form { grid-template-columns: 1fr; }.agris-page-hero { padding-block: 45px 52px; }.agris-section-heading { align-items: flex-start; flex-direction: column; }.agris-grid-2, .agris-grid-3, .agris-grid-4, .agris-form-two, .agris-gallery { grid-template-columns: 1fr; }.agris-media-frame, .agris-media-frame img { min-height: 280px; }.agris-person-photo { min-height: 280px; }.agris-footer-grid { grid-template-columns: 1fr; padding-top: 42px; }.agris-footer-bottom { flex-direction: column; }.agris-library-tools { align-items: stretch; flex-direction: column; }.agris-library-search input { width: 100%; min-width: 0; }.agris-cta { align-items: flex-start; flex-direction: column; }.agris-cta-image { width: 100%; flex-basis: auto; }.agris-single-layout { grid-template-columns: 1fr; gap: 30px; }.agris-share { position: static; }.agris-a11y { right: 14px; bottom: 14px; }
 }
 
 /* Local redesign typography contract. */

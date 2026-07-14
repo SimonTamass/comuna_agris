@@ -30,7 +30,7 @@ final class Assets {
 			array(),
 			null
 		);
-		wp_register_style( 'agris-widgets', AGRIS_WIDGETS_URL . 'assets/css/frontend.css', array( 'agris-fonts' ), AGRIS_WIDGETS_VERSION );
+		wp_register_style( 'agris-widgets', AGRIS_WIDGETS_URL . 'assets/css/frontend.css', array( 'agris-fonts', 'dashicons' ), AGRIS_WIDGETS_VERSION );
 		wp_register_script( 'agris-widgets', AGRIS_WIDGETS_URL . 'assets/js/frontend.js', array(), AGRIS_WIDGETS_VERSION, true );
 		wp_localize_script(
 			'agris-widgets',
