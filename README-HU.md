@@ -23,6 +23,8 @@ Az átépítés nem hoz létre új oldalt, és nem módosítja a meglévő oldal
 
 A 24 widget az Elementor bal oldali paneljén, a **Comuna Agriș** kategóriában található. A készlet tartalmaz globális headert és footert, keresőt, akadálymentesítést, hero elemeket, tartalmi blokkokat, szolgáltatásokat, vezetői profilt, fogadóórákat, tanácstagokat, kapcsolati elemeket, galériát, adattáblát, híreket, dokumentumtárat, blogarchívumot és egyedi bejegyzéssablont.
 
+Minden widget önálló komponensfájlban található, és saját **Megjelenés** füllel rendelkezik. Itt widgetenként állítható a kiemelő-, cím-, szöveg- és háttérszín, a sarokkerekítés, a belső térköz és a címtipográfia. A widgetazonosítók változatlanok, ezért a korábban felépített Elementor-oldalak kompatibilisek maradnak.
+
 ## URL-szabály
 
 Új slug vagy új helyettesítő oldal nem készülhet. A meglévő publikus útvonalakat kell helyben modernizálni, beleértve a történetileg elírt, de már használt URL-eket is.

@@ -18,6 +18,9 @@ A plugin nem tartalmaz saját GitHub- vagy WordPress-frissítőt. Ez szándékos
 ## Tartalom
 
 - 24 külön Elementor widget
+- widgetenként külön PHP komponensfájl és központi widget-regiszter
+- minden widgeten egységes Elementor Style fül szín-, térköz-, sarok- és tipográfiavezérléssel
+- külön Elementor-integrációs és asset-kezelő szolgáltatás
 - teljes header, footer, kereső és akadálymentesítési panel
 - nyitóoldali és belső oldali hero elemek
 - szolgáltatás-, hír-, dokumentum-, galéria- és tartalmi widgetek

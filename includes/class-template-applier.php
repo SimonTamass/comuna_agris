@@ -8,6 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Template_Applier {
 	private const NONCE_ACTION = 'agris_apply_template';
 	private const NONCE_RESTORE = 'agris_restore_template';
+	private const NONCE_GROUP = 'agris_apply_group';
 	private const BACKUP_META = '_agris_rebuild_backups';
 	private const MANIFEST_META = '_agris_rebuild_manifest';
 	private const MAX_BACKUPS = 10;
@@ -25,6 +26,7 @@ final class Template_Applier {
 		add_action( 'admin_menu', array( $this, 'register_admin_page' ) );
 		add_action( 'admin_post_agris_apply_template', array( $this, 'handle_apply' ) );
 		add_action( 'admin_post_agris_restore_template', array( $this, 'handle_restore' ) );
+		add_action( 'admin_post_agris_apply_group', array( $this, 'handle_apply_group' ) );
 	}
 
 	public function register_admin_page(): void {
@@ -45,6 +47,9 @@ final class Template_Applier {
 		$page_id = isset( $_GET['post_id'] ) ? absint( $_GET['post_id'] ) : 0;
 		$status  = isset( $_GET['agris_status'] ) ? sanitize_key( wp_unslash( $_GET['agris_status'] ) ) : '';
 		$error_code = isset( $_GET['agris_error'] ) ? sanitize_key( wp_unslash( $_GET['agris_error'] ) ) : '';
+		$group_done = isset( $_GET['agris_group'] ) ? sanitize_key( wp_unslash( $_GET['agris_group'] ) ) : '';
+		$group_ok = isset( $_GET['agris_ok'] ) ? absint( $_GET['agris_ok'] ) : 0;
+		$group_failed = isset( $_GET['agris_failed'] ) ? absint( $_GET['agris_failed'] ) : 0;
 		$routes  = $this->routes();
 		$targets = $this->template_targets();
 		?>
@@ -57,6 +62,7 @@ final class Template_Applier {
 			<?php elseif ( 'error' === $status ) : ?>
 				<div class="notice notice-error"><p><?php esc_html_e( 'Operațiunea nu a putut fi finalizată. Pagina nu a fost modificată.', 'comuna-agris' ); ?><?php if ( $error_code ) : ?> <code><?php echo esc_html( $error_code ); ?></code><?php endif; ?></p></div>
 			<?php endif; ?>
+			<?php if ( $group_done ) : ?><div class="notice <?php echo $group_failed ? 'notice-warning' : 'notice-success'; ?>"><p><?php echo esc_html( sprintf( __( 'Grupul %1$s: %2$d pagini reconstruite, %3$d erori. URL-urile au fost verificate individual.', 'comuna-agris' ), $group_done, $group_ok, $group_failed ) ); ?></p></div><?php endif; ?>
 			<p><?php esc_html_e( 'Instrumentul păstrează ID-ul, titlul, limba, părintele, slugul și adresa URL. Înainte de fiecare aplicare salvează automat starea curentă.', 'comuna-agris' ); ?></p>
 			<table class="widefat striped" style="max-width:980px">
 				<thead><tr><th><?php esc_html_e( 'Șablon', 'comuna-agris' ); ?></th><th><?php esc_html_e( 'Pagină țintă', 'comuna-agris' ); ?></th><th><?php esc_html_e( 'Siguranță', 'comuna-agris' ); ?></th><th><?php esc_html_e( 'Acțiune', 'comuna-agris' ); ?></th></tr></thead>
@@ -93,6 +99,13 @@ final class Template_Applier {
 					<?php endforeach; ?>
 				</tbody>
 			</table>
+			<h2 style="margin-top:28px"><?php esc_html_e( 'Reconstrucție în grupuri', 'comuna-agris' ); ?></h2>
+			<p><?php esc_html_e( 'Sunt incluse numai paginile române publicate. Paginile private și ciornele nu sunt modificate. Fiecare pagină primește propria copie de siguranță.', 'comuna-agris' ); ?></p>
+			<table class="widefat striped" style="max-width:980px"><thead><tr><th><?php esc_html_e( 'Grup', 'comuna-agris' ); ?></th><th><?php esc_html_e( 'Pagini', 'comuna-agris' ); ?></th><th><?php esc_html_e( 'Descriere', 'comuna-agris' ); ?></th><th><?php esc_html_e( 'Acțiune', 'comuna-agris' ); ?></th></tr></thead><tbody>
+			<?php foreach ( $this->rebuild_groups() as $group => $definition ) : $group_pages = $this->group_pages( $group ); ?>
+				<tr><th scope="row"><?php echo esc_html( $definition['label'] ); ?></th><td><?php echo (int) count( $group_pages ); ?></td><td><?php echo esc_html( $definition['description'] ); ?></td><td><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="agris_apply_group"><input type="hidden" name="group" value="<?php echo esc_attr( $group ); ?>"><?php wp_nonce_field( self::NONCE_GROUP . '_' . $group ); ?><?php submit_button( sprintf( __( 'Reconstruiește grupul (%d)', 'comuna-agris' ), count( $group_pages ) ), 'secondary', 'submit', false, count( $group_pages ) ? array() : array( 'disabled' => 'disabled' ) ); ?></form></td></tr>
+			<?php endforeach; ?>
+			</tbody></table>
 			<h2 style="margin-top:28px"><?php esc_html_e( 'Rute folosite de șablon', 'comuna-agris' ); ?></h2>
 			<table class="widefat striped" style="max-width:820px"><tbody><?php foreach ( $routes as $key => $route ) : ?><tr><th scope="row"><?php echo esc_html( $key ); ?></th><td><code><?php echo esc_html( $route ); ?></code></td></tr><?php endforeach; ?></tbody></table>
 		</div>
@@ -136,6 +149,37 @@ final class Template_Applier {
 		exit;
 	}
 
+	public function handle_apply_group(): void {
+		$group = isset( $_POST['group'] ) ? sanitize_key( wp_unslash( $_POST['group'] ) ) : '';
+		$groups = $this->rebuild_groups();
+		if ( ! isset( $groups[ $group ] ) || ! check_admin_referer( self::NONCE_GROUP . '_' . $group ) || ! current_user_can( 'edit_pages' ) ) {
+			wp_die( esc_html__( 'Cerere invalidă.', 'comuna-agris' ) );
+		}
+
+		if ( function_exists( 'set_time_limit' ) ) {
+			@set_time_limit( 180 );
+		}
+
+		$ok = 0;
+		$failed = 0;
+		foreach ( $this->group_pages( $group ) as $page ) {
+			if ( ! current_user_can( 'edit_post', $page->ID ) ) {
+				++$failed;
+				continue;
+			}
+			$type = $this->classify_page( $page );
+			$result = $this->write_elementor_page( $page, 'page_' . $type, $this->generic_page_data( $page, $type ) );
+			if ( is_wp_error( $result ) ) {
+				++$failed;
+			} else {
+				++$ok;
+			}
+		}
+
+		wp_safe_redirect( admin_url( 'tools.php?page=agris-rebuild&agris_group=' . rawurlencode( $group ) . '&agris_ok=' . $ok . '&agris_failed=' . $failed ) );
+		exit;
+	}
+
 	private function apply_template( int $post_id, string $template ) {
 		$post = get_post( $post_id );
 		if ( ! $post instanceof \WP_Post || 'page' !== $post->post_type ) {
@@ -146,6 +190,12 @@ final class Template_Applier {
 		if ( ! $data ) {
 			return new \WP_Error( 'invalid_template', __( 'Șablonul solicitat nu este disponibil.', 'comuna-agris' ) );
 		}
+
+		return $this->write_elementor_page( $post, $template, $data );
+	}
+
+	private function write_elementor_page( \WP_Post $post, string $template, array $data ) {
+		$post_id = (int) $post->ID;
 		$encoded_data = wp_json_encode( $data );
 		if ( false === $encoded_data ) {
 			return new \WP_Error( 'elementor_json_failed', __( 'Datele Elementor nu au putut fi codificate.', 'comuna-agris' ) );
@@ -258,6 +308,79 @@ final class Template_Applier {
 				'button'  => __( 'Aplică pagina Primar Elementor', 'comuna-agris' ),
 				'post_id' => $this->find_mayor_ro_page(),
 			),
+		);
+	}
+
+	private function rebuild_groups(): array {
+		return array(
+			'administration' => array(
+				'label'       => __( 'Primărie și conducere', 'comuna-agris' ),
+				'description' => __( 'Conducere, consiliu local, departamente și pagina de contact.', 'comuna-agris' ),
+			),
+			'documents'      => array(
+				'label'       => __( 'Documente și transparență', 'comuna-agris' ),
+				'description' => __( 'Hotărâri, anunțuri, proiecte, declarații, bugete, registre și formulare.', 'comuna-agris' ),
+			),
+			'community'      => array(
+				'label'       => __( 'Comuna și servicii', 'comuna-agris' ),
+				'description' => __( 'Istorie, localizare, servicii, turism, sport, personalități și pagini informative.', 'comuna-agris' ),
+			),
+			'galleries'      => array(
+				'label'       => __( 'Galerii', 'comuna-agris' ),
+				'description' => __( 'Pagini foto și galerii istorice.', 'comuna-agris' ),
+			),
+		);
+	}
+
+	private function published_ro_pages(): array {
+		$pages = get_posts(
+			array(
+				'post_type'        => 'page',
+				'post_status'      => 'publish',
+				'posts_per_page'   => -1,
+				'orderby'          => array( 'menu_order' => 'ASC', 'title' => 'ASC' ),
+				'suppress_filters' => false,
+			)
+		);
+		$excluded = array_filter( array( $this->find_home_ro_page(), $this->find_mayor_ro_page() ) );
+		return array_values(
+			array_filter(
+				$pages,
+				function ( $page ) use ( $excluded ): bool {
+					if ( in_array( (int) $page->ID, $excluded, true ) ) {
+						return false;
+					}
+					$language = function_exists( 'pll_get_post_language' ) ? pll_get_post_language( $page->ID, 'slug' ) : '';
+					$path = (string) wp_parse_url( get_permalink( $page ), PHP_URL_PATH );
+					return 'ro' === $language || ( ! $language && str_contains( $path, '/ro/' ) );
+				}
+			)
+		);
+	}
+
+	private function classify_page( \WP_Post $page ): string {
+		$slug = strtolower( remove_accents( $page->post_name ) );
+		$title = strtolower( remove_accents( $page->post_title ) );
+		$haystack = $slug . ' ' . $title;
+
+		if ( preg_match( '/galeria|gallery|foto/', $haystack ) ) {
+			return 'galleries';
+		}
+		if ( preg_match( '/contact|viceprimar|secretar|departament|consili|cuvantul-primarului/', $haystack ) ) {
+			return 'administration';
+		}
+		if ( preg_match( '/anunt|hotarar|document|declarati|buget|dare-de-seama|dispoziti|financiar|formular|legisl|monitorul-oficial|proces|proiect|registr|regulament|autorizati|certificat|taxe|impozit|convocator|minute|informare|statut/', $haystack ) ) {
+			return 'documents';
+		}
+		return 'community';
+	}
+
+	private function group_pages( string $group ): array {
+		return array_values(
+			array_filter(
+				$this->published_ro_pages(),
+				fn( $page ): bool => $group === $this->classify_page( $page )
+			)
 		);
 	}
 

@@ -16,14 +16,17 @@ final class Plugin {
 	}
 
 	private function __construct() {
+		require_once AGRIS_WIDGETS_PATH . 'includes/class-assets.php';
+		require_once AGRIS_WIDGETS_PATH . 'includes/class-widget-registry.php';
+		require_once AGRIS_WIDGETS_PATH . 'includes/class-elementor.php';
+
 		add_action( 'init', array( $this, 'register_document_type' ) );
 		add_action( 'add_meta_boxes_agris_document', array( $this, 'add_document_meta_box' ) );
 		add_action( 'save_post_agris_document', array( $this, 'save_document_meta' ) );
-		add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ) );
-		add_action( 'elementor/editor/after_enqueue_styles', array( $this, 'enqueue_editor_styles' ) );
 		add_action( 'wp_ajax_agris_contact', array( $this, 'handle_contact' ) );
 		add_action( 'wp_ajax_nopriv_agris_contact', array( $this, 'handle_contact' ) );
 		add_action( 'admin_notices', array( $this, 'dependency_notice' ) );
+		Assets::instance();
 
 		if ( is_admin() ) {
 			require_once AGRIS_WIDGETS_PATH . 'includes/class-template-applier.php';
@@ -31,90 +34,15 @@ final class Plugin {
 		}
 
 		if ( did_action( 'elementor/loaded' ) ) {
-			$this->boot_elementor();
+			Elementor_Integration::instance();
 		} else {
-			add_action( 'elementor/loaded', array( $this, 'boot_elementor' ) );
+			add_action( 'elementor/loaded', array( Elementor_Integration::class, 'instance' ) );
 		}
 	}
 
 	public static function activate(): void {
 		self::instance()->register_document_type();
 		flush_rewrite_rules();
-	}
-
-	public function boot_elementor(): void {
-		add_action( 'elementor/elements/categories_registered', array( $this, 'register_category' ) );
-		add_action( 'elementor/widgets/register', array( $this, 'register_widgets' ) );
-	}
-
-	public function register_category( $elements_manager ): void {
-		$elements_manager->add_category(
-			'comuna-agris',
-			array(
-				'title' => esc_html__( 'Comuna Agriș', 'comuna-agris' ),
-				'icon'  => 'eicon-site-identity',
-			)
-		);
-	}
-
-	public function register_assets(): void {
-		wp_register_style( 'agris-widgets', AGRIS_WIDGETS_URL . 'assets/css/frontend.css', array(), AGRIS_WIDGETS_VERSION );
-		wp_register_script( 'agris-widgets', AGRIS_WIDGETS_URL . 'assets/js/frontend.js', array(), AGRIS_WIDGETS_VERSION, true );
-		wp_localize_script(
-			'agris-widgets',
-			'agrisWidgets',
-			array(
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'agris-contact' ),
-				'i18n'    => array(
-					'error'   => esc_html__( 'A apărut o eroare. Încercați din nou.', 'comuna-agris' ),
-					'sending' => esc_html__( 'Se trimite…', 'comuna-agris' ),
-				),
-			)
-		);
-	}
-
-	public function enqueue_editor_styles(): void {
-		wp_enqueue_style( 'agris-editor', AGRIS_WIDGETS_URL . 'assets/css/editor.css', array(), AGRIS_WIDGETS_VERSION );
-	}
-
-	public function register_widgets( $widgets_manager ): void {
-		require_once AGRIS_WIDGETS_PATH . 'includes/widgets/class-base.php';
-		require_once AGRIS_WIDGETS_PATH . 'includes/widgets/class-global-widgets.php';
-		require_once AGRIS_WIDGETS_PATH . 'includes/widgets/class-content-widgets.php';
-		require_once AGRIS_WIDGETS_PATH . 'includes/widgets/class-collection-widgets.php';
-		require_once AGRIS_WIDGETS_PATH . 'includes/widgets/class-template-widgets.php';
-
-		$classes = array(
-			Widgets\Site_Header::class,
-			Widgets\Site_Footer::class,
-			Widgets\Accessibility_Tools::class,
-			Widgets\Home_Hero::class,
-			Widgets\Page_Hero::class,
-			Widgets\Section_Heading::class,
-			Widgets\Services_Grid::class,
-			Widgets\Content_Media::class,
-			Widgets\Person_Profile::class,
-			Widgets\Schedule_Grid::class,
-			Widgets\Council_Members::class,
-			Widgets\Link_List::class,
-			Widgets\Contact_Details::class,
-			Widgets\Contact_Form::class,
-			Widgets\Cta_Banner::class,
-			Widgets\Photo_Gallery::class,
-			Widgets\Data_Table::class,
-			Widgets\Stats_Bars::class,
-			Widgets\News_Grid::class,
-			Widgets\Document_Grid::class,
-			Widgets\Document_Library::class,
-			Widgets\Post_Archive::class,
-			Widgets\Single_Post::class,
-			Widgets\Search_Box::class,
-		);
-
-		foreach ( $classes as $class ) {
-			$widgets_manager->register( new $class() );
-		}
 	}
 
 	public function register_document_type(): void {
