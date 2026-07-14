@@ -667,12 +667,43 @@ final class Template_Applier {
 	}
 
 	private function normalize_legacy_content( string $content ): string {
+		if ( str_contains( $content, 'agris-header-wrap' ) || str_contains( $content, 'elementor-widget-agris-site-header' ) ) {
+			$content = $this->extract_nested_richtext( $content );
+		}
 		$content = preg_replace( '/\[(?:\/?)[a-zA-Z][a-zA-Z0-9_-]*(?:\s[^\]]*)?\]/u', '', $content ) ?? $content;
 		$content = preg_replace( '/<h1(\s[^>]*)?>/i', '<h2$1>', $content ) ?? $content;
 		$content = preg_replace( '/<\/h1>/i', '</h2>', $content ) ?? $content;
 		$content = preg_replace( '/<p>\s*(?:&nbsp;)?\s*<\/p>/i', '', $content ) ?? $content;
 		$content = trim( $content );
 		return '' !== wp_strip_all_tags( $content ) ? $content : '<p>Conținutul acestei pagini este în curs de actualizare.</p>';
+	}
+
+	private function extract_nested_richtext( string $content ): string {
+		if ( ! class_exists( '\DOMDocument' ) || ! class_exists( '\DOMXPath' ) ) {
+			return '';
+		}
+
+		$previous_errors = libxml_use_internal_errors( true );
+		$document = new \DOMDocument();
+		$loaded = $document->loadHTML( '<?xml encoding="utf-8" ?><div id="agris-source-root">' . $content . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
+		libxml_clear_errors();
+		libxml_use_internal_errors( $previous_errors );
+		if ( ! $loaded ) {
+			return '';
+		}
+
+		$xpath = new \DOMXPath( $document );
+		$nodes = $xpath->query( '//*[contains(concat(" ", normalize-space(@class), " "), " agris-richtext ") and not(.//*[contains(concat(" ", normalize-space(@class), " "), " agris-richtext ")])]' );
+		if ( ! $nodes || 0 === $nodes->length ) {
+			return '';
+		}
+
+		$node = $nodes->item( $nodes->length - 1 );
+		$html = '';
+		foreach ( $node->childNodes as $child ) {
+			$html .= $document->saveHTML( $child );
+		}
+		return $html;
 	}
 
 	private function legacy_category_slug( string $content ): string {

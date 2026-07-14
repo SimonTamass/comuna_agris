@@ -30,4 +30,11 @@ if ( 'galeria-foto-2018' !== $category->invoke( $applier, $legacy ) ) {
 	exit( 1 );
 }
 
+$nested = '<div class="agris-header-wrap">Duplicated header</div><div class="agris-richtext"><div class="agris-richtext"><p>Conținut real.</p></div></div><footer class="agris-footer">Duplicated footer</footer>';
+$normalized_nested = $normalize->invoke( $applier, $nested );
+if ( str_contains( $normalized_nested, 'Duplicated header' ) || str_contains( $normalized_nested, 'Duplicated footer' ) || ! str_contains( $normalized_nested, 'Conținut real.' ) ) {
+	fwrite( STDERR, "Nested Elementor content extraction failed.\n" );
+	exit( 1 );
+}
+
 echo "Legacy content smoke passed.\n";
