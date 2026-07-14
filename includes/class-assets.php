@@ -24,7 +24,13 @@ final class Assets {
 	}
 
 	public function register(): void {
-		wp_register_style( 'agris-widgets', AGRIS_WIDGETS_URL . 'assets/css/frontend.css', array(), AGRIS_WIDGETS_VERSION );
+		wp_register_style(
+			'agris-fonts',
+			'https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Source+Sans+3:wght@400;500;600;700;800;900&display=swap',
+			array(),
+			null
+		);
+		wp_register_style( 'agris-widgets', AGRIS_WIDGETS_URL . 'assets/css/frontend.css', array( 'agris-fonts' ), AGRIS_WIDGETS_VERSION );
 		wp_register_script( 'agris-widgets', AGRIS_WIDGETS_URL . 'assets/js/frontend.js', array(), AGRIS_WIDGETS_VERSION, true );
 		wp_localize_script(
 			'agris-widgets',
