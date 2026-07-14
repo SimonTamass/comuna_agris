@@ -36,7 +36,7 @@ if ( ! str_contains( $normalized, 'wp-image-5278' ) || ! str_contains( $normaliz
 }
 
 $applier_source = file_get_contents( dirname( __DIR__ ) . '/includes/class-template-applier.php' );
-foreach ( array( 'revslider_sliders', 'revslider_slides', 'home_ro_data( \\WP_Post $page )', 'mayor_ro_data( \\WP_Post $page )' ) as $needle ) {
+foreach ( array( 'revslider_sliders', 'revslider_slides', 'home_ro_data( \\WP_Post $page )', 'mayor_ro_data( \\WP_Post $page )', '2018/07/hatter-slider-46.jpg', 'media_item_from_id( 4295' ) as $needle ) {
 	if ( ! str_contains( $applier_source, $needle ) ) {
 		fwrite( STDERR, "Missing media recovery contract: {$needle}.\n" );
 		exit( 1 );

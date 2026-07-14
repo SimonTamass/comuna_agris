@@ -1100,14 +1100,11 @@ final class Template_Applier {
 		$routes  = $this->routes();
 		$source_content = $this->original_page_content( $page );
 		$media_items = $this->legacy_media_items( $page, $source_content );
-		$hero_background = $this->primary_media( $media_items );
-		$cta_image = $this->media();
-		foreach ( $media_items as $item ) {
-			if ( ! in_array( $item['_origin'] ?? '', array( 'featured', 'slider' ), true ) ) {
-				$cta_image = $item['image'];
-				break;
-			}
-		}
+		$uploads = wp_get_upload_dir();
+		$hero_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2018/07/hatter-slider-46.jpg', 'slider' ) : null;
+		$hero_background = $hero_item ? $hero_item['image'] : $this->primary_media( $media_items );
+		$cta_item = $this->media_item_from_id( 4295, 'shortcode' );
+		$cta_image = $cta_item ? $cta_item['image'] : $this->media();
 
 		return array(
 			$this->container(
