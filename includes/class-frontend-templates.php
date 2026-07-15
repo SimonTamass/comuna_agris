@@ -19,7 +19,9 @@ final class Frontend_Templates {
 	private function __construct() {
 		add_filter( 'template_include', array( $this, 'template_include' ), 99 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ), 30 );
+		add_action( 'pre_get_posts', array( $this, 'scope_explicit_language' ), 1 );
 		add_filter( 'body_class', array( $this, 'body_classes' ) );
+		add_filter( 'language_attributes', array( $this, 'language_attributes' ) );
 	}
 
 	private function applies(): bool {
@@ -40,7 +42,6 @@ final class Frontend_Templates {
 		}
 		wp_enqueue_style( 'elementor-frontend' );
 		wp_enqueue_style( 'agris-widgets' );
-		wp_enqueue_script( 'elementor-frontend' );
 		wp_enqueue_script( 'agris-widgets' );
 	}
 
@@ -52,7 +53,29 @@ final class Frontend_Templates {
 		return array_values( array_unique( $classes ) );
 	}
 
+	public function scope_explicit_language( \WP_Query $query ): void {
+		if ( is_admin() || ! $query->is_main_query() || ! isset( $_GET['lang'] ) ) {
+			return;
+		}
+		$language = sanitize_key( wp_unslash( $_GET['lang'] ) );
+		if ( in_array( $language, array( 'ro', 'hu' ), true ) ) {
+			$query->set( 'lang', $language );
+		}
+	}
+
+	public function language_attributes( string $output ): string {
+		if ( ! $this->applies() ) {
+			return $output;
+		}
+		$locale = 'hu' === $this->language() ? 'hu-HU' : 'ro-RO';
+		return preg_replace( '/\blang=(["\']).*?\1/i', 'lang="' . $locale . '"', $output ) ?? $output;
+	}
+
 	private function language(): string {
+		$request_language = isset( $_GET['lang'] ) ? sanitize_key( wp_unslash( $_GET['lang'] ) ) : '';
+		if ( in_array( $request_language, array( 'ro', 'hu' ), true ) ) {
+			return $request_language;
+		}
 		$language = function_exists( 'pll_current_language' ) ? pll_current_language( 'slug' ) : '';
 		if ( in_array( $language, array( 'ro', 'hu' ), true ) ) {
 			return $language;

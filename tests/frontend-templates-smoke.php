@@ -20,11 +20,14 @@ $checks = array(
 	'functional WordPress fallback' => array( $frontend, 'render_native_content( array $copy, array $routes )' ),
 	'transactional global renderer' => array( $frontend, 'function render_safely' ),
 	'language-aware shared header' => array( $frontend, "'agris-site-header'" ),
+	'explicit search language' => array( $frontend, "\$_GET['lang']" ),
+	'explicit query language scope' => array( $frontend, "\$query->set( 'lang', \$language )" ),
+	'localized HTML language' => array( $frontend, "'hu-HU' : 'ro-RO'" ),
 	'language-aware shared footer' => array( $frontend, "'agris-site-footer'" ),
 	'WordPress document shell' => array( $template, 'wp_head();' ),
 	'safe template entrypoint' => array( $template, 'render_safely();' ),
 	'localized archive labels' => array( $archive, "\$s['read_more_text']" ),
-	'localized single labels' => array( $single, "\$s['share_label']" ),
+	'localized single labels' => array( $single, "\$settings['share_label']" ),
 	'global template layout' => array( $css, '.agris-global-main' ),
 );
 
@@ -33,6 +36,11 @@ foreach ( $checks as $label => $check ) {
 		fwrite( STDERR, "Missing {$label}.\n" );
 		exit( 1 );
 	}
+}
+
+if ( str_contains( $frontend, "wp_enqueue_script( 'elementor-frontend'" ) ) {
+	fwrite( STDERR, "Global templates must not enqueue an unconfigured Elementor frontend runtime.\n" );
+	exit( 1 );
 }
 
 echo "Frontend templates smoke passed.\n";

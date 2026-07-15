@@ -17,6 +17,7 @@ final class Plugin {
 
 	private function __construct() {
 		require_once AGRIS_WIDGETS_PATH . 'includes/class-assets.php';
+		require_once AGRIS_WIDGETS_PATH . 'includes/class-legacy-content.php';
 		require_once AGRIS_WIDGETS_PATH . 'includes/class-widget-registry.php';
 		require_once AGRIS_WIDGETS_PATH . 'includes/class-elementor.php';
 		require_once AGRIS_WIDGETS_PATH . 'includes/class-frontend-templates.php';
