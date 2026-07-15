@@ -1223,7 +1223,7 @@ final class Template_Applier {
 				),
 				array( 'content_width' => 'full' )
 			),
-			$this->section( 'services-head', 'Acces rapid', 'Servicii frecvente', '', 'Toate informațiile', $routes['public_info'], 'agris-home-band agris-home-band-alt' ),
+			$this->section( 'services-head', 'Acces rapid', 'Servicii frecvente', '', 'Toate informațiile', $routes['public_info'], 'light', '#ffffff' ),
 			$this->container(
 				'services',
 				array(
@@ -1246,11 +1246,12 @@ final class Template_Applier {
 					),
 				),
 				array(
-					'_css_classes' => 'agris-home-band agris-home-band-alt agris-home-band-body',
+					'background_background' => 'classic',
+					'background_color' => '#ffffff',
 					'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '70', 'left' => '0', 'isLinked' => false ),
 				)
 			),
-			$this->section( 'news-head', 'Actualizat după site-ul original', 'Anunțuri oficiale', '', 'Toate anunțurile', $routes['announcements'], 'agris-home-band' ),
+			$this->section( 'news-head', 'Actualizat după site-ul original', 'Anunțuri oficiale', '', 'Toate anunțurile', $routes['announcements'] ),
 			$this->container(
 				'news',
 				array(
@@ -1270,11 +1271,10 @@ final class Template_Applier {
 					),
 				),
 				array(
-					'_css_classes' => 'agris-home-band agris-home-band-body',
 					'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '70', 'left' => '0', 'isLinked' => false ),
 				)
 			),
-			$this->section( 'decisions-head', 'Consiliul Local', 'Hotărâri recente', '', 'Arhiva H.C.L.', $routes['decisions'], 'agris-home-band agris-home-band-dark' ),
+			$this->section( 'decisions-head', 'Consiliul Local', 'Hotărâri recente', '', 'Arhiva H.C.L.', $routes['decisions'], 'dark', '#0f2f1f' ),
 			$this->container(
 				'decisions',
 				array(
@@ -1293,7 +1293,8 @@ final class Template_Applier {
 					),
 				),
 				array(
-					'_css_classes' => 'agris-home-band agris-home-band-dark agris-home-band-body',
+					'background_background' => 'classic',
+					'background_color' => '#0f2f1f',
 					'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '80', 'left' => '0', 'isLinked' => false ),
 				)
 			),
@@ -1310,11 +1311,10 @@ final class Template_Applier {
 					) ),
 				),
 				array(
-					'_css_classes' => 'agris-home-band agris-home-community',
 					'padding' => array( 'unit' => 'px', 'top' => '72', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ),
 				)
 			),
-			$this->section( 'monitor-head', 'Monitorul Oficial Local', 'Documente publice într-un singur loc', '', 'Deschide MOL', $routes['monitor'], 'agris-home-band agris-home-band-alt' ),
+			$this->section( 'monitor-head', 'Monitorul Oficial Local', 'Documente publice într-un singur loc', '', 'Deschide MOL', $routes['monitor'], 'light', '#ffffff' ),
 			$this->container(
 				'monitor-services',
 				array(
@@ -1328,7 +1328,8 @@ final class Template_Applier {
 					) ),
 				),
 				array(
-					'_css_classes' => 'agris-home-band agris-home-band-alt agris-home-band-body',
+					'background_background' => 'classic',
+					'background_color' => '#ffffff',
 					'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ),
 				)
 			),
@@ -1349,7 +1350,6 @@ final class Template_Applier {
 					),
 				),
 				array(
-					'_css_classes' => 'agris-home-band agris-home-band-tight',
 					'padding' => array( 'unit' => 'px', 'top' => '48', 'right' => '0', 'bottom' => '48', 'left' => '0', 'isLinked' => false ),
 				)
 			),
@@ -1491,7 +1491,7 @@ final class Template_Applier {
 		);
 	}
 
-	private function section( string $seed, string $kicker, string $title, string $description = '', string $button = '', string $url = '', string $css_class = '' ): array {
+	private function section( string $seed, string $kicker, string $title, string $description = '', string $button = '', string $url = '', string $theme = 'light', string $background = '' ): array {
 		return $this->container(
 			$seed,
 			array(
@@ -1502,13 +1502,15 @@ final class Template_Applier {
 						'kicker'      => $kicker,
 						'title'       => $title,
 						'description' => $description,
+						'theme'       => $theme,
 						'button_text' => $button,
 						'button_link' => $this->link( $url ),
 					)
 				),
 			),
 			array(
-				'_css_classes' => $css_class,
+				'background_background' => $background ? 'classic' : '',
+				'background_color' => $background,
 				'padding' => array( 'unit' => 'px', 'top' => '80', 'right' => '0', 'bottom' => '30', 'left' => '0', 'isLinked' => false ),
 			)
 		);

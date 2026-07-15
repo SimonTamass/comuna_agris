@@ -2,6 +2,7 @@
 $root = dirname( __DIR__ );
 $applier = file_get_contents( $root . '/includes/class-template-applier.php' );
 $assets = file_get_contents( $root . '/includes/class-assets.php' );
+$section_heading = file_get_contents( $root . '/includes/widgets/class-section-heading.php' );
 $css = file_get_contents( $root . '/assets/css/frontend.css' );
 $plugin = file_get_contents( $root . '/comuna-agris-elementor.php' );
 
@@ -25,12 +26,22 @@ if ( ! str_contains( $assets, "'agris-fonts'" ) || ! str_contains( $assets, 'fon
 	exit( 1 );
 }
 
+if ( ! str_contains( $assets, "add_filter( 'body_class'" ) || ! str_contains( $assets, "'agris-home-page'" ) ) {
+	fwrite( STDERR, "Homepage body-class scoping is incomplete.\n" );
+	exit( 1 );
+}
+
+if ( ! str_contains( $section_heading, "'theme'" ) || ! str_contains( $section_heading, "' is-dark'" ) ) {
+	fwrite( STDERR, "Section heading dark variant is incomplete.\n" );
+	exit( 1 );
+}
+
 if ( preg_match( '/letter-spacing:\s*-/', $css ) || ! str_contains( $css, 'font-size: 16px; line-height: 1.55' ) ) {
 	fwrite( STDERR, "Typography contract does not match the local redesign.\n" );
 	exit( 1 );
 }
 
-if ( ! str_contains( $plugin, "AGRIS_WIDGETS_VERSION', '1.8.0'" ) ) {
+if ( ! str_contains( $plugin, "AGRIS_WIDGETS_VERSION', '1.8.1'" ) ) {
 	fwrite( STDERR, "Plugin version was not bumped.\n" );
 	exit( 1 );
 }
@@ -62,14 +73,14 @@ if ( 8 !== substr_count( $services_block, "array( 'icon' =>" ) ) {
 	exit( 1 );
 }
 
-foreach ( array( 'agris-home-band-dark', 'agris-home-community', "'monitor-services-widget'", "'show_search'    => 'yes'", "'count'        => 3" ) as $needle ) {
+foreach ( array( "'theme'       => \$theme", "'background_color' => \$background", "'monitor-services-widget'", "'show_search'    => 'yes'", "'count'        => 3" ) as $needle ) {
 	if ( ! str_contains( $applier, $needle ) ) {
 		fwrite( STDERR, "Homepage local-design structure is incomplete: {$needle}.\n" );
 		exit( 1 );
 	}
 }
 
-foreach ( array( '.agris-home-community .agris-content-media', '.agris-home-band-tight .agris-cta', '.agris-home-band .agris-news-image' ) as $needle ) {
+foreach ( array( '.agris-home-page .agris-content-media', '.agris-home-page .agris-cta', '.agris-home-page .agris-news-image' ) as $needle ) {
 	if ( ! str_contains( $css, $needle ) ) {
 		fwrite( STDERR, "Homepage local-design styling is incomplete: {$needle}.\n" );
 		exit( 1 );

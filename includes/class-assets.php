@@ -21,6 +21,15 @@ final class Assets {
 		add_action( 'elementor/frontend/after_register_styles', array( $this, 'register' ) );
 		add_action( 'elementor/frontend/after_register_scripts', array( $this, 'register' ) );
 		add_action( 'elementor/editor/after_enqueue_styles', array( $this, 'enqueue_editor_styles' ) );
+		add_filter( 'body_class', array( $this, 'body_classes' ) );
+	}
+
+	public function body_classes( array $classes ): array {
+		if ( is_page( 'home-ro' ) ) {
+			$classes[] = 'agris-home-page';
+		}
+
+		return $classes;
 	}
 
 	public function register(): void {

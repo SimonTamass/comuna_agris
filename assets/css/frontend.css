@@ -138,36 +138,34 @@
 .agris-update { grid-template-columns: 42px 1fr; gap: 12px; padding: 6px 0; }
 .agris-update > b { width: 42px; height: 42px; }
 
-.agris-home-band-alt { background: #fff; }
-.agris-home-band .agris-section-heading { gap: 20px; }
-.agris-home-band-dark { background: var(--agris-ink); color: #fff; }
-.agris-home-band-dark .agris-title { color: #fff; }
-.agris-home-band-dark .agris-kicker { color: var(--agris-cyan); }
-.agris-home-band-dark .agris-button-outline { border-color: rgba(255,255,255,.55); color: #fff !important; }
-.agris-home-band-dark .agris-button-outline:hover { border-color: #fff; background: #fff; color: var(--agris-ink) !important; }
+.agris-home-page .agris-section-heading { gap: 20px; }
+.agris-section-heading.is-dark .agris-title { color: #fff; }
+.agris-section-heading.is-dark .agris-kicker { color: var(--agris-cyan); }
+.agris-section-heading.is-dark .agris-button-outline { border-color: rgba(255,255,255,.55); color: #fff !important; }
+.agris-section-heading.is-dark .agris-button-outline:hover { border-color: #fff; background: #fff; color: var(--agris-ink) !important; }
 
-.agris-home-band .agris-service-card { min-height: 162px; display: grid; gap: 12px; padding: 22px; border-radius: var(--agris-radius-lg); }
-.agris-home-band .agris-service-card h3 { margin: 0; font-size: 1.03rem; }
-.agris-home-band .agris-icon-box { width: 48px; height: 48px; border-radius: 12px; }
-.agris-home-band .agris-service-card > i { display: none; }
-.agris-home-band .agris-news-image { height: 170px; aspect-ratio: auto; }
-.agris-home-band .agris-news-body { padding: 18px; }
-.agris-home-band .agris-news-card h3 { margin: 10px 0 8px; font-size: 1.03rem; }
-.agris-home-band .agris-news-card p { margin: 0; }
-.agris-home-band .agris-read-more { margin-top: 12px; }
+.agris-home-page .agris-service-card { min-height: 162px; display: grid; gap: 12px; padding: 22px; border-radius: var(--agris-radius-lg); }
+.agris-home-page .agris-service-card h3 { margin: 0; font-size: 1.03rem; }
+.agris-home-page .agris-icon-box { width: 48px; height: 48px; border-radius: 12px; }
+.agris-home-page .agris-service-card > i { display: none; }
+.agris-home-page .agris-news-image { height: 170px; aspect-ratio: auto; }
+.agris-home-page .agris-news-body { padding: 18px; }
+.agris-home-page .agris-news-card h3 { margin: 10px 0 8px; font-size: 1.03rem; }
+.agris-home-page .agris-news-card p { margin: 0; }
+.agris-home-page .agris-read-more { margin-top: 12px; }
 
-.agris-home-community .agris-content-media { grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); gap: 42px; }
-.agris-home-community .agris-media-frame,
-.agris-home-community .agris-media-frame img { min-height: 390px; }
-.agris-home-community .agris-media-frame { border-radius: var(--agris-radius-lg); }
+.agris-home-page .agris-content-media { grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); gap: 42px; }
+.agris-home-page .agris-content-media .agris-media-frame,
+.agris-home-page .agris-content-media .agris-media-frame img { min-height: 390px; }
+.agris-home-page .agris-content-media .agris-media-frame { border-radius: var(--agris-radius-lg); }
 .agris-home-link-list { display: grid; gap: 10px; margin-top: 22px; }
 .agris-home-link-list a { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 15px; border: 1px solid var(--agris-line); border-radius: var(--agris-radius); background: #fff; color: var(--agris-ink-soft) !important; font-weight: 750; text-decoration: none !important; }
 .agris-home-link-list a:hover { border-color: var(--agris-brand); color: var(--agris-brand) !important; }
 
-.agris-home-band-tight .agris-cta { gap: 22px; padding: 22px; }
-.agris-home-band-tight .agris-cta > div:first-child { max-width: 620px; }
-.agris-home-band-tight .agris-cta-image { flex: 0 0 min(46%,520px); min-height: 92px; display: flex; align-items: center; justify-content: center; padding: 18px 22px; box-shadow: 0 14px 34px rgba(6,39,13,.18); }
-.agris-home-band-tight .agris-cta-image img { width: 100%; max-width: 480px; object-fit: contain; }
+.agris-home-page .agris-cta { gap: 22px; padding: 22px; }
+.agris-home-page .agris-cta > div:first-child { max-width: 620px; }
+.agris-home-page .agris-cta-image { flex: 0 0 min(46%,520px); min-height: 92px; display: flex; align-items: center; justify-content: center; padding: 18px 22px; box-shadow: 0 14px 34px rgba(6,39,13,.18); }
+.agris-home-page .agris-cta-image img { width: 100%; max-width: 480px; object-fit: contain; }
 .agris-page-hero { position: relative; isolation: isolate; overflow: hidden; padding-block: 65px 72px; background: var(--agris-ink); color: #fff; font-family: var(--agris-body); }
 .agris-page-hero::before { position: absolute; z-index: -2; inset: 0; content: ""; background: var(--agris-page-image, linear-gradient(135deg,#42664d,#8ba28f)); background-size: cover; background-position: center; }
 .agris-page-hero::after { position: absolute; z-index: -1; inset: 0; content: ""; background: linear-gradient(90deg, rgba(4,30,43,.95), rgba(7,46,45,.55)); }
@@ -276,11 +274,11 @@ body.agris-high-contrast { --agris-ink:#000;--agris-muted:#222;--agris-line:#000
 }
 
 @media (max-width: 1040px) {
-  .agris-home-community .agris-content-media { grid-template-columns: 1fr; }
+  .agris-home-page .agris-content-media { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 720px) {
-  .agris-home-band-tight .agris-cta-image { width: 100%; flex: 1 1 auto; }
+  .agris-home-page .agris-cta-image { width: 100%; flex: 1 1 auto; }
 }
 
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
