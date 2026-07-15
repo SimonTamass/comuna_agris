@@ -3,6 +3,8 @@ $root = dirname( __DIR__ );
 $assets = file_get_contents( $root . '/includes/class-assets.php' );
 $header = file_get_contents( $root . '/includes/widgets/class-site-header.php' );
 $footer = file_get_contents( $root . '/includes/widgets/class-site-footer.php' );
+$home_hero = file_get_contents( $root . '/includes/widgets/class-home-hero.php' );
+$page_hero = file_get_contents( $root . '/includes/widgets/class-page-hero.php' );
 $applier = file_get_contents( $root . '/includes/class-template-applier.php' );
 $css = file_get_contents( $root . '/assets/css/frontend.css' );
 $js = file_get_contents( $root . '/assets/js/frontend.js' );
@@ -12,6 +14,10 @@ $checks = array(
 	'accessible menu connection' => array( $header, 'aria-controls="<?php echo esc_attr( $nav_id ); ?>"' ),
 	'accessible submenu walker'  => array( $header, 'class Header_Menu_Walker' ),
 	'submenu toggle control'     => array( $header, 'data-agris-submenu-toggle' ),
+	'localized submenu control'  => array( $header, "new Header_Menu_Walker( \$s['submenu_label'] )" ),
+	'safe submenu formatting'    => array( $header, "str_replace( '%s', \$title, \$this->submenu_label )" ),
+	'home skip-link target'      => array( $home_hero, 'id="main-content"' ),
+	'page skip-link target'      => array( $page_hero, 'id="main-content"' ),
 	'four-level menu rendering'  => array( $header, "'depth' => 4" ),
 	'search icon'                => array( $header, 'dashicons-search' ),
 	'menu icon'                  => array( $header, 'dashicons-menu-alt3' ),

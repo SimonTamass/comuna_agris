@@ -34,6 +34,11 @@ final class Site_Footer extends Base {
 		$this->add_control( 'copyright', array( 'label' => __( 'Copyright', 'comuna-agris' ), 'type' => Controls_Manager::TEXT, 'default' => 'Toate drepturile rezervate Comuna Agriș.' ) );
 		$this->add_control( 'contact_url', array( 'label' => __( 'Link Contact', 'comuna-agris' ), 'type' => Controls_Manager::URL ) );
 		$this->add_control( 'monitor_url', array( 'label' => __( 'Link Monitorul Oficial', 'comuna-agris' ), 'type' => Controls_Manager::URL ) );
+		$this->add_control( 'contact_title', array( 'label' => __( 'Kapcsolati oszlop címe', 'comuna-agris' ), 'type' => Controls_Manager::TEXT, 'default' => 'Contact' ) );
+		$this->add_control( 'contact_link_text', array( 'label' => __( 'Kapcsolati link', 'comuna-agris' ), 'type' => Controls_Manager::TEXT, 'default' => 'Contact' ) );
+		$this->add_control( 'monitor_link_text', array( 'label' => __( 'Hivatalos közlöny link', 'comuna-agris' ), 'type' => Controls_Manager::TEXT, 'default' => 'Monitorul Oficial' ) );
+		$this->add_control( 'footer_nav_label', array( 'label' => __( 'Alsó navigáció címkéje', 'comuna-agris' ), 'type' => Controls_Manager::TEXT, 'default' => 'Linkuri subsol' ) );
+		$this->add_control( 'back_to_top_label', array( 'label' => __( 'Vissza az oldal tetejére', 'comuna-agris' ), 'type' => Controls_Manager::TEXT, 'default' => 'Înapoi sus' ) );
 		$this->end_controls_section();
 
 		$this->register_common_style_controls();
@@ -49,8 +54,8 @@ final class Site_Footer extends Base {
 		<footer class="agris-footer"><div class="agris-shell agris-footer-grid">
 			<div class="agris-footer-brand"><div class="agris-brand"><span class="agris-brand-mark">CA</span><span><strong><?php echo esc_html( $s['title'] ); ?></strong><small><?php echo esc_html( $s['subtitle'] ); ?></small></span></div><p><?php echo esc_html( $s['description'] ); ?></p></div>
 			<?php foreach ( $columns as $title => $items ) : ?><div><h2><?php echo esc_html( $title ); ?></h2><div class="agris-footer-links"><?php foreach ( $items as $item ) : ?><a <?php echo self::link_attrs( $item['url'] ); ?>><?php echo esc_html( $item['label'] ); ?></a><?php endforeach; ?></div></div><?php endforeach; ?>
-			<div><h2><?php esc_html_e( 'Contact', 'comuna-agris' ); ?></h2><div class="agris-footer-contact"><a href="tel:<?php echo esc_attr( preg_replace( '/\D+/', '', $s['phone'] ) ); ?>"><?php echo esc_html( $s['phone'] ); ?></a><a href="mailto:<?php echo esc_attr( antispambot( $s['email'] ) ); ?>"><?php echo esc_html( antispambot( $s['email'] ) ); ?></a><p><?php echo nl2br( esc_html( $s['address'] ) ); ?></p></div></div>
-		</div><div class="agris-shell agris-footer-bottom"><span>© <?php echo esc_html( wp_date( 'Y' ) ); ?> <?php echo esc_html( $s['copyright'] ); ?></span><nav aria-label="<?php esc_attr_e( 'Linkuri subsol', 'comuna-agris' ); ?>"><a <?php echo self::link_attrs( $contact_url ); ?>><?php esc_html_e( 'Contact', 'comuna-agris' ); ?></a><span aria-hidden="true">·</span><a <?php echo self::link_attrs( $monitor_url ); ?>><?php esc_html_e( 'Monitorul Oficial', 'comuna-agris' ); ?></a><a class="agris-back-to-top" href="#top" aria-label="<?php esc_attr_e( 'Înapoi sus', 'comuna-agris' ); ?>" title="<?php esc_attr_e( 'Înapoi sus', 'comuna-agris' ); ?>"><span class="dashicons dashicons-arrow-up-alt2" aria-hidden="true"></span></a></nav></div></footer>
+			<div><h2><?php echo esc_html( $s['contact_title'] ); ?></h2><div class="agris-footer-contact"><a href="tel:<?php echo esc_attr( preg_replace( '/\D+/', '', $s['phone'] ) ); ?>"><?php echo esc_html( $s['phone'] ); ?></a><a href="mailto:<?php echo esc_attr( antispambot( $s['email'] ) ); ?>"><?php echo esc_html( antispambot( $s['email'] ) ); ?></a><p><?php echo nl2br( esc_html( $s['address'] ) ); ?></p></div></div>
+		</div><div class="agris-shell agris-footer-bottom"><span>© <?php echo esc_html( wp_date( 'Y' ) ); ?> <?php echo esc_html( $s['copyright'] ); ?></span><nav aria-label="<?php echo esc_attr( $s['footer_nav_label'] ); ?>"><a <?php echo self::link_attrs( $contact_url ); ?>><?php echo esc_html( $s['contact_link_text'] ); ?></a><span aria-hidden="true">·</span><a <?php echo self::link_attrs( $monitor_url ); ?>><?php echo esc_html( $s['monitor_link_text'] ); ?></a><a class="agris-back-to-top" href="#top" aria-label="<?php echo esc_attr( $s['back_to_top_label'] ); ?>" title="<?php echo esc_attr( $s['back_to_top_label'] ); ?>"><span class="dashicons dashicons-arrow-up-alt2" aria-hidden="true"></span></a></nav></div></footer>
 		<?php
 	}
 }

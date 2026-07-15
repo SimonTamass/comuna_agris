@@ -25,7 +25,7 @@ final class Assets {
 	}
 
 	public function body_classes( array $classes ): array {
-		if ( is_page( 'home-ro' ) ) {
+		if ( is_page( array( 'home-ro', 'home-hu' ) ) ) {
 			$classes[] = 'agris-home-page';
 		}
 
@@ -33,6 +33,8 @@ final class Assets {
 	}
 
 	public function register(): void {
+		$language = function_exists( 'pll_current_language' ) ? pll_current_language( 'slug' ) : '';
+		$is_hungarian = 'hu' === $language;
 		wp_register_style(
 			'agris-fonts',
 			'https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Source+Sans+3:wght@400;500;600;700;800;900&display=swap',
@@ -48,8 +50,8 @@ final class Assets {
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'agris-contact' ),
 				'i18n'    => array(
-					'error'   => esc_html__( 'A apărut o eroare. Încercați din nou.', 'comuna-agris' ),
-					'sending' => esc_html__( 'Se trimite…', 'comuna-agris' ),
+					'error'   => $is_hungarian ? 'Hiba történt. Kérjük, próbálja újra.' : esc_html__( 'A apărut o eroare. Încercați din nou.', 'comuna-agris' ),
+					'sending' => $is_hungarian ? 'Küldés…' : esc_html__( 'Se trimite…', 'comuna-agris' ),
 				),
 			)
 		);

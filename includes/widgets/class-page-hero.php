@@ -22,5 +22,5 @@ final class Page_Hero extends Base {
 
 		$this->register_common_style_controls();
 	}
-	protected function render(): void { $s = $this->get_settings_for_display(); $bg = $s['background']['url'] ? ' style="--agris-page-image:url(' . esc_url( $s['background']['url'] ) . ')"' : ''; ?><section class="agris-page-hero"<?php echo $bg; ?>><div class="agris-shell"><div class="agris-breadcrumbs"><a <?php echo self::link_attrs( $s['parent_link'] ); ?>><?php echo esc_html( $s['parent_label'] ); ?></a><span>/</span><span><?php echo esc_html( $s['current_label'] ); ?></span></div><?php $this->render_heading( $s, 'h1' ); ?></div></section><?php }
+	protected function render(): void { $s = $this->get_settings_for_display(); $bg = $s['background']['url'] ? ' style="--agris-page-image:url(' . esc_url( $s['background']['url'] ) . ')"' : ''; ?><section id="main-content" class="agris-page-hero"<?php echo $bg; ?>><div class="agris-shell"><div class="agris-breadcrumbs"><a <?php echo self::link_attrs( $s['parent_link'] ); ?>><?php echo esc_html( $s['parent_label'] ); ?></a><span>/</span><span><?php echo esc_html( $s['current_label'] ); ?></span></div><?php $this->render_heading( $s, 'h1' ); ?></div></section><?php }
 }

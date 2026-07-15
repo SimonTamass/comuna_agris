@@ -10,6 +10,7 @@ final class Template_Applier {
 	private const NONCE_RESTORE = 'agris_restore_template';
 	private const NONCE_GROUP = 'agris_apply_group';
 	private const NONCE_ALL = 'agris_apply_all';
+	private const NONCE_ALL_HU = 'agris_apply_all_hu';
 	private const BACKUP_META = '_agris_rebuild_backups';
 	private const MANIFEST_META = '_agris_rebuild_manifest';
 	private const SOURCE_META = '_agris_original_page_content';
@@ -23,8 +24,8 @@ final class Template_Applier {
 		'_elementor_data',
 		'_elementor_css',
 	);
-	private ?string $menu_id_cache = null;
-	private ?array $routes_cache = null;
+	private array $menu_id_cache = array();
+	private array $routes_cache = array();
 
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'register_admin_page' ) );
@@ -32,6 +33,7 @@ final class Template_Applier {
 		add_action( 'admin_post_agris_restore_template', array( $this, 'handle_restore' ) );
 		add_action( 'admin_post_agris_apply_group', array( $this, 'handle_apply_group' ) );
 		add_action( 'admin_post_agris_apply_all', array( $this, 'handle_apply_all' ) );
+		add_action( 'admin_post_agris_apply_all_hu', array( $this, 'handle_apply_all_hu' ) );
 	}
 
 	public function register_admin_page(): void {
@@ -57,7 +59,7 @@ final class Template_Applier {
 		$group_ok = isset( $_GET['agris_ok'] ) ? absint( $_GET['agris_ok'] ) : 0;
 		$group_failed = isset( $_GET['agris_failed'] ) ? absint( $_GET['agris_failed'] ) : 0;
 		$all_done = isset( $_GET['agris_all'] ) ? absint( $_GET['agris_all'] ) : 0;
-		$routes  = $this->routes();
+		$routes  = array( 'ro' => $this->routes( 'ro' ), 'hu' => $this->routes( 'hu' ) );
 		$targets = $this->template_targets();
 		?>
 		<div class="wrap">
@@ -109,17 +111,18 @@ final class Template_Applier {
 				</tbody>
 			</table>
 			<h2 style="margin-top:28px"><?php esc_html_e( 'Reconstrucție în grupuri', 'comuna-agris' ); ?></h2>
-			<p><?php esc_html_e( 'Sunt incluse numai paginile române publicate. Paginile private și ciornele nu sunt modificate. Fiecare pagină primește propria copie de siguranță.', 'comuna-agris' ); ?></p>
+			<p><?php esc_html_e( 'Sunt incluse separat paginile române și maghiare publicate. Paginile private și ciornele nu sunt modificate. Fiecare pagină primește propria copie de siguranță.', 'comuna-agris' ); ?></p>
 			<table class="widefat striped" style="max-width:980px"><thead><tr><th><?php esc_html_e( 'Grup', 'comuna-agris' ); ?></th><th><?php esc_html_e( 'Pagini', 'comuna-agris' ); ?></th><th><?php esc_html_e( 'Descriere', 'comuna-agris' ); ?></th><th><?php esc_html_e( 'Acțiune', 'comuna-agris' ); ?></th></tr></thead><tbody>
 			<?php foreach ( $this->rebuild_groups() as $group => $definition ) : $group_pages = $this->group_pages( $group ); ?>
 				<tr><th scope="row"><?php echo esc_html( $definition['label'] ); ?></th><td><?php echo (int) count( $group_pages ); ?></td><td><?php echo esc_html( $definition['description'] ); ?></td><td><form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="agris_apply_group"><input type="hidden" name="group" value="<?php echo esc_attr( $group ); ?>"><?php wp_nonce_field( self::NONCE_GROUP . '_' . $group ); ?><?php submit_button( sprintf( __( 'Reconstruiește grupul (%d)', 'comuna-agris' ), count( $group_pages ) ), 'secondary', 'submit', false, count( $group_pages ) ? array() : array( 'disabled' => 'disabled' ) ); ?></form></td></tr>
 			<?php endforeach; ?>
 			</tbody></table>
 			<h2 style="margin-top:28px"><?php esc_html_e( 'Reconstrucție completă', 'comuna-agris' ); ?></h2>
-			<p><?php esc_html_e( 'Aplică noul sistem Elementor pe index, pagina primarului și toate celelalte pagini române publicate, fără schimbarea adreselor.', 'comuna-agris' ); ?></p>
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="agris_apply_all"><?php wp_nonce_field( self::NONCE_ALL ); ?><?php submit_button( sprintf( __( 'Reconstruiește toate paginile române (%d)', 'comuna-agris' ), count( $this->published_ro_pages() ) + count( array_filter( wp_list_pluck( $targets, 'post_id' ) ) ) ), 'primary', 'submit', false ); ?></form>
+			<p><?php esc_html_e( 'Aplicați separat sistemul Elementor pe paginile române sau maghiare publicate, fără schimbarea adreselor.', 'comuna-agris' ); ?></p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"><input type="hidden" name="action" value="agris_apply_all"><?php wp_nonce_field( self::NONCE_ALL ); ?><?php submit_button( sprintf( __( 'Reconstruiește toate paginile române (%d)', 'comuna-agris' ), count( $this->published_ro_pages() ) + count( array_filter( wp_list_pluck( $this->template_targets( 'ro' ), 'post_id' ) ) ) ), 'primary', 'submit', false ); ?></form>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top:10px"><input type="hidden" name="action" value="agris_apply_all_hu"><?php wp_nonce_field( self::NONCE_ALL_HU ); ?><?php submit_button( sprintf( __( 'Reconstruiește toate paginile maghiare (%d)', 'comuna-agris' ), count( $this->published_hu_pages() ) + count( array_filter( wp_list_pluck( $this->template_targets( 'hu' ), 'post_id' ) ) ) ), 'primary', 'submit', false ); ?></form>
 			<h2 style="margin-top:28px"><?php esc_html_e( 'Rute folosite de șablon', 'comuna-agris' ); ?></h2>
-			<table class="widefat striped" style="max-width:820px"><tbody><?php foreach ( $routes as $key => $route ) : ?><tr><th scope="row"><?php echo esc_html( $key ); ?></th><td><code><?php echo esc_html( $route ); ?></code></td></tr><?php endforeach; ?></tbody></table>
+			<table class="widefat striped" style="max-width:820px"><tbody><?php foreach ( $routes as $language => $language_routes ) : ?><?php foreach ( $language_routes as $key => $route ) : ?><tr><th scope="row"><?php echo esc_html( strtoupper( $language ) . ' · ' . $key ); ?></th><td><code><?php echo esc_html( $route ); ?></code></td></tr><?php endforeach; ?><?php endforeach; ?></tbody></table>
 		</div>
 		<?php
 	}
@@ -174,13 +177,14 @@ final class Template_Applier {
 
 		$ok = 0;
 		$failed = 0;
+		$language = str_starts_with( $group, 'hu_' ) ? 'hu' : 'ro';
 		foreach ( $this->group_pages( $group ) as $page ) {
 			if ( ! current_user_can( 'edit_post', $page->ID ) ) {
 				++$failed;
 				continue;
 			}
 			$type = $this->classify_page( $page );
-			$result = $this->write_elementor_page( $page, 'page_' . $type, $this->generic_page_data( $page, $type ) );
+			$result = $this->write_elementor_page( $page, 'page_' . $language . '_' . $type, $this->generic_page_data( $page, $type, $language ) );
 			if ( is_wp_error( $result ) ) {
 				++$failed;
 			} else {
@@ -193,7 +197,15 @@ final class Template_Applier {
 	}
 
 	public function handle_apply_all(): void {
-		if ( ! check_admin_referer( self::NONCE_ALL ) || ! current_user_can( 'edit_pages' ) ) {
+		$this->handle_apply_all_language( 'ro', self::NONCE_ALL );
+	}
+
+	public function handle_apply_all_hu(): void {
+		$this->handle_apply_all_language( 'hu', self::NONCE_ALL_HU );
+	}
+
+	private function handle_apply_all_language( string $language, string $nonce ): void {
+		if ( ! check_admin_referer( $nonce ) || ! current_user_can( 'edit_pages' ) ) {
 			wp_die( esc_html__( 'Cerere invalidă.', 'comuna-agris' ) );
 		}
 
@@ -204,7 +216,7 @@ final class Template_Applier {
 		$ok = 0;
 		$failed = 0;
 		$error_codes = array();
-		foreach ( $this->template_targets() as $template => $target ) {
+		foreach ( $this->template_targets( $language ) as $template => $target ) {
 			$post_id = (int) $target['post_id'];
 			$result = $post_id && current_user_can( 'edit_post', $post_id ) ? $this->apply_template( $post_id, $template ) : new \WP_Error( 'permission_denied' );
 			if ( is_wp_error( $result ) ) {
@@ -216,14 +228,14 @@ final class Template_Applier {
 			}
 		}
 
-		foreach ( $this->published_ro_pages() as $page ) {
+		foreach ( $this->published_pages( $language ) as $page ) {
 			if ( ! current_user_can( 'edit_post', $page->ID ) ) {
 				++$failed;
 				$error_codes['permission_denied'] = ( $error_codes['permission_denied'] ?? 0 ) + 1;
 				continue;
 			}
 			$type = $this->classify_page( $page );
-			$result = $this->write_elementor_page( $page, 'page_' . $type, $this->generic_page_data( $page, $type ) );
+			$result = $this->write_elementor_page( $page, 'page_' . $language . '_' . $type, $this->generic_page_data( $page, $type, $language ) );
 			if ( is_wp_error( $result ) ) {
 				++$failed;
 				$code = $result->get_error_code();
@@ -234,7 +246,7 @@ final class Template_Applier {
 		}
 
 		$summary = implode( ', ', array_map( static fn( $code, $count ): string => $code . ':' . $count, array_keys( $error_codes ), $error_codes ) );
-		wp_safe_redirect( admin_url( 'tools.php?page=agris-rebuild&agris_all=1&agris_ok=' . $ok . '&agris_failed=' . $failed . '&agris_error_summary=' . rawurlencode( $summary ) ) );
+		wp_safe_redirect( admin_url( 'tools.php?page=agris-rebuild&agris_all=1&agris_language=' . rawurlencode( $language ) . '&agris_ok=' . $ok . '&agris_failed=' . $failed . '&agris_error_summary=' . rawurlencode( $summary ) ) );
 		exit;
 	}
 
@@ -244,7 +256,13 @@ final class Template_Applier {
 			return new \WP_Error( 'invalid_page', __( 'Pagina țintă nu este validă.', 'comuna-agris' ) );
 		}
 
-		$data = 'home_ro' === $template ? $this->home_ro_data( $post ) : ( 'mayor_ro' === $template ? $this->mayor_ro_data( $post ) : array() );
+		$data = match ( $template ) {
+			'home_ro'  => $this->home_ro_data( $post ),
+			'mayor_ro' => $this->mayor_ro_data( $post ),
+			'home_hu'  => $this->home_hu_data( $post ),
+			'mayor_hu' => $this->mayor_hu_data( $post ),
+			default    => array(),
+		};
 		if ( ! $data ) {
 			return new \WP_Error( 'invalid_template', __( 'Șablonul solicitat nu este disponibil.', 'comuna-agris' ) );
 		}
@@ -323,7 +341,20 @@ final class Template_Applier {
 		return $this->find_ro_page( array( 'primar' ) );
 	}
 
+	private function find_home_hu_page(): int {
+		return $this->find_language_page( array( 'home-hu' ), 'hu' );
+	}
+
+	private function find_mayor_hu_page(): int {
+		$translated = function_exists( 'pll_get_post' ) ? (int) pll_get_post( $this->find_mayor_ro_page(), 'hu' ) : 0;
+		return $translated ?: $this->find_language_page( array( 'polgarmester' ), 'hu' );
+	}
+
 	private function find_ro_page( array $slugs ): int {
+		return $this->find_language_page( $slugs, 'ro' );
+	}
+
+	private function find_language_page( array $slugs, string $language ): int {
 		foreach ( $slugs as $slug ) {
 			$pages = get_posts(
 				array(
@@ -332,12 +363,13 @@ final class Template_Applier {
 					'post_status'      => array( 'publish', 'draft', 'private' ),
 					'posts_per_page'   => -1,
 					'suppress_filters' => false,
+					'lang'             => $language,
 				)
 			);
 			foreach ( $pages as $page ) {
-				$language  = function_exists( 'pll_get_post_language' ) ? pll_get_post_language( $page->ID, 'slug' ) : '';
+				$page_language = function_exists( 'pll_get_post_language' ) ? pll_get_post_language( $page->ID, 'slug' ) : '';
 				$permalink = get_permalink( $page );
-				if ( 'ro' === $language || ( ! $language && str_contains( (string) wp_parse_url( $permalink, PHP_URL_PATH ), '/ro/' ) ) ) {
+				if ( $language === $page_language || ( ! $page_language && str_contains( (string) wp_parse_url( $permalink, PHP_URL_PATH ), '/' . $language . '/' ) ) ) {
 					return (int) $page->ID;
 				}
 			}
@@ -345,8 +377,8 @@ final class Template_Applier {
 		return 0;
 	}
 
-	private function template_targets(): array {
-		return array(
+	private function template_targets( string $language = '' ): array {
+		$targets = array(
 			'home_ro'  => array(
 				'label'   => __( 'Index român', 'comuna-agris' ),
 				'button'  => __( 'Aplică indexul român Elementor', 'comuna-agris' ),
@@ -357,11 +389,25 @@ final class Template_Applier {
 				'button'  => __( 'Aplică pagina Primar Elementor', 'comuna-agris' ),
 				'post_id' => $this->find_mayor_ro_page(),
 			),
+			'home_hu'  => array(
+				'label'   => __( 'Magyar index', 'comuna-agris' ),
+				'button'  => __( 'A magyar Elementor-index alkalmazása', 'comuna-agris' ),
+				'post_id' => $this->find_home_hu_page(),
+			),
+			'mayor_hu' => array(
+				'label'   => __( 'Polgármester oldal', 'comuna-agris' ),
+				'button'  => __( 'A magyar polgármesteri oldal alkalmazása', 'comuna-agris' ),
+				'post_id' => $this->find_mayor_hu_page(),
+			),
 		);
+		if ( in_array( $language, array( 'ro', 'hu' ), true ) ) {
+			return array_filter( $targets, static fn( string $key ): bool => str_ends_with( $key, '_' . $language ), ARRAY_FILTER_USE_KEY );
+		}
+		return $targets;
 	}
 
 	private function rebuild_groups(): array {
-		return array(
+		$groups = array(
 			'administration' => array(
 				'label'       => __( 'Primărie și conducere', 'comuna-agris' ),
 				'description' => __( 'Conducere, consiliu local, departamente și pagina de contact.', 'comuna-agris' ),
@@ -379,9 +425,27 @@ final class Template_Applier {
 				'description' => __( 'Pagini foto și galerii istorice.', 'comuna-agris' ),
 			),
 		);
+		$hungarian = array(
+			'administration' => array( 'label' => 'Magyar · Polgármesteri hivatal és vezetőség', 'description' => 'Polgármester, helyi tanács, hivatali részlegek és elérhetőségek.' ),
+			'documents'      => array( 'label' => 'Magyar · Dokumentumok és közérdekű adatok', 'description' => 'Felhívások, határozatok, közlöny, szabályzatok, nyilvántartások és formanyomtatványok.' ),
+			'community'      => array( 'label' => 'Magyar · Község és szolgáltatások', 'description' => 'Történet, elhelyezkedés, turizmus, sport, kultúra és közösségi oldalak.' ),
+			'galleries'      => array( 'label' => 'Magyar · Galériák', 'description' => 'Fényképes oldalak, események és történelmi galériák.' ),
+		);
+		foreach ( $hungarian as $key => $definition ) {
+			$groups['hu_' . $key] = $definition;
+		}
+		return $groups;
 	}
 
 	private function published_ro_pages(): array {
+		return $this->published_pages( 'ro' );
+	}
+
+	private function published_hu_pages(): array {
+		return $this->published_pages( 'hu' );
+	}
+
+	private function published_pages( string $language ): array {
 		$pages = get_posts(
 			array(
 				'post_type'        => 'page',
@@ -389,19 +453,22 @@ final class Template_Applier {
 				'posts_per_page'   => -1,
 				'orderby'          => array( 'menu_order' => 'ASC', 'title' => 'ASC' ),
 				'suppress_filters' => false,
+				'lang'             => $language,
 			)
 		);
-		$excluded = array_filter( array( $this->find_home_ro_page(), $this->find_mayor_ro_page() ) );
+		$excluded = 'hu' === $language
+			? array_filter( array( $this->find_home_hu_page(), $this->find_mayor_hu_page() ) )
+			: array_filter( array( $this->find_home_ro_page(), $this->find_mayor_ro_page() ) );
 		return array_values(
 			array_filter(
 				$pages,
-				function ( $page ) use ( $excluded ): bool {
+				function ( $page ) use ( $excluded, $language ): bool {
 					if ( in_array( (int) $page->ID, $excluded, true ) ) {
 						return false;
 					}
-					$language = function_exists( 'pll_get_post_language' ) ? pll_get_post_language( $page->ID, 'slug' ) : '';
+					$page_language = function_exists( 'pll_get_post_language' ) ? pll_get_post_language( $page->ID, 'slug' ) : '';
 					$path = (string) wp_parse_url( get_permalink( $page ), PHP_URL_PATH );
-					return 'ro' === $language || ( ! $language && str_contains( $path, '/ro/' ) );
+					return $language === $page_language || ( ! $page_language && str_contains( $path, '/' . $language . '/' ) );
 				}
 			)
 		);
@@ -412,35 +479,37 @@ final class Template_Applier {
 		$title = strtolower( remove_accents( $page->post_title ) );
 		$haystack = $slug . ' ' . $title;
 
-		if ( preg_match( '/galeria|gallery|foto/', $haystack ) ) {
+		if ( preg_match( '/galeria|gallery|foto|fénykép|fenykep/', $haystack ) ) {
 			return 'galleries';
 		}
-		if ( preg_match( '/contact|viceprimar|secretar|departament|consili|cuvantul-primarului/', $haystack ) ) {
+		if ( preg_match( '/contact|viceprimar|secretar|departament|consili|cuvantul-primarului|elerhet|alpolgarmester|jegyzo|reszleg|tanacs|polgarmester/', $haystack ) ) {
 			return 'administration';
 		}
-		if ( preg_match( '/anunt|hotarar|document|declarati|buget|dare-de-seama|dispoziti|financiar|formular|legisl|monitorul-oficial|proces|proiect|registr|regulament|autorizati|certificat|taxe|impozit|convocator|minute|informare|statut/', $haystack ) ) {
+		if ( preg_match( '/anunt|hotarar|document|declarati|buget|dare-de-seama|dispoziti|financiar|formular|legisl|monitorul-oficial|proces|proiect|registr|regulament|autorizati|certificat|taxe|impozit|convocator|minute|informare|statut|felhivas|hatarozat|nyilatkozat|koltsegvet|rendelkezes|penzugy|formanyomtatvany|jogalkotas|kozlony|jegyzokonyv|nyilvantartas|szabalyzat|torveny|kozerd/', $haystack ) ) {
 			return 'documents';
 		}
 		return 'community';
 	}
 
 	private function group_pages( string $group ): array {
+		$language = str_starts_with( $group, 'hu_' ) ? 'hu' : 'ro';
+		$type = 'hu' === $language ? substr( $group, 3 ) : $group;
 		return array_values(
 			array_filter(
-				$this->published_ro_pages(),
-				fn( $page ): bool => $group === $this->classify_page( $page )
+				$this->published_pages( $language ),
+				fn( $page ): bool => $type === $this->classify_page( $page )
 			)
 		);
 	}
 
-	private function menu_id(): string {
-		if ( null !== $this->menu_id_cache ) {
-			return $this->menu_id_cache;
+	private function menu_id( string $language = 'ro' ): string {
+		if ( isset( $this->menu_id_cache[ $language ] ) ) {
+			return $this->menu_id_cache[ $language ];
 		}
 		$menus = wp_get_nav_menus();
 		if ( ! $menus ) {
-			$this->menu_id_cache = '';
-			return $this->menu_id_cache;
+			$this->menu_id_cache[ $language ] = '';
+			return $this->menu_id_cache[ $language ];
 		}
 
 		$best_id = '';
@@ -454,12 +523,22 @@ final class Template_Applier {
 			}
 
 			$score = $count;
-			if ( in_array( $name, array( 'fo roman', 'fő roman', 'fo romana', 'meniu principal roman' ), true ) ) {
+			$language_names = 'hu' === $language ? array( 'fo magyar', 'fő magyar', 'magyar fo menu', 'magyar fő menü' ) : array( 'fo roman', 'fő roman', 'fo romana', 'meniu principal roman' );
+			$language_tokens = 'hu' === $language ? array( 'magyar', 'hungar', 'hu' ) : array( 'roman', 'romana', 'ro' );
+			$opposite_tokens = 'hu' === $language ? array( 'roman', 'romana' ) : array( 'magyar', 'hungar' );
+			if ( in_array( $name, $language_names, true ) ) {
 				$score += 10000;
-			} elseif ( ( str_contains( $name, 'fo' ) || str_contains( $name, 'principal' ) ) && ( str_contains( $name, 'roman' ) || str_contains( $name, 'ro' ) ) ) {
+			} elseif ( ( str_contains( $name, 'fo' ) || str_contains( $name, 'fő' ) || str_contains( $name, 'principal' ) ) && array_filter( $language_tokens, fn( string $token ): bool => str_contains( $name, $token ) ) ) {
 				$score += 5000;
-			} elseif ( str_contains( $name, 'roman' ) ) {
+			} elseif ( array_filter( $language_tokens, fn( string $token ): bool => str_contains( $name, $token ) ) ) {
 				$score += 1000;
+			}
+			foreach ( (array) $items as $item ) {
+				$path = (string) wp_parse_url( (string) ( $item->url ?? '' ), PHP_URL_PATH );
+				$score += str_contains( $path, '/' . $language . '/' ) ? 120 : 0;
+			}
+			if ( array_filter( $opposite_tokens, fn( string $token ): bool => str_contains( $name, $token ) ) ) {
+				$score -= 6000;
 			}
 			if ( str_contains( $name, 'bal' ) || str_contains( $name, 'sidebar' ) ) {
 				$score -= 5000;
@@ -471,8 +550,8 @@ final class Template_Applier {
 			}
 		}
 
-		$this->menu_id_cache = $best_id;
-		return $this->menu_id_cache;
+		$this->menu_id_cache[ $language ] = $best_id;
+		return $this->menu_id_cache[ $language ];
 	}
 
 	private function backups( int $post_id ): array {
@@ -533,13 +612,53 @@ final class Template_Applier {
 		return true;
 	}
 
-	private function routes(): array {
-		if ( null !== $this->routes_cache ) {
-			return $this->routes_cache;
+	private function routes( string $language = 'ro' ): array {
+		if ( isset( $this->routes_cache[ $language ] ) ) {
+			return $this->routes_cache[ $language ];
 		}
-		$this->routes_cache = array(
+		if ( 'hu' === $language ) {
+			$home_hu = $this->page_url( array( 'home-hu' ), '/hu/home-hu/', 'hu' );
+			$ro_routes = $this->routes( 'ro' );
+			$definitions = array(
+				'public_info'   => array( array( 'informatii-publice' ), array() ),
+				'monitor'       => array( array( 'monitorul-oficial-local' ), array( 'helyi-hivatalos-kozlony' ) ),
+				'contact'       => array( array( 'contact' ), array( 'elerhetosegeink' ) ),
+				'announcements' => array( array( 'anunti' ), array() ),
+				'decisions'     => array( array( 'hotarari-ale-consiului-local' ), array( 'a-helyi-tanacs-hatarozatai', 'hatarozattervezetek' ) ),
+				'forms'         => array( array( 'formulare-tipizate' ), array( 'formanyomtatvanyok' ) ),
+				'taxes'         => array( array( 'taxe-si-impozite-locale' ), array() ),
+				'urbanism'      => array( array( 'urbanism' ), array() ),
+				'agricultural'  => array( array( 'registru-agricol' ), array() ),
+				'mayor'         => array( array( 'primar' ), array( 'polgarmester' ) ),
+				'council'       => array( array( 'conponenta-consiliul-local' ), array( 'a-helyi-tanacs-szerkezete' ) ),
+				'history'       => array( array( 'istoria-comunei' ), array( 'kozsegunk-tortenete' ) ),
+				'monuments'     => array( array( 'monumente-istorice' ), array( 'emlekmuvek' ) ),
+				'tourism'       => array( array( 'ekoturisma' ), array( 'okoturizmus' ) ),
+				'twinned'       => array( array( 'comune-infratite' ), array( 'testvertelepulesek' ) ),
+				'deliberative'  => array( array( 'hotararile-autoritatii-deliberative' ), array( 'a-tanacsado-hatosag-rendelkezesei' ) ),
+				'executive'     => array( array( 'dispozitii-autoritatii-executive' ), array( 'a-vegrehajto-hatosag-rendelkezesei' ) ),
+				'financial'     => array( array( 'documente-si-informatii-financiare' ), array( 'penzugyi-dokumentumok-es-informaciok' ) ),
+			);
+			$routes = array( 'home_ro' => $this->page_url( array( 'home-ro' ), '/ro/home-ro/', 'ro' ), 'home_hu' => $home_hu );
+			foreach ( $definitions as $key => $definition ) {
+				$hu_page_id = $definition[1] ? $this->find_language_page( $definition[1], 'hu' ) : 0;
+				$fallback = $hu_page_id && 'publish' === get_post_status( $hu_page_id ) ? (string) get_permalink( $hu_page_id ) : ( $ro_routes[ $key ] ?? $home_hu );
+				if ( in_array( $key, array( 'public_info', 'announcements' ), true ) ) {
+					$fallback = home_url( '/hu/category/felhivasok/' );
+				}
+				$routes[ $key ] = $this->translated_url( $this->find_ro_page( $definition[0] ), 'hu', $fallback );
+			}
+			$routes['location'] = $this->page_url( array( 'a-kozseg-elhelyezkedese' ), '/hu/a-kozseg-elhelyezkedese/', 'hu' );
+			$routes['galleries'] = home_url( '/hu/category/foto-galeria/' );
+			$routes['events'] = $this->page_url( array( 'esemenyek' ), '/hu/esemenyek/', 'hu' );
+			$routes['journal'] = $this->page_url( array( 'egri-naplo' ), '/hu/egri-naplo/', 'hu' );
+			$routes['law17'] = home_url( '/hu/category/17-es-torveny/' );
+			$this->routes_cache['hu'] = $routes;
+			return $routes;
+		}
+		$this->routes_cache['ro'] = array(
 			'home_ro'       => $this->page_url( array( 'home-ro' ), '/ro/home-ro/' ),
-			'home_hu'       => $this->page_url( array( 'home-hu' ), '/hu/home-hu/' ),
+			'home_hu'       => $this->page_url( array( 'home-hu' ), '/hu/home-hu/', 'hu' ),
 			'public_info'   => $this->page_url( array( 'informatii-publice' ), '/ro/informatii-publice/' ),
 			'monitor'       => $this->page_url( array( 'monitorul-oficial-local' ), '/ro/monitorul-oficial-local/' ),
 			'contact'       => $this->page_url( array( 'contact' ), '/ro/contact/' ),
@@ -559,10 +678,10 @@ final class Template_Applier {
 			'executive'     => $this->page_url( array( 'dispozitii-autoritatii-executive' ), '/ro/dispozitii-autoritatii-executive/' ),
 			'financial'     => $this->page_url( array( 'documente-si-informatii-financiare' ), '/ro/documente-si-informatii-financiare/' ),
 		);
-		return $this->routes_cache;
+		return $this->routes_cache['ro'];
 	}
 
-	private function page_url( array $slugs, string $fallback ): string {
+	private function page_url( array $slugs, string $fallback, string $language = 'ro' ): string {
 		foreach ( $slugs as $slug ) {
 			$pages = get_posts(
 				array(
@@ -571,12 +690,13 @@ final class Template_Applier {
 					'post_status'      => 'publish',
 					'posts_per_page'   => -1,
 					'suppress_filters' => false,
+					'lang'             => $language,
 				)
 			);
 			foreach ( $pages as $page ) {
-				$language = function_exists( 'pll_get_post_language' ) ? pll_get_post_language( $page->ID, 'slug' ) : '';
+				$page_language = function_exists( 'pll_get_post_language' ) ? pll_get_post_language( $page->ID, 'slug' ) : '';
 				$permalink = get_permalink( $page );
-				if ( 'ro' === $language || ( ! $language && str_contains( (string) wp_parse_url( $permalink, PHP_URL_PATH ), '/ro/' ) ) ) {
+				if ( $language === $page_language || ( ! $page_language && str_contains( (string) wp_parse_url( $permalink, PHP_URL_PATH ), '/' . $language . '/' ) ) ) {
 					return $permalink;
 				}
 			}
@@ -853,7 +973,8 @@ final class Template_Applier {
 				return $rendered;
 			}
 		}
-		return '<p>Conținutul acestei pagini este în curs de actualizare.</p>';
+		$language = function_exists( 'pll_get_post_language' ) ? pll_get_post_language( $page->ID, 'slug' ) : '';
+		return 'hu' === $language ? '<p>Az oldal tartalmának frissítése folyamatban van.</p>' : '<p>Conținutul acestei pagini este în curs de actualizare.</p>';
 	}
 
 	private function legacy_image_markup( array $ids, bool $gallery = false ): string {
@@ -1042,11 +1163,109 @@ final class Template_Applier {
 		return $this->public_media_items( $items );
 	}
 
-	private function generic_page_data( \WP_Post $page, string $type ): array {
-		$routes = $this->routes();
-		$menu_id = $this->menu_id();
+	private function recent_updates( string $language, int $count = 3 ): array {
+		$posts = get_posts( array( 'post_type' => 'post', 'post_status' => 'publish', 'posts_per_page' => max( 1, $count * 3 ), 'orderby' => 'date', 'order' => 'DESC', 'suppress_filters' => false, 'lang' => $language ) );
+		$items = array();
+		foreach ( $posts as $post ) {
+			$post_language = function_exists( 'pll_get_post_language' ) ? pll_get_post_language( $post->ID, 'slug' ) : '';
+			$path = (string) wp_parse_url( get_permalink( $post ), PHP_URL_PATH );
+			if ( $post_language && $language !== $post_language ) {
+				continue;
+			}
+			if ( ! $post_language && ! str_contains( $path, '/' . $language . '/' ) ) {
+				continue;
+			}
+			$items[] = array( 'day' => get_the_date( 'd', $post ), 'title' => get_the_title( $post ), 'meta' => get_the_date( 'Y. m. d.', $post ), 'url' => $this->link( get_permalink( $post ) ) );
+			if ( count( $items ) >= $count ) {
+				break;
+			}
+		}
+		return $this->repeater( 'updates-' . $language, $items );
+	}
+
+	private function interface_copy( string $language ): array {
+		if ( 'hu' === $language ) {
+			return array(
+				'official' => 'Egri Község Polgármesteri Hivatalának hivatalos oldala, Szatmár megye, Románia', 'trust' => 'Biztonságos kapcsolat',
+				'brand_subtitle' => 'Egri Község Polgármesteri Hivatala', 'cta' => 'Helyi hivatalos közlöny', 'home' => 'Kezdőlap',
+				'skip' => 'Ugrás a tartalomhoz', 'language' => 'Nyelvválasztás', 'nav' => 'Fő navigáció', 'search' => 'Keresés',
+				'menu_open' => 'Menü megnyitása', 'menu_close' => 'Menü bezárása', 'submenu' => '%s almenüjének megnyitása',
+				'search_title' => 'Keresés a portálon', 'search_placeholder' => 'Dokumentumok, felhívások és szolgáltatások keresése…', 'search_button' => 'Keresés', 'close' => 'Bezárás',
+				'footer_description' => 'Hivatalos portál ügyintézéshez, közérdekű dokumentumokhoz és önkormányzati tájékoztatáshoz.',
+				'office' => 'Polgármesteri Hivatal', 'leadership' => 'Vezetőség', 'council' => 'Helyi tanács', 'public' => 'Közérdekű', 'announcements' => 'Felhívások', 'monitor' => 'Helyi hivatalos közlöny',
+				'contact' => 'Elérhetőség', 'footer_nav' => 'Lábléc hivatkozások', 'back_top' => 'Vissza az oldal tetejére', 'copyright' => 'Minden jog fenntartva, Egri Község.',
+				'address' => 'Románia, 447066, Egri, Csűry Bálint utca 68., Szatmár megye',
+				'accessibility' => 'Akadálymentesítés', 'text_size' => 'Szövegméret', 'contrast' => 'Nagy kontraszt', 'grayscale' => 'Szürkeárnyalat', 'underline' => 'Hivatkozások aláhúzása', 'reset' => 'Beállítások visszaállítása', 'options' => 'Akadálymentesítési beállítások',
+				'empty_posts' => 'Ehhez a válogatáshoz jelenleg nincs közzétett bejegyzés.', 'read_more' => 'Tovább →', 'all' => 'Összes',
+			);
+		}
+		return array(
+			'official' => 'Site oficial al Primăriei Comunei Agriș, județul Satu Mare, România', 'trust' => 'Conexiune securizată',
+			'brand_subtitle' => 'Primăria Comunei Agriș', 'cta' => 'Monitorul Oficial', 'home' => 'Acasă',
+			'skip' => 'Sari la conținut', 'language' => 'Alege limba', 'nav' => 'Navigație principală', 'search' => 'Caută',
+			'menu_open' => 'Deschide meniul', 'menu_close' => 'Închide meniul', 'submenu' => 'Deschide submeniul pentru %s',
+			'search_title' => 'Căutare în portal', 'search_placeholder' => 'Căutați documente, anunțuri, servicii…', 'search_button' => 'Caută', 'close' => 'Închide',
+			'footer_description' => 'Portal oficial pentru cetățeni, documente publice și comunicări administrative.',
+			'office' => 'Primăria', 'leadership' => 'Conducere', 'council' => 'Consiliul Local', 'public' => 'Informații publice', 'announcements' => 'Anunțuri', 'monitor' => 'Monitorul Oficial',
+			'contact' => 'Contact', 'footer_nav' => 'Linkuri subsol', 'back_top' => 'Înapoi sus', 'copyright' => 'Toate drepturile rezervate Comuna Agriș.',
+			'address' => 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, Satu Mare',
+			'accessibility' => 'Accesibilitate', 'text_size' => 'Mărime text', 'contrast' => 'Contrast ridicat', 'grayscale' => 'Tonuri de gri', 'underline' => 'Linkuri subliniate', 'reset' => 'Resetează setările', 'options' => 'Opțiuni de accesibilitate',
+			'empty_posts' => 'Nu există articole publicate pentru această selecție.', 'read_more' => 'Citește mai mult →', 'all' => 'Toate',
+		);
+	}
+
+	private function header_settings( \WP_Post $page, string $language, array $routes, string $seed ): array {
+		$copy = $this->interface_copy( $language );
+		$other_language = 'hu' === $language ? 'ro' : 'hu';
+		$other_url = $this->translated_url( $page->ID, $other_language, $routes[ 'home_' . $other_language ] );
+		$language_items = 'hu' === $language
+			? array( array( 'code' => 'HU', 'label' => 'Magyar', 'url' => $this->link( get_permalink( $page ) ) ), array( 'code' => 'RO', 'label' => 'Română', 'url' => $this->link( $other_url ) ) )
+			: array( array( 'code' => 'RO', 'label' => 'Română', 'url' => $this->link( get_permalink( $page ) ) ), array( 'code' => 'HU', 'label' => 'Magyar', 'url' => $this->link( $other_url ) ) );
+		return array(
+			'official_text' => $copy['official'], 'trust_text' => $copy['trust'], 'mail_url' => $this->link( 'mailto:primaria@comunaagris.ro' ), 'logo' => $this->media(),
+			'brand_title' => 'hu' === $language ? 'Egri Község' : 'Comuna Agriș', 'brand_subtitle' => $copy['brand_subtitle'], 'home_url' => $this->link( $routes[ 'home_' . $language ] ), 'menu_id' => $this->menu_id( $language ),
+			'cta_text' => $copy['cta'], 'cta_link' => $this->link( $routes['monitor'] ), 'sticky' => 'yes', 'language_items' => $this->repeater( $seed . '-languages', $language_items ),
+			'skip_label' => $copy['skip'], 'language_label' => $copy['language'], 'nav_label' => $copy['nav'], 'search_label' => $copy['search'],
+			'menu_open_label' => $copy['menu_open'], 'menu_close_label' => $copy['menu_close'], 'submenu_label' => $copy['submenu'],
+		);
+	}
+
+	private function search_settings( string $language ): array {
+		$copy = $this->interface_copy( $language );
+		return array( 'title' => $copy['search_title'], 'placeholder' => $copy['search_placeholder'], 'button_text' => $copy['search_button'], 'close_label' => $copy['close'], 'language' => $language, 'modal' => 'yes' );
+	}
+
+	private function footer_settings( string $language, array $routes, string $seed ): array {
+		$copy = $this->interface_copy( $language );
+		return array(
+			'title' => 'hu' === $language ? 'Egri Község' : 'Comuna Agriș', 'subtitle' => $copy['brand_subtitle'], 'description' => $copy['footer_description'],
+			'links' => $this->repeater( $seed . '-links', array(
+				array( 'column' => $copy['office'], 'label' => $copy['leadership'], 'url' => $this->link( $routes['mayor'] ) ),
+				array( 'column' => $copy['office'], 'label' => $copy['council'], 'url' => $this->link( $routes['council'] ) ),
+				array( 'column' => $copy['public'], 'label' => $copy['announcements'], 'url' => $this->link( $routes['announcements'] ) ),
+				array( 'column' => $copy['public'], 'label' => $copy['monitor'], 'url' => $this->link( $routes['monitor'] ) ),
+			) ),
+			'phone' => '0261 878 112', 'email' => 'primaria@comunaagris.ro', 'address' => $copy['address'], 'copyright' => $copy['copyright'],
+			'contact_url' => $this->link( $routes['contact'] ), 'monitor_url' => $this->link( $routes['monitor'] ), 'contact_title' => $copy['contact'],
+			'contact_link_text' => $copy['contact'], 'monitor_link_text' => $copy['monitor'], 'footer_nav_label' => $copy['footer_nav'], 'back_to_top_label' => $copy['back_top'],
+		);
+	}
+
+	private function accessibility_settings( string $language ): array {
+		$copy = $this->interface_copy( $language );
+		return array( 'title' => $copy['accessibility'], 'position' => 'right', 'text_size_label' => $copy['text_size'], 'contrast_label' => $copy['contrast'], 'grayscale_label' => $copy['grayscale'], 'underline_label' => $copy['underline'], 'reset_label' => $copy['reset'], 'options_label' => $copy['options'], 'back_to_top_label' => $copy['back_top'] );
+	}
+
+	private function generic_page_data( \WP_Post $page, string $type, string $language = 'ro' ): array {
+		$routes = $this->routes( $language );
+		$copy = $this->interface_copy( $language );
 		$seed = 'page-' . $page->ID;
-		$labels = array(
+		$labels = 'hu' === $language ? array(
+			'administration' => array( 'Polgármesteri Hivatal', 'A helyi közigazgatás, a vezetőség és az ügyfélkapcsolatok információi.' ),
+			'documents'      => array( 'Közérdekű adatok', 'Egri Község dokumentumai, felhívásai és nyilvános információi.' ),
+			'community'      => array( 'Egri Község', 'Hasznos információk a községről és a helyi közszolgáltatásokról.' ),
+			'galleries'      => array( 'Galéria', 'Képek Egri Község életéből és történetéből.' ),
+		) : array(
 			'administration' => array( 'Administrație', 'Informații despre administrația locală, conducere și relația cu cetățenii.' ),
 			'documents'      => array( 'Transparență', 'Documente, anunțuri și informații publice ale Comunei Agriș.' ),
 			'community'      => array( 'Comuna Agriș', 'Informații utile despre comunitate și serviciile publice locale.' ),
@@ -1055,7 +1274,6 @@ final class Template_Applier {
 		$label = $labels[ $type ] ?? $labels['community'];
 		$excerpt = trim( wp_strip_all_tags( (string) $page->post_excerpt ) );
 		$description = $excerpt;
-		$hu_url = $this->translated_url( $page->ID, 'hu', $routes['home_hu'] );
 		$source_content = $this->original_page_content( $page );
 		$media_items = $this->legacy_media_items( $page, $source_content );
 		$image = $this->primary_media( $media_items );
@@ -1067,24 +1285,8 @@ final class Template_Applier {
 			$this->container(
 				$seed . '-header',
 				array(
-					$this->widget( $seed . '-header-widget', 'agris-site-header', array(
-						'official_text' => 'Site oficial al Primăriei Comunei Agriș, județul Satu Mare, România',
-						'trust_text' => 'Conexiune securizată',
-						'mail_url' => $this->link( 'mailto:primaria@comunaagris.ro' ),
-						'logo' => $this->media(),
-						'brand_title' => 'Comuna Agriș',
-						'brand_subtitle' => 'Primăria Comunei Agriș',
-						'home_url' => $this->link( $routes['home_ro'] ),
-						'menu_id' => $menu_id,
-						'cta_text' => 'Monitorul Oficial',
-						'cta_link' => $this->link( $routes['monitor'] ),
-						'sticky' => 'yes',
-						'language_items' => $this->repeater( $seed . '-lang', array(
-							array( 'code' => 'RO', 'label' => 'Română', 'url' => $this->link( get_permalink( $page ) ) ),
-							array( 'code' => 'HU', 'label' => 'Magyar', 'url' => $this->link( $hu_url ) ),
-						) ),
-					) ),
-					$this->widget( $seed . '-search', 'agris-search-box' ),
+					$this->widget( $seed . '-header-widget', 'agris-site-header', $this->header_settings( $page, $language, $routes, $seed . '-header' ) ),
+					$this->widget( $seed . '-search', 'agris-search-box', $this->search_settings( $language ) ),
 				),
 				array( 'content_width' => 'full' )
 			),
@@ -1094,8 +1296,8 @@ final class Template_Applier {
 					'kicker' => $label[0],
 					'title' => get_the_title( $page ),
 					'description' => $description,
-					'parent_label' => 'Acasă',
-					'parent_link' => $this->link( $routes['home_ro'] ),
+					'parent_label' => $copy['home'],
+					'parent_link' => $this->link( $routes[ 'home_' . $language ] ),
 					'current_label' => get_the_title( $page ),
 					'background' => $image,
 				) ) ),
@@ -1118,30 +1320,20 @@ final class Template_Applier {
 		if ( 'galleries' === $type ) {
 			$gallery_items = $this->gallery_items( $page, '', $source_content );
 			if ( $gallery_items ) {
-				$data[] = $this->container( $seed . '-gallery', array( $this->widget( $seed . '-gallery-widget', 'agris-photo-gallery', array( 'kicker' => 'Galerie', 'title' => get_the_title( $page ), 'description' => $description, 'items_list' => $this->repeater( $seed . '-images', $gallery_items ), 'columns' => '3' ) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+				$data[] = $this->container( $seed . '-gallery', array( $this->widget( $seed . '-gallery-widget', 'agris-photo-gallery', array( 'kicker' => 'hu' === $language ? 'Galéria' : 'Galerie', 'title' => get_the_title( $page ), 'description' => $description, 'items_list' => $this->repeater( $seed . '-images', $gallery_items ), 'columns' => '3' ) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
 			}
 		}
 		foreach ( $legacy_queries as $query_index => $query ) {
 			$data[] = $this->container( $seed . '-legacy-posts-' . $query_index, array( $this->widget( $seed . '-legacy-posts-widget-' . $query_index, 'agris-news-grid', array(
-				'post_type' => 'post', 'category' => $query['category'], 'count' => $query['count'], 'columns' => $query['columns'], 'orderby' => $query['orderby'], 'show_excerpt' => $query['show_excerpt'], 'show_category' => 'yes', 'show_date' => 'yes',
+				'post_type' => 'post', 'category' => $query['category'], 'language' => $language, 'count' => $query['count'], 'columns' => $query['columns'], 'orderby' => $query['orderby'], 'show_excerpt' => $query['show_excerpt'], 'show_category' => 'yes', 'show_date' => 'yes', 'empty_text' => $copy['empty_posts'], 'read_more_text' => $copy['read_more'],
 			) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
 		}
 		if ( 'galleries' !== $type && $unplaced_media ) {
-			$data[] = $this->container( $seed . '-media', array( $this->widget( $seed . '-media-widget', 'agris-photo-gallery', array( 'kicker' => 'Media', 'title' => 'Imagini și materiale media', 'description' => $description, 'items_list' => $this->repeater( $seed . '-media-items', $unplaced_media ), 'columns' => count( $unplaced_media ) > 2 ? '3' : '2' ) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+			$data[] = $this->container( $seed . '-media', array( $this->widget( $seed . '-media-widget', 'agris-photo-gallery', array( 'kicker' => 'hu' === $language ? 'Média' : 'Media', 'title' => 'hu' === $language ? 'Képek és médiatartalmak' : 'Imagini și materiale media', 'description' => $description, 'items_list' => $this->repeater( $seed . '-media-items', $unplaced_media ), 'columns' => count( $unplaced_media ) > 2 ? '3' : '2' ) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
 		}
 		$data[] = $this->container( $seed . '-footer', array(
-			$this->widget( $seed . '-footer-widget', 'agris-site-footer', array(
-				'title' => 'Comuna Agriș', 'subtitle' => 'Primăria Comunei Agriș', 'description' => 'Portal oficial pentru cetățeni, documente publice și comunicări administrative.',
-				'links' => $this->repeater( $seed . '-footer-links', array(
-					array( 'column' => 'Primăria', 'label' => 'Conducere', 'url' => $this->link( $routes['mayor'] ) ),
-					array( 'column' => 'Primăria', 'label' => 'Consiliul Local', 'url' => $this->link( $routes['council'] ) ),
-					array( 'column' => 'Informații publice', 'label' => 'Anunțuri', 'url' => $this->link( $routes['announcements'] ) ),
-					array( 'column' => 'Informații publice', 'label' => 'Monitorul Oficial', 'url' => $this->link( $routes['monitor'] ) ),
-				) ),
-				'phone' => '0261 878 112', 'email' => 'primaria@comunaagris.ro', 'address' => 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, Satu Mare', 'copyright' => 'Toate drepturile rezervate Comuna Agriș.',
-				'contact_url' => $this->link( $routes['contact'] ), 'monitor_url' => $this->link( $routes['monitor'] ),
-			) ),
-			$this->widget( $seed . '-accessibility', 'agris-accessibility', array( 'title' => 'Accesibilitate', 'position' => 'right' ) ),
+			$this->widget( $seed . '-footer-widget', 'agris-site-footer', $this->footer_settings( $language, $routes, $seed . '-footer' ) ),
+			$this->widget( $seed . '-accessibility', 'agris-accessibility', $this->accessibility_settings( $language ) ),
 		), array( 'content_width' => 'full' ) );
 
 		return $data;
@@ -1384,6 +1576,82 @@ final class Template_Applier {
 		);
 	}
 
+	private function home_hu_data( \WP_Post $page ): array {
+		$routes = $this->routes( 'hu' );
+		$copy = $this->interface_copy( 'hu' );
+		$source_content = $this->original_page_content( $page );
+		$media_items = $this->legacy_media_items( $page, $source_content );
+		$uploads = wp_get_upload_dir();
+		$hero_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2018/07/hatter-slider-46.jpg', 'slider' ) : null;
+		$hero_background = $hero_item ? $hero_item['image'] : $this->primary_media( $media_items );
+		$community_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2019/02/egriii.jpg', 'homepage-community' ) : null;
+		$community_image = $community_item ? $community_item['image'] : $this->media();
+		$community_content = '<p>Ismerje meg Egri Község történetét, földrajzi elhelyezkedését, emlékműveit, természeti értékeit és testvértelepülési kapcsolatait.</p><div class="agris-home-link-list">'
+			. '<a href="' . esc_url( $routes['history'] ) . '">Községünk története <span>→</span></a>'
+			. '<a href="' . esc_url( $routes['location'] ) . '">A község elhelyezkedése <span>→</span></a>'
+			. '<a href="' . esc_url( $routes['monuments'] ) . '">Emlékművek <span>→</span></a>'
+			. '<a href="' . esc_url( $routes['tourism'] ) . '">Ökoturizmus <span>→</span></a>'
+			. '<a href="' . esc_url( $routes['twinned'] ) . '">Testvértelepülések <span>→</span></a></div>';
+
+		return array(
+			$this->container( 'hu-header', array(
+				$this->widget( 'hu-header-widget', 'agris-site-header', $this->header_settings( $page, 'hu', $routes, 'hu-home-header' ) ),
+				$this->widget( 'hu-search-modal', 'agris-search-box', $this->search_settings( 'hu' ) ),
+			), array( 'content_width' => 'full' ) ),
+			$this->container( 'hu-hero', array(
+				$this->widget( 'hu-hero-widget', 'agris-home-hero', array(
+					'eyebrow' => 'Ügyfélfogadás · Hétfő–péntek 8:00–16:00',
+					'title' => 'Isten hozta Önöket Egri Község hivatalos honlapján!',
+					'description' => 'Közérdekű tájékoztatás, hivatali ügyintézés, felhívások, dokumentumok és közösségi hírek egy helyen.',
+					'primary_text' => 'Közérdekű információk', 'primary_link' => $this->link( $routes['public_info'] ),
+					'secondary_text' => 'Elérhetőség', 'secondary_link' => $this->link( $routes['contact'] ), 'background' => $hero_background, 'show_search' => 'yes',
+					'search_label' => $copy['search'], 'search_placeholder' => $copy['search_placeholder'], 'search_button' => $copy['search_button'], 'search_language' => 'hu',
+					'updates_title' => 'Legutóbbi bejegyzések', 'updates_items' => $this->recent_updates( 'hu', 3 ),
+				) ),
+			), array( 'content_width' => 'full' ) ),
+			$this->section( 'hu-services-head', 'Gyors elérés', 'Közérdekű ügyek', '', 'Minden felhívás', $routes['announcements'], 'light', '#ffffff' ),
+			$this->container( 'hu-services', array(
+				$this->widget( 'hu-services-widget', 'agris-services-grid', array( 'columns' => '4', 'items_list' => $this->repeater( 'hu-services', array(
+					array( 'icon' => 'KÖZ', 'title' => 'Helyi hivatalos közlöny', 'description' => 'Határozatok, rendelkezések és nyilvános dokumentumok.', 'url' => $this->link( $routes['monitor'] ) ),
+					array( 'icon' => 'PDF', 'title' => 'Formanyomtatványok', 'description' => 'Hivatali kérelmek és letölthető űrlapok.', 'url' => $this->link( $routes['forms'] ) ),
+					array( 'icon' => '17', 'title' => '17-es törvény', 'description' => 'Hirdetmények és a kapcsolódó nyilvános információk.', 'url' => $this->link( $routes['law17'] ) ),
+					array( 'icon' => 'HT', 'title' => 'Határozattervezetek', 'description' => 'A helyi tanács tervezetei és döntései.', 'url' => $this->link( $routes['decisions'] ) ),
+					array( 'icon' => 'EL', 'title' => 'Elérhetőség', 'description' => 'Telefonszámok, cím és ügyfélfogadás.', 'url' => $this->link( $routes['contact'] ) ),
+					array( 'icon' => 'HT', 'title' => 'Helyi tanács', 'description' => 'A helyi tanács szerkezete és határozatai.', 'url' => $this->link( $routes['council'] ) ),
+					array( 'icon' => 'EG', 'title' => 'Községünk', 'description' => 'Történet, kultúra, sport és turizmus.', 'url' => $this->link( $routes['history'] ) ),
+					array( 'icon' => 'FOT', 'title' => 'Galéria', 'description' => 'Képek a község eseményeiről és mindennapjairól.', 'url' => $this->link( $routes['galleries'] ) ),
+				) ) ) ),
+			), array( 'background_background' => 'classic', 'background_color' => '#ffffff', 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '70', 'left' => '0', 'isLinked' => false ) ) ),
+			$this->container( 'hu-community', array(
+				$this->widget( 'hu-community-widget', 'agris-content-media', array( 'kicker' => 'Községünk', 'title' => 'Történet, kultúra és természeti értékek Szatmár szívében', 'description' => '', 'content' => $community_content, 'image' => $community_image, 'image_side' => 'right' ) ),
+			), array( 'padding' => array( 'unit' => 'px', 'top' => '72', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) ),
+			$this->section( 'hu-announcements-head', 'Közérdekű', 'Felhívások', '', 'Minden felhívás', $routes['announcements'] ),
+			$this->container( 'hu-announcements', array(
+				$this->widget( 'hu-announcements-widget', 'agris-news-grid', array( 'post_type' => 'post', 'category' => 'felhivasok', 'language' => 'hu', 'count' => 3, 'columns' => '3', 'orderby' => 'date', 'show_excerpt' => 'yes', 'show_category' => 'yes', 'show_date' => 'yes', 'empty_text' => $copy['empty_posts'], 'read_more_text' => $copy['read_more'] ) ),
+			), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '70', 'left' => '0', 'isLinked' => false ) ) ),
+			$this->section( 'hu-events-head', 'Közösség', 'Események', '', 'Minden esemény', $routes['events'], 'dark', '#0f2f1f' ),
+			$this->container( 'hu-events', array(
+				$this->widget( 'hu-events-widget', 'agris-news-grid', array( 'post_type' => 'post', 'category' => 'esemenyek', 'language' => 'hu', 'count' => 3, 'columns' => '3', 'orderby' => 'date', 'show_excerpt' => 'yes', 'show_category' => 'yes', 'show_date' => 'yes', 'empty_text' => $copy['empty_posts'], 'read_more_text' => $copy['read_more'] ) ),
+			), array( 'background_background' => 'classic', 'background_color' => '#0f2f1f', 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '76', 'left' => '0', 'isLinked' => false ) ) ),
+			$this->section( 'hu-journal-head', 'Helyi kiadvány', 'Egri Napló', '', 'Az Egri Napló archívuma', $routes['journal'] ),
+			$this->container( 'hu-journal', array(
+				$this->widget( 'hu-journal-widget', 'agris-news-grid', array( 'post_type' => 'post', 'category' => 'egri-naplo', 'language' => 'hu', 'count' => 3, 'columns' => '3', 'orderby' => 'date', 'show_excerpt' => 'yes', 'show_category' => 'yes', 'show_date' => 'yes', 'empty_text' => $copy['empty_posts'], 'read_more_text' => $copy['read_more'] ) ),
+			), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '70', 'left' => '0', 'isLinked' => false ) ) ),
+			$this->section( 'hu-monitor-head', 'Önkormányzati átláthatóság', 'Helyi hivatalos közlöny', '', 'Közlöny megnyitása', $routes['monitor'], 'light', '#ffffff' ),
+			$this->container( 'hu-monitor', array(
+				$this->widget( 'hu-monitor-widget', 'agris-services-grid', array( 'columns' => '3', 'items_list' => $this->repeater( 'hu-monitor-items', array(
+					array( 'icon' => 'HT', 'title' => 'A tanácsadó hatóság rendelkezései', 'description' => 'A helyi tanács határozatainak archívuma.', 'url' => $this->link( $routes['deliberative'] ) ),
+					array( 'icon' => 'VH', 'title' => 'A végrehajtó hatóság rendelkezései', 'description' => 'A végrehajtó vezetőség által kiadott dokumentumok.', 'url' => $this->link( $routes['executive'] ) ),
+					array( 'icon' => 'PÉN', 'title' => 'Pénzügyi dokumentumok és információk', 'description' => 'Költségvetési és pénzügyi adatok.', 'url' => $this->link( $routes['financial'] ) ),
+				) ) ) ),
+			), array( 'background_background' => 'classic', 'background_color' => '#ffffff', 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) ),
+			$this->container( 'hu-footer', array(
+				$this->widget( 'hu-footer-widget', 'agris-site-footer', $this->footer_settings( 'hu', $routes, 'hu-home-footer' ) ),
+				$this->widget( 'hu-accessibility-widget', 'agris-accessibility', $this->accessibility_settings( 'hu' ) ),
+			), array( 'content_width' => 'full' ) ),
+		);
+	}
+
 	private function mayor_ro_data( \WP_Post $page ): array {
 		$menu_id = $this->menu_id();
 		$routes  = $this->routes();
@@ -1489,6 +1757,38 @@ final class Template_Applier {
 				array( 'content_width' => 'full' )
 			),
 		);
+	}
+
+	private function mayor_hu_data( \WP_Post $page ): array {
+		$routes = $this->routes( 'hu' );
+		$source_content = $this->original_page_content( $page );
+		$media_items = $this->legacy_media_items( $page, $source_content );
+		$mayor_photo = $media_items ? $media_items[0]['image'] : $this->media();
+		$normalized_content = $this->normalize_legacy_content( $source_content );
+		$unplaced_media = $this->unplaced_media_items( $media_items, $normalized_content, $mayor_photo );
+		$data = array(
+			$this->container( 'mayor-hu-header', array(
+				$this->widget( 'mayor-hu-header-widget', 'agris-site-header', $this->header_settings( $page, 'hu', $routes, 'mayor-hu-header' ) ),
+				$this->widget( 'mayor-hu-search-modal', 'agris-search-box', $this->search_settings( 'hu' ) ),
+			), array( 'content_width' => 'full' ) ),
+			$this->container( 'mayor-hu-hero', array(
+				$this->widget( 'mayor-hu-hero-widget', 'agris-page-hero', array( 'kicker' => 'Polgármesteri Hivatal', 'title' => get_the_title( $page ), 'description' => '', 'parent_label' => 'Kezdőlap', 'parent_link' => $this->link( $routes['home_hu'] ), 'current_label' => get_the_title( $page ), 'background' => $mayor_photo ) ),
+			), array( 'content_width' => 'full' ) ),
+			$this->container( 'mayor-hu-profile', array(
+				$this->widget( 'mayor-hu-profile-widget', 'agris-person-profile', array( 'photo' => $mayor_photo, 'role' => 'Polgármester', 'name' => 'Szabó Elek', 'subtitle' => '', 'bio' => '<p><strong>Születési idő:</strong> 1963. október 3.</p>', 'phone' => '0261 878 111', 'email' => 'primar@comunaagris.ro', 'office' => 'Hétfő 9:00–11:00 · Csütörtök 9:00–11:00' ) ),
+			), array( 'padding' => array( 'unit' => 'px', 'top' => '70', 'right' => '0', 'bottom' => '32', 'left' => '0', 'isLinked' => false ) ) ),
+			$this->container( 'mayor-hu-content', array(
+				$this->widget( 'mayor-hu-content-widget', 'agris-content-media', array( 'kicker' => '', 'title' => '', 'description' => '', 'content' => $normalized_content, 'image' => $this->media(), 'image_side' => 'right' ) ),
+			), array( 'padding' => array( 'unit' => 'px', 'top' => '24', 'right' => '0', 'bottom' => '64', 'left' => '0', 'isLinked' => false ) ) ),
+		);
+		if ( $unplaced_media ) {
+			$data[] = $this->container( 'mayor-hu-media', array( $this->widget( 'mayor-hu-media-widget', 'agris-photo-gallery', array( 'kicker' => 'Média', 'title' => 'Kapcsolódó képek', 'description' => '', 'items_list' => $this->repeater( 'mayor-hu-media-items', $unplaced_media ), 'columns' => count( $unplaced_media ) > 2 ? '3' : '2' ) ) ), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '64', 'left' => '0', 'isLinked' => false ) ) );
+		}
+		$data[] = $this->container( 'mayor-hu-footer', array(
+			$this->widget( 'mayor-hu-footer-widget', 'agris-site-footer', $this->footer_settings( 'hu', $routes, 'mayor-hu-footer' ) ),
+			$this->widget( 'mayor-hu-accessibility-widget', 'agris-accessibility', $this->accessibility_settings( 'hu' ) ),
+		), array( 'content_width' => 'full' ) );
+		return $data;
 	}
 
 	private function section( string $seed, string $kicker, string $title, string $description = '', string $button = '', string $url = '', string $theme = 'light', string $background = '' ): array {

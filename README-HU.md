@@ -19,6 +19,12 @@ Az **Eszközök → Comuna Agriș rebuild** oldal szerveroldalon alkalmazza az E
 
 Az átépítés nem hoz létre új oldalt, és nem módosítja a meglévő oldal ID-ját, nyelvét, szülőjét vagy slugját.
 
+### Magyar oldalak
+
+Az **Összes magyar oldal átépítése** művelet a meglévő `hu` nyelvű indexet, polgármesteri oldalt és minden publikált magyar belső oldalt Elementor-adattá alakítja. A magyar fejlécet és láblécet, a teljes többszintű WordPress-menüt, a keresés nyelvét, valamint az eredeti tartalmat, képeket, galériákat és dinamikus bejegyzéslistákat is megtartja.
+
+Ha egy céloldalnak van Polylang-fordítása, a rendszer azt használja. Ha nincs magyar párja, csak már létező publikus útvonalra mutat; új vagy feltételezett slugot nem hoz létre.
+
 ## Elementor widgetek
 
 A 24 widget az Elementor bal oldali paneljén, a **Comuna Agriș** kategóriában található. A készlet tartalmaz globális headert és footert, keresőt, akadálymentesítést, hero elemeket, tartalmi blokkokat, szolgáltatásokat, vezetői profilt, fogadóórákat, tanácstagokat, kapcsolati elemeket, galériát, adattáblát, híreket, dokumentumtárat, blogarchívumot és egyedi bejegyzéssablont.

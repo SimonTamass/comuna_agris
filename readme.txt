@@ -3,7 +3,7 @@ Contributors: comunaagris
 Tags: elementor, municipality, documents, accessibility, theme builder
 Requires at least: 6.4
 Requires PHP: 8.0
-Stable tag: 1.9.1
+Stable tag: 2.0.0
 License: GPLv2 or later
 
 A complete modular Elementor widget suite for the Comuna Agriș website.
@@ -51,6 +51,13 @@ Page-building widgets:
 6. Add official files under the new Documents menu.
 
 == Changelog ==
+
+= 2.0.0 =
+* Add complete Hungarian Elementor rebuild support for the homepage, mayor page and every published Hungarian page.
+* Detect the Hungarian WordPress menu and preserve Polylang translation links, page IDs, language, slugs and URLs.
+* Localize shared header, footer, search, accessibility, news and document controls for Hungarian visitors.
+* Preserve legacy Hungarian content, media, galleries, shortcodes and post grids during server-side conversion.
+* Add separate Romanian and Hungarian rebuild groups and full-site actions with per-page backups and URL verification.
 
 = 1.9.1 =
 * Support WordPress navigation trees through four menu levels in the shared header.
