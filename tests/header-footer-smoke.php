@@ -29,7 +29,7 @@ $checks = array(
 	'dynamic footer routes'      => array( $applier, "'contact_url' => \$this->link( \$routes['contact'] )" ),
 	'header height'              => array( $css, 'min-height: 78px;' ),
 	'local footer grid'          => array( $css, 'grid-template-columns: 1.2fr repeat(3, 1fr);' ),
-	'deduplicated language item' => array( $css, '.agris-menu > .lang-item { display: none; }' ),
+	'deduplicated language item' => array( $css, '.agris-menu > .lang-item, .agris-menu > .pll-parent-menu-item { display: none; }' ),
 	'theme-safe menu sizing'     => array( $css, '.agris-menu a { box-sizing: border-box; }' ),
 	'local mobile breakpoint'    => array( $css, '@media (max-width: 1040px)' ),
 	'hover bridge'               => array( $css, '.agris-menu .sub-menu::before' ),
