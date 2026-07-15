@@ -1276,9 +1276,8 @@ final class Template_Applier {
 		$description = $excerpt;
 		$source_content = $this->original_page_content( $page );
 		$media_items = $this->legacy_media_items( $page, $source_content );
-		$image = $this->primary_media( $media_items );
 		$normalized_content = $this->normalize_legacy_content( $source_content );
-		$unplaced_media = $this->unplaced_media_items( $media_items, $normalized_content, $image );
+		$unplaced_media = $this->unplaced_media_items( $media_items, $normalized_content, $this->media() );
 		$legacy_queries = $this->legacy_post_queries( $source_content );
 
 		$data = array(
@@ -1299,7 +1298,6 @@ final class Template_Applier {
 					'parent_label' => $copy['home'],
 					'parent_link' => $this->link( $routes[ 'home_' . $language ] ),
 					'current_label' => get_the_title( $page ),
-					'background' => $image,
 				) ) ),
 				array( 'content_width' => 'full' )
 			),
@@ -1342,11 +1340,7 @@ final class Template_Applier {
 	private function home_ro_data( \WP_Post $page ): array {
 		$menu_id = $this->menu_id();
 		$routes  = $this->routes();
-		$source_content = $this->original_page_content( $page );
-		$media_items = $this->legacy_media_items( $page, $source_content );
 		$uploads = wp_get_upload_dir();
-		$hero_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2018/07/hatter-slider-46.jpg', 'slider' ) : null;
-		$hero_background = $hero_item ? $hero_item['image'] : $this->primary_media( $media_items );
 		$cta_item = $this->media_item_from_id( 4295, 'shortcode' );
 		$cta_image = $cta_item ? $cta_item['image'] : $this->media();
 		$community_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2019/02/egriii.jpg', 'homepage-community' ) : null;
@@ -1402,7 +1396,6 @@ final class Template_Applier {
 							'primary_link'   => $this->link( $routes['public_info'] ),
 							'secondary_text' => 'Contact rapid',
 							'secondary_link' => $this->link( $routes['contact'] ),
-							'background'     => $hero_background,
 							'show_search'    => 'yes',
 							'updates_title'  => 'Noutăți din portal',
 							'updates_items'  => $this->repeater( 'home-updates', array(
@@ -1579,11 +1572,7 @@ final class Template_Applier {
 	private function home_hu_data( \WP_Post $page ): array {
 		$routes = $this->routes( 'hu' );
 		$copy = $this->interface_copy( 'hu' );
-		$source_content = $this->original_page_content( $page );
-		$media_items = $this->legacy_media_items( $page, $source_content );
 		$uploads = wp_get_upload_dir();
-		$hero_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2018/07/hatter-slider-46.jpg', 'slider' ) : null;
-		$hero_background = $hero_item ? $hero_item['image'] : $this->primary_media( $media_items );
 		$community_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2019/02/egriii.jpg', 'homepage-community' ) : null;
 		$community_image = $community_item ? $community_item['image'] : $this->media();
 		$community_content = '<p>Ismerje meg Egri Község történetét, földrajzi elhelyezkedését, emlékműveit, természeti értékeit és testvértelepülési kapcsolatait.</p><div class="agris-home-link-list">'
@@ -1604,7 +1593,7 @@ final class Template_Applier {
 					'title' => 'Isten hozta Önöket Egri Község hivatalos honlapján!',
 					'description' => 'Közérdekű tájékoztatás, hivatali ügyintézés, felhívások, dokumentumok és közösségi hírek egy helyen.',
 					'primary_text' => 'Közérdekű információk', 'primary_link' => $this->link( $routes['public_info'] ),
-					'secondary_text' => 'Elérhetőség', 'secondary_link' => $this->link( $routes['contact'] ), 'background' => $hero_background, 'show_search' => 'yes',
+					'secondary_text' => 'Elérhetőség', 'secondary_link' => $this->link( $routes['contact'] ), 'show_search' => 'yes',
 					'search_label' => $copy['search'], 'search_placeholder' => $copy['search_placeholder'], 'search_button' => $copy['search_button'], 'search_language' => 'hu',
 					'updates_title' => 'Legutóbbi bejegyzések', 'updates_items' => $this->recent_updates( 'hu', 3 ),
 				) ),
@@ -1702,7 +1691,6 @@ final class Template_Applier {
 							'parent_label'  => 'Acasă',
 							'parent_link'   => $this->link( $routes['home_ro'] ),
 							'current_label' => 'Primar',
-							'background'    => $mayor_photo,
 						)
 					),
 				),
@@ -1772,7 +1760,7 @@ final class Template_Applier {
 				$this->widget( 'mayor-hu-search-modal', 'agris-search-box', $this->search_settings( 'hu' ) ),
 			), array( 'content_width' => 'full' ) ),
 			$this->container( 'mayor-hu-hero', array(
-				$this->widget( 'mayor-hu-hero-widget', 'agris-page-hero', array( 'kicker' => 'Polgármesteri Hivatal', 'title' => get_the_title( $page ), 'description' => '', 'parent_label' => 'Kezdőlap', 'parent_link' => $this->link( $routes['home_hu'] ), 'current_label' => get_the_title( $page ), 'background' => $mayor_photo ) ),
+				$this->widget( 'mayor-hu-hero-widget', 'agris-page-hero', array( 'kicker' => 'Polgármesteri Hivatal', 'title' => get_the_title( $page ), 'description' => '', 'parent_label' => 'Kezdőlap', 'parent_link' => $this->link( $routes['home_hu'] ), 'current_label' => get_the_title( $page ) ) ),
 			), array( 'content_width' => 'full' ) ),
 			$this->container( 'mayor-hu-profile', array(
 				$this->widget( 'mayor-hu-profile-widget', 'agris-person-profile', array( 'photo' => $mayor_photo, 'role' => 'Polgármester', 'name' => 'Szabó Elek', 'subtitle' => '', 'bio' => '<p><strong>Születési idő:</strong> 1963. október 3.</p>', 'phone' => '0261 878 111', 'email' => 'primar@comunaagris.ro', 'office' => 'Hétfő 9:00–11:00 · Csütörtök 9:00–11:00' ) ),

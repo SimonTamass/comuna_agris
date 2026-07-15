@@ -46,15 +46,18 @@ final class Single_Post extends Base {
 		$article_class = 'agris-single' . ( $document_count ? ' has-document-list' : '' );
 		?>
 		<article class="<?php echo esc_attr( $article_class ); ?>">
-			<header>
+			<header class="agris-title-band">
+				<div class="agris-title-band-inner">
 				<div class="agris-breadcrumbs">
-					<a <?php echo self::link_attrs( $settings['home_url'] ); ?>><?php echo esc_html( $settings['home_label'] ); ?></a><span>/</span><span><?php echo esc_html( $categories[0]->name ?? $settings['article_label'] ); ?></span>
+					<a <?php echo self::link_attrs( $settings['home_url'] ); ?>><?php echo esc_html( $settings['home_label'] ); ?></a><span>/</span><span><?php echo esc_html( get_the_title( $post_id ) ); ?></span>
 				</div>
+				<div class="agris-kicker"><?php echo esc_html( $categories[0]->name ?? $settings['article_label'] ); ?></div>
 				<h1><?php echo esc_html( get_the_title( $post_id ) ); ?></h1>
 				<div class="agris-single-meta">
 					<time datetime="<?php echo esc_attr( get_the_date( DATE_W3C, $post_id ) ); ?>"><?php echo esc_html( get_the_date( '', $post_id ) ); ?></time>
 					<?php if ( 'yes' === $settings['show_author'] ) : ?><span><?php echo esc_html( get_the_author_meta( 'display_name', (int) get_post_field( 'post_author', $post_id ) ) ); ?></span><?php endif; ?>
 					<?php if ( $categories ) : ?><a href="<?php echo esc_url( get_category_link( $categories[0] ) ); ?>"><?php echo esc_html( $categories[0]->name ); ?></a><?php endif; ?>
+				</div>
 				</div>
 			</header>
 			<?php if ( 'yes' === $settings['show_image'] && has_post_thumbnail( $post_id ) ) : ?>

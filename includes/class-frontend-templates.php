@@ -245,14 +245,14 @@ final class Frontend_Templates {
 		echo '<main id="main-content" class="agris-global-main agris-render-fallback"><div class="agris-shell">';
 		if ( is_singular( array( 'post', 'agris_document' ) ) ) {
 			$post_id = get_queried_object_id();
-			echo '<article class="agris-single"><header><div class="agris-breadcrumbs"><a href="' . esc_url( $routes['home'] ) . '">' . esc_html( $copy['home'] ) . '</a></div><h1>' . esc_html( get_the_title( $post_id ) ) . '</h1><div class="agris-single-meta"><time>' . esc_html( get_the_date( '', $post_id ) ) . '</time></div></header>';
+			echo '<article class="agris-single"><header class="agris-title-band"><div class="agris-title-band-inner"><div class="agris-breadcrumbs"><a href="' . esc_url( $routes['home'] ) . '">' . esc_html( $copy['home'] ) . '</a><span>/</span><span>' . esc_html( get_the_title( $post_id ) ) . '</span></div><div class="agris-kicker">' . esc_html( $copy['article'] ) . '</div><h1>' . esc_html( get_the_title( $post_id ) ) . '</h1><div class="agris-single-meta"><time>' . esc_html( get_the_date( '', $post_id ) ) . '</time></div></div></header>';
 			if ( has_post_thumbnail( $post_id ) ) {
 				echo '<figure class="agris-single-image">' . get_the_post_thumbnail( $post_id, 'full' ) . '</figure>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
 			echo '<div class="agris-single-content">' . wp_kses_post( wpautop( (string) get_post_field( 'post_content', $post_id ) ) ) . '</div></article>';
 		} else {
 			$title = is_search() ? str_replace( '%s', get_search_query(), $copy['search_prefix'] ) : ( is_archive() ? get_the_archive_title() : $copy['archive_kicker'] );
-			echo '<header class="agris-archive-header"><div class="agris-kicker">' . esc_html( $copy['archive_kicker'] ) . '</div><h1>' . wp_kses_post( $title ) . '</h1></header><div class="agris-grid agris-grid-3">';
+			echo '<header class="agris-archive-header agris-title-band"><div class="agris-title-band-inner"><div class="agris-breadcrumbs"><a href="' . esc_url( $routes['home'] ) . '">' . esc_html( $copy['home'] ) . '</a><span>/</span><span>' . esc_html( wp_strip_all_tags( $title ) ) . '</span></div><div class="agris-kicker">' . esc_html( $copy['archive_kicker'] ) . '</div><h1>' . wp_kses_post( $title ) . '</h1></div></header><div class="agris-grid agris-grid-3">';
 			global $wp_query;
 			if ( $wp_query instanceof \WP_Query ) {
 				$wp_query->rewind_posts();
@@ -299,7 +299,7 @@ final class Frontend_Templates {
 		if ( is_singular( array( 'post', 'agris_document' ) ) ) {
 			$content_rendered = $this->render_widget( '\\ComunaAgris\\Widgets\\Single_Post', 'agris-single-post', array( 'show_image' => 'yes', 'show_author' => '', 'home_label' => $copy['home'], 'home_url' => $this->link( $routes['home'] ), 'article_label' => $copy['article'] ), 'single-' . $language );
 		} else {
-			$content_rendered = $this->render_widget( '\\ComunaAgris\\Widgets\\Post_Archive', 'agris-post-archive', array( 'columns' => '3', 'show_archive_header' => 'yes', 'fallback_title' => $copy['archive_kicker'], 'excerpt_words' => 24, 'archive_kicker' => $copy['archive_kicker'], 'search_prefix' => $copy['search_prefix'], 'read_more_text' => $copy['read_more'], 'pagination_label' => $copy['pagination'], 'empty_text' => $copy['empty'], 'article_label' => $copy['article'] ), 'archive-' . $language );
+			$content_rendered = $this->render_widget( '\\ComunaAgris\\Widgets\\Post_Archive', 'agris-post-archive', array( 'columns' => '3', 'show_archive_header' => 'yes', 'fallback_title' => $copy['archive_kicker'], 'excerpt_words' => 24, 'archive_kicker' => $copy['archive_kicker'], 'home_label' => $copy['home'], 'home_url' => $this->link( $routes['home'] ), 'search_prefix' => $copy['search_prefix'], 'read_more_text' => $copy['read_more'], 'pagination_label' => $copy['pagination'], 'empty_text' => $copy['empty'], 'article_label' => $copy['article'] ), 'archive-' . $language );
 		}
 		$content_output = ob_get_clean();
 		if ( $content_rendered ) {

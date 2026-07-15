@@ -28,7 +28,9 @@ $checks = array(
 	'WordPress document shell' => array( $template, 'wp_head();' ),
 	'safe template entrypoint' => array( $template, 'render_safely();' ),
 	'localized archive labels' => array( $archive, "\$s['read_more_text']" ),
+	'unified archive title band' => array( $archive, 'agris-archive-header agris-title-band' ),
 	'document-aware single content' => array( $single, "' has-document-list'" ),
+	'unified single title band' => array( $single, '<header class="agris-title-band">' ),
 	'global template layout' => array( $css, '.agris-global-main' ),
 	'download card layout' => array( $css, '.agris-download-item' ),
 );
