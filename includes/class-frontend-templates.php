@@ -170,8 +170,16 @@ final class Frontend_Templates {
 		if ( ! class_exists( $class ) ) {
 			return;
 		}
-		$widget = new $class( array( 'id' => substr( md5( 'agris-global-' . $seed ), 0, 7 ), 'elType' => 'widget', 'widgetType' => $type, 'settings' => $settings ) );
-		$widget->print_element();
+		$data = array(
+			'id'         => substr( md5( 'agris-global-' . $seed ), 0, 7 ),
+			'elType'     => 'widget',
+			'widgetType' => $type,
+			'settings'   => $settings,
+		);
+		$widget = \Elementor\Plugin::$instance->elements_manager->create_element_instance( $data );
+		if ( $widget ) {
+			$widget->print_element();
+		}
 	}
 
 	public function render(): void {

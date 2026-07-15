@@ -15,6 +15,7 @@ $checks = array(
 	'Elementor archive widget' => array( $frontend, "'agris-post-archive'" ),
 	'Elementor single widget' => array( $frontend, "'agris-single-post'" ),
 	'defensive widget loading' => array( $frontend, "require_once AGRIS_WIDGETS_PATH . 'includes/widgets/class-'" ),
+	'Elementor widget factory' => array( $frontend, 'elements_manager->create_element_instance( $data )' ),
 	'language-aware shared header' => array( $frontend, "'agris-site-header'" ),
 	'language-aware shared footer' => array( $frontend, "'agris-site-footer'" ),
 	'WordPress document shell' => array( $template, 'wp_head();' ),

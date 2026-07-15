@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Comuna Agriș Elementor Widgets
  * Description: Modular Elementor widget suite and document library for rebuilding the Comuna Agriș municipal website.
- * Version: 2.1.0
+ * Version: 2.1.1
  * Author: Comuna Agriș
  * Text Domain: comuna-agris
  * Requires at least: 6.4
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'AGRIS_WIDGETS_VERSION', '2.1.0' );
+define( 'AGRIS_WIDGETS_VERSION', '2.1.1' );
 define( 'AGRIS_WIDGETS_FILE', __FILE__ );
 define( 'AGRIS_WIDGETS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'AGRIS_WIDGETS_URL', plugin_dir_url( __FILE__ ) );
