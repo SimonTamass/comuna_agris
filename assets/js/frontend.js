@@ -280,6 +280,174 @@
     });
   }
 
+  const lightboxCandidateSelector = [
+    '.agris-gallery a',
+    '.agris-legacy-gallery img',
+    '.agris-legacy-media > img',
+    '.agris-single-image img',
+    '.agris-single-content img',
+    '.agris-richtext img',
+    '.agris-media-frame img',
+    '.agris-person-photo img',
+    '.agris-cta-image img',
+  ].join(', ');
+  let lightbox = null;
+  let lightboxItems = [];
+  let lightboxIndex = 0;
+  let lightboxPreviousFocus = null;
+
+  const isImageUrl = (url) => /^(?:data:image\/|blob:)|\.(?:avif|gif|jpe?g|png|webp)(?:[?#]|$)/i.test(url || '');
+
+  function largestImageSource(image) {
+    const candidates = (image.getAttribute('srcset') || '').split(',').map((candidate) => {
+      const parts = candidate.trim().split(/\s+/);
+      return { url: parts[0] || '', width: parseInt(parts[1], 10) || 0 };
+    }).filter((candidate) => candidate.url);
+    candidates.sort((left, right) => right.width - left.width);
+    return candidates[0]?.url || image.currentSrc || image.src || '';
+  }
+
+  function resolveLightboxTrigger(candidate) {
+    if (candidate.matches('a')) return candidate;
+    const link = candidate.closest('a');
+    if (!link) return candidate;
+    return link.matches('[data-agris-lightbox]') || isImageUrl(link.getAttribute('href')) ? link : null;
+  }
+
+  function lightboxItem(trigger) {
+    const image = trigger.matches('img') ? trigger : one('img', trigger);
+    if (!image) return null;
+    const href = trigger.matches('a') ? trigger.getAttribute('href') || '' : '';
+    const source = (trigger.hasAttribute('data-agris-lightbox') || isImageUrl(href)) ? href : largestImageSource(image);
+    if (!source) return null;
+    const figureCaption = trigger.closest('figure')?.querySelector('figcaption')?.textContent?.trim() || '';
+    const visibleCaption = one(':scope > span', trigger)?.textContent?.trim() || '';
+    const caption = trigger.dataset.agrisLightboxCaption || figureCaption || visibleCaption || image.alt || '';
+    return { trigger, source, caption, alt: image.alt || caption };
+  }
+
+  function collectLightboxItems(root) {
+    const triggers = [];
+    all(lightboxCandidateSelector, root).forEach((candidate) => {
+      const trigger = resolveLightboxTrigger(candidate);
+      if (trigger && !triggers.includes(trigger)) triggers.push(trigger);
+    });
+    return triggers.map(lightboxItem).filter(Boolean);
+  }
+
+  function lightboxGroupRoot(trigger) {
+    return trigger.closest('.agris-gallery, .agris-legacy-gallery, .agris-single, .agris-content-media, .agris-person, .agris-cta') || trigger.parentElement;
+  }
+
+  function formatCounter(position, total) {
+    return (window.agrisWidgets?.i18n?.imageCounter || 'Image %1$d of %2$d')
+      .replace('%1$d', String(position))
+      .replace('%2$d', String(total));
+  }
+
+  function showLightboxItem(index) {
+    if (!lightbox || !lightboxItems.length) return;
+    lightboxIndex = (index + lightboxItems.length) % lightboxItems.length;
+    const item = lightboxItems[lightboxIndex];
+    const image = one('[data-agris-lightbox-image]', lightbox);
+    const caption = one('[data-agris-lightbox-text]', lightbox);
+    const counter = one('[data-agris-lightbox-counter]', lightbox);
+    const hasMultiple = lightboxItems.length > 1;
+    image.src = item.source;
+    image.alt = item.alt;
+    caption.textContent = item.caption;
+    caption.hidden = !item.caption;
+    counter.textContent = formatCounter(lightboxIndex + 1, lightboxItems.length);
+    all('[data-agris-lightbox-nav]', lightbox).forEach((button) => { button.hidden = !hasMultiple; });
+  }
+
+  function closeLightbox() {
+    if (!lightbox || lightbox.hidden) return;
+    lightbox.hidden = true;
+    document.body.classList.remove('agris-lightbox-open');
+    one('[data-agris-lightbox-image]', lightbox)?.removeAttribute('src');
+    lightboxPreviousFocus?.focus();
+  }
+
+  function ensureLightbox() {
+    if (lightbox) return lightbox;
+    lightbox = document.createElement('div');
+    lightbox.className = 'agris-lightbox';
+    lightbox.hidden = true;
+    lightbox.setAttribute('role', 'dialog');
+    lightbox.setAttribute('aria-modal', 'true');
+    lightbox.setAttribute('aria-label', window.agrisWidgets?.i18n?.openImage || 'Image viewer');
+    lightbox.innerHTML = `
+      <button type="button" class="agris-lightbox-close" data-agris-lightbox-close><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
+      <button type="button" class="agris-lightbox-nav is-previous" data-agris-lightbox-nav="previous"><span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span></button>
+      <figure class="agris-lightbox-stage">
+        <img data-agris-lightbox-image alt="">
+        <figcaption data-agris-lightbox-text></figcaption>
+        <small data-agris-lightbox-counter aria-live="polite"></small>
+      </figure>
+      <button type="button" class="agris-lightbox-nav is-next" data-agris-lightbox-nav="next"><span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span></button>`;
+    document.body.appendChild(lightbox);
+    const close = one('[data-agris-lightbox-close]', lightbox);
+    const previous = one('[data-agris-lightbox-nav="previous"]', lightbox);
+    const next = one('[data-agris-lightbox-nav="next"]', lightbox);
+    close.setAttribute('aria-label', window.agrisWidgets?.i18n?.closeLightbox || 'Close');
+    previous.setAttribute('aria-label', window.agrisWidgets?.i18n?.previousImage || 'Previous image');
+    next.setAttribute('aria-label', window.agrisWidgets?.i18n?.nextImage || 'Next image');
+    close.addEventListener('click', closeLightbox);
+    previous.addEventListener('click', () => showLightboxItem(lightboxIndex - 1));
+    next.addEventListener('click', () => showLightboxItem(lightboxIndex + 1));
+    lightbox.addEventListener('click', (event) => { if (event.target === lightbox) closeLightbox(); });
+    lightbox.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeLightbox();
+      if (event.key === 'ArrowLeft') showLightboxItem(lightboxIndex - 1);
+      if (event.key === 'ArrowRight') showLightboxItem(lightboxIndex + 1);
+      if (event.key !== 'Tab') return;
+      const focusable = all('button:not([hidden])', lightbox);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    });
+    return lightbox;
+  }
+
+  function openLightbox(items, index, trigger) {
+    if (!items.length) return;
+    ensureLightbox();
+    lightboxItems = items;
+    lightboxPreviousFocus = trigger;
+    showLightboxItem(index);
+    lightbox.hidden = false;
+    document.body.classList.add('agris-lightbox-open');
+    one('[data-agris-lightbox-close]', lightbox)?.focus();
+  }
+
+  function initLightbox(root = document) {
+    collectLightboxItems(root).forEach((item) => {
+      const trigger = item.trigger;
+      if (trigger.dataset.agrisLightboxReady) return;
+      trigger.dataset.agrisLightboxReady = 'true';
+      if (trigger.matches('img')) {
+        trigger.setAttribute('role', 'button');
+        trigger.tabIndex = 0;
+      }
+      const openLabel = window.agrisWidgets?.i18n?.openImage || 'Open image';
+      trigger.setAttribute('aria-label', item.caption ? `${openLabel}: ${item.caption}` : openLabel);
+      const activate = (event) => {
+        event.preventDefault();
+        const groupItems = collectLightboxItems(lightboxGroupRoot(trigger));
+        const index = Math.max(0, groupItems.findIndex((entry) => entry.trigger === trigger));
+        openLightbox(groupItems, index, trigger);
+      };
+      trigger.addEventListener('click', activate);
+      trigger.addEventListener('keydown', (event) => {
+        if (!trigger.matches('img') || !['Enter', ' '].includes(event.key)) return;
+        activate(event);
+      });
+    });
+  }
+
   function openSearch() {
     const modal = one('[data-agris-search-modal].is-modal');
     if (!modal) return;
@@ -288,7 +456,7 @@
   }
 
   function init(root = document) {
-    initHeader(root); initFilters(root); initContact(root); initAccessibility(root); initSearch(root); initCopy(root);
+    initHeader(root); initFilters(root); initContact(root); initAccessibility(root); initSearch(root); initCopy(root); initLightbox(root);
   }
 
   document.addEventListener('click', (event) => {

@@ -52,6 +52,11 @@ final class Assets {
 				'i18n'    => array(
 					'error'   => $is_hungarian ? 'Hiba történt. Kérjük, próbálja újra.' : esc_html__( 'A apărut o eroare. Încercați din nou.', 'comuna-agris' ),
 					'sending' => $is_hungarian ? 'Küldés…' : esc_html__( 'Se trimite…', 'comuna-agris' ),
+					'openImage'     => $is_hungarian ? 'Kép megnyitása nagy méretben' : esc_html__( 'Deschide imaginea la dimensiune mare', 'comuna-agris' ),
+					'closeLightbox' => $is_hungarian ? 'Bezárás' : esc_html__( 'Închide', 'comuna-agris' ),
+					'previousImage' => $is_hungarian ? 'Előző kép' : esc_html__( 'Imaginea anterioară', 'comuna-agris' ),
+					'nextImage'     => $is_hungarian ? 'Következő kép' : esc_html__( 'Imaginea următoare', 'comuna-agris' ),
+					'imageCounter'  => $is_hungarian ? '%1$d / %2$d kép' : esc_html__( 'Imaginea %1$d din %2$d', 'comuna-agris' ),
 				),
 			)
 		);
