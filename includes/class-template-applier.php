@@ -540,6 +540,7 @@ final class Template_Applier {
 		$this->routes_cache = array(
 			'home_ro'       => $this->page_url( array( 'home-ro' ), '/ro/home-ro/' ),
 			'home_hu'       => $this->page_url( array( 'home-hu' ), '/hu/home-hu/' ),
+			'public_info'   => $this->page_url( array( 'informatii-publice' ), '/ro/informatii-publice/' ),
 			'monitor'       => $this->page_url( array( 'monitorul-oficial-local' ), '/ro/monitorul-oficial-local/' ),
 			'contact'       => $this->page_url( array( 'contact' ), '/ro/contact/' ),
 			'announcements' => $this->page_url( array( 'anunti' ), '/ro/anunti/' ),
@@ -550,6 +551,13 @@ final class Template_Applier {
 			'agricultural'  => $this->page_url( array( 'registru-agricol' ), '/ro/registru-agricol/' ),
 			'mayor'         => $this->page_url( array( 'primar' ), '/ro/primar/' ),
 			'council'       => $this->page_url( array( 'conponenta-consiliul-local' ), '/ro/conponenta-consiliul-local/' ),
+			'history'       => $this->page_url( array( 'istoria-comunei' ), '/ro/istoria-comunei/' ),
+			'monuments'     => $this->page_url( array( 'monumente-istorice' ), '/ro/monumente-istorice/' ),
+			'tourism'       => $this->page_url( array( 'ekoturisma' ), '/ro/ekoturisma/' ),
+			'twinned'       => $this->page_url( array( 'comune-infratite' ), '/ro/comune-infratite/' ),
+			'deliberative'  => $this->page_url( array( 'hotararile-autoritatii-deliberative' ), '/ro/hotararile-autoritatii-deliberative/' ),
+			'executive'     => $this->page_url( array( 'dispozitii-autoritatii-executive' ), '/ro/dispozitii-autoritatii-executive/' ),
+			'financial'     => $this->page_url( array( 'documente-si-informatii-financiare' ), '/ro/documente-si-informatii-financiare/' ),
 		);
 		return $this->routes_cache;
 	}
@@ -1149,6 +1157,15 @@ final class Template_Applier {
 		$hero_background = $hero_item ? $hero_item['image'] : $this->primary_media( $media_items );
 		$cta_item = $this->media_item_from_id( 4295, 'shortcode' );
 		$cta_image = $cta_item ? $cta_item['image'] : $this->media();
+		$community_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2019/02/egriii.jpg', 'homepage-community' ) : null;
+		$community_image = $community_item ? $community_item['image'] : $this->media();
+		$community_content = '<p>Noua structură păstrează conținutul esențial din site-ul vechi: istoria comunei, localizarea, monumentele istorice, turismul, sportul și legăturile cu localitățile înfrățite.</p>'
+			. '<div class="agris-home-link-list">'
+			. '<a href="' . esc_url( $routes['history'] ) . '">Istoria comunei <span>→</span></a>'
+			. '<a href="' . esc_url( $routes['monuments'] ) . '">Monumente istorice <span>→</span></a>'
+			. '<a href="' . esc_url( $routes['tourism'] ) . '">Ecoturism și agroturism <span>→</span></a>'
+			. '<a href="' . esc_url( $routes['twinned'] ) . '">Comune înfrățite <span>→</span></a>'
+			. '</div>';
 
 		return array(
 			$this->container(
@@ -1186,23 +1203,27 @@ final class Template_Applier {
 						'hero-widget',
 						'agris-home-hero',
 						array(
-							'eyebrow'        => '',
-							'title'          => 'Bine ați venit',
-							'description'    => '',
-							'primary_text'   => '',
-							'primary_link'   => $this->link(),
-							'secondary_text' => '',
-							'secondary_link' => $this->link(),
+							'eyebrow'        => 'Ghișeul este deschis · Luni–Vineri 8:00–16:00',
+							'title'          => 'Servicii publice transparente pentru Comuna Agriș.',
+							'description'    => 'Portal modern pentru documente, formulare, hotărâri, anunțuri oficiale și informații utile pentru cetățeni.',
+							'primary_text'   => 'Vezi documentele',
+							'primary_link'   => $this->link( $routes['public_info'] ),
+							'secondary_text' => 'Contact rapid',
+							'secondary_link' => $this->link( $routes['contact'] ),
 							'background'     => $hero_background,
-							'show_search'    => '',
-							'updates_title'  => '',
-							'updates_items'  => array(),
+							'show_search'    => 'yes',
+							'updates_title'  => 'Noutăți din portal',
+							'updates_items'  => $this->repeater( 'home-updates', array(
+								array( 'day' => '08', 'title' => 'ANUNȚ INDIVIDUAL', 'meta' => 'Publicat în iulie 2026', 'url' => $this->link( home_url( '/ro/anunt-idividual/' ) ) ),
+								array( 'day' => '18', 'title' => 'H.C.L. nr. 13–16 / 2026', 'meta' => 'Hotărâri publicate pe 18 mai 2026', 'url' => $this->link( home_url( '/ro/hotararea-consiliului-local-nr-13-16-2026-2/' ) ) ),
+								array( 'day' => '24', 'title' => 'H.C.L. nr. 4–9 / 2026', 'meta' => 'Arhivă Consiliul Local', 'url' => $this->link( home_url( '/ro/hotararea-consiliului-local-nr-4-9-2026/' ) ) ),
+							) ),
 						)
 					),
 				),
 				array( 'content_width' => 'full' )
 			),
-			$this->section( 'services-head', 'Acces rapid', 'Servicii frecvente', '', 'Toate informațiile', $routes['monitor'] ),
+			$this->section( 'services-head', 'Acces rapid', 'Servicii frecvente', '', 'Toate informațiile', $routes['public_info'], 'agris-home-band agris-home-band-alt' ),
 			$this->container(
 				'services',
 				array(
@@ -1225,10 +1246,11 @@ final class Template_Applier {
 					),
 				),
 				array(
+					'_css_classes' => 'agris-home-band agris-home-band-alt agris-home-band-body',
 					'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '70', 'left' => '0', 'isLinked' => false ),
 				)
 			),
-			$this->section( 'news-head', '', 'Anunturi', '', 'Mai multe știri', $routes['announcements'] ),
+			$this->section( 'news-head', 'Actualizat după site-ul original', 'Anunțuri oficiale', '', 'Toate anunțurile', $routes['announcements'], 'agris-home-band' ),
 			$this->container(
 				'news',
 				array(
@@ -1238,63 +1260,76 @@ final class Template_Applier {
 						array(
 							'post_type'    => 'post',
 							'category'     => 'anunturi',
-							'count'        => 6,
+							'count'        => 3,
 							'columns'      => '3',
 							'orderby'      => 'date',
 							'show_excerpt' => 'yes',
-							'show_category'=> '',
-							'show_date'    => '',
+							'show_category'=> 'yes',
+							'show_date'    => 'yes',
 						)
 					),
 				),
 				array(
+					'_css_classes' => 'agris-home-band agris-home-band-body',
 					'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '70', 'left' => '0', 'isLinked' => false ),
 				)
 			),
-			$this->section( 'reports-head', '', 'Dare-de-seama', '' ),
-			$this->container(
-				'reports',
-				array(
-					$this->widget(
-						'reports-widget',
-						'agris-news-grid',
-						array(
-							'post_type'     => 'post',
-							'category'      => 'dare-de-seama',
-							'count'         => 6,
-							'columns'       => '3',
-							'orderby'       => 'date',
-							'show_excerpt'  => 'yes',
-							'show_category' => '',
-							'show_date'     => '',
-						)
-					),
-				),
-				array(
-					'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '80', 'left' => '0', 'isLinked' => false ),
-				)
-			),
-			$this->section( 'decisions-head', '', 'Hotarari-ale-consiului-local', '' ),
+			$this->section( 'decisions-head', 'Consiliul Local', 'Hotărâri recente', '', 'Arhiva H.C.L.', $routes['decisions'], 'agris-home-band agris-home-band-dark' ),
 			$this->container(
 				'decisions',
 				array(
 					$this->widget(
 						'decisions-widget',
-						'agris-news-grid',
+						'agris-document-grid',
 						array(
-							'post_type'     => 'post',
-							'category'      => 'hotarari-ale-consiului-local-2026,hotarari-ale-consiului-local-2025',
-							'count'         => 6,
-							'columns'       => '3',
-							'orderby'       => 'date',
-							'show_excerpt'  => 'yes',
-							'show_category' => '',
-							'show_date'     => 'yes',
+							'columns'    => '3',
+							'filters'    => '',
+							'items_list' => $this->repeater( 'home-decisions', array(
+								array( 'icon' => 'HCL', 'title' => 'H.C.L. nr. 13–16 / 2026', 'meta' => '18 mai 2026', 'category' => 'Hotărâri', 'url' => $this->link( home_url( '/ro/hotararea-consiliului-local-nr-13-16-2026-2/' ) ) ),
+								array( 'icon' => 'HCL', 'title' => 'H.C.L. nr. 10–12 / 2026', 'meta' => '18 mai 2026', 'category' => 'Hotărâri', 'url' => $this->link( home_url( '/ro/hotararea-consiliului-local-nr-10-12-2026/' ) ) ),
+								array( 'icon' => 'HCL', 'title' => 'H.C.L. nr. 4–9 / 2026', 'meta' => '24 martie 2026', 'category' => 'Hotărâri', 'url' => $this->link( home_url( '/ro/hotararea-consiliului-local-nr-4-9-2026/' ) ) ),
+							) ),
 						)
 					),
 				),
 				array(
+					'_css_classes' => 'agris-home-band agris-home-band-dark agris-home-band-body',
 					'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '80', 'left' => '0', 'isLinked' => false ),
+				)
+			),
+			$this->container(
+				'community',
+				array(
+					$this->widget( 'community-widget', 'agris-content-media', array(
+						'kicker' => 'Comuna',
+						'title' => 'Istorie, cultură și natură în inima județului Satu Mare',
+						'description' => '',
+						'content' => $community_content,
+						'image' => $community_image,
+						'image_side' => 'right',
+					) ),
+				),
+				array(
+					'_css_classes' => 'agris-home-band agris-home-community',
+					'padding' => array( 'unit' => 'px', 'top' => '72', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ),
+				)
+			),
+			$this->section( 'monitor-head', 'Monitorul Oficial Local', 'Documente publice într-un singur loc', '', 'Deschide MOL', $routes['monitor'], 'agris-home-band agris-home-band-alt' ),
+			$this->container(
+				'monitor-services',
+				array(
+					$this->widget( 'monitor-services-widget', 'agris-services-grid', array(
+						'columns' => '3',
+						'items_list' => $this->repeater( 'monitor-services', array(
+							array( 'icon' => 'CL', 'title' => 'Hotărârile autorității deliberative', 'description' => 'Arhivă pentru hotărârile Consiliului Local.', 'url' => $this->link( $routes['deliberative'] ) ),
+							array( 'icon' => 'PR', 'title' => 'Dispoziții autoritatea executivă', 'description' => 'Documente emise de conducerea executivă.', 'url' => $this->link( $routes['executive'] ) ),
+							array( 'icon' => 'FIN', 'title' => 'Documente și informații financiare', 'description' => 'Buget, execuție și date financiare publice.', 'url' => $this->link( $routes['financial'] ) ),
+						) ),
+					) ),
+				),
+				array(
+					'_css_classes' => 'agris-home-band agris-home-band-alt agris-home-band-body',
+					'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ),
 				)
 			),
 			$this->container(
@@ -1304,14 +1339,18 @@ final class Template_Applier {
 						'cta-widget',
 						'agris-cta-banner',
 						array(
-							'kicker'      => '',
-							'title'       => '',
-							'description' => '',
+							'kicker'      => 'Transparență administrativă',
+							'title'       => 'Guvernare transparentă, deschisă și participativă',
+							'description' => 'Bannerul SIPOCĂ din site-ul original a fost păstrat ca reper instituțional.',
 							'image'       => $cta_image,
 							'button_text' => '',
 							'button_link' => $this->link(),
 						)
 					),
+				),
+				array(
+					'_css_classes' => 'agris-home-band agris-home-band-tight',
+					'padding' => array( 'unit' => 'px', 'top' => '48', 'right' => '0', 'bottom' => '48', 'left' => '0', 'isLinked' => false ),
 				)
 			),
 			$this->container(
@@ -1452,7 +1491,7 @@ final class Template_Applier {
 		);
 	}
 
-	private function section( string $seed, string $kicker, string $title, string $description = '', string $button = '', string $url = '' ): array {
+	private function section( string $seed, string $kicker, string $title, string $description = '', string $button = '', string $url = '', string $css_class = '' ): array {
 		return $this->container(
 			$seed,
 			array(
@@ -1469,6 +1508,7 @@ final class Template_Applier {
 				),
 			),
 			array(
+				'_css_classes' => $css_class,
 				'padding' => array( 'unit' => 'px', 'top' => '80', 'right' => '0', 'bottom' => '30', 'left' => '0', 'isLinked' => false ),
 			)
 		);
