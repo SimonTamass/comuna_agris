@@ -152,7 +152,14 @@ final class Frontend_Templates {
 		return function_exists( 'pll_home_url' ) ? (string) pll_home_url( $other_language ) : home_url( '/' . $other_language . '/' );
 	}
 
-	private function render_widget( string $class, string $type, array $settings, string $seed ): void {
+	private function report_render_error( string $context, \Throwable $error ): void {
+		do_action( 'agris_frontend_render_error', $context, $error );
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( sprintf( 'Comuna Agris frontend render error [%s]: %s', $context, $error->getMessage() ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		}
+	}
+
+	private function render_widget( string $class, string $type, array $settings, string $seed ): bool {
 		$widget_files = array(
 			'\\ComunaAgris\\Widgets\\Site_Header' => 'site-header',
 			'\\ComunaAgris\\Widgets\\Site_Footer' => 'site-footer',
@@ -161,25 +168,86 @@ final class Frontend_Templates {
 			'\\ComunaAgris\\Widgets\\Post_Archive' => 'post-archive',
 			'\\ComunaAgris\\Widgets\\Single_Post' => 'single-post',
 		);
-		if ( ! class_exists( '\\ComunaAgris\\Widgets\\Base' ) ) {
-			require_once AGRIS_WIDGETS_PATH . 'includes/widgets/class-base.php';
-		}
-		if ( ! class_exists( $class ) && isset( $widget_files[ $class ] ) ) {
-			require_once AGRIS_WIDGETS_PATH . 'includes/widgets/class-' . $widget_files[ $class ] . '.php';
-		}
-		if ( ! class_exists( $class ) ) {
-			return;
-		}
-		$data = array(
-			'id'         => substr( md5( 'agris-global-' . $seed ), 0, 7 ),
-			'elType'     => 'widget',
-			'widgetType' => $type,
-			'settings'   => $settings,
-		);
-		$widget = \Elementor\Plugin::$instance->elements_manager->create_element_instance( $data );
-		if ( $widget ) {
+		$buffer_level = ob_get_level();
+		ob_start();
+		try {
+			if ( ! class_exists( '\\ComunaAgris\\Widgets\\Base' ) ) {
+				require_once AGRIS_WIDGETS_PATH . 'includes/widgets/class-base.php';
+			}
+			if ( ! class_exists( $class ) && isset( $widget_files[ $class ] ) ) {
+				require_once AGRIS_WIDGETS_PATH . 'includes/widgets/class-' . $widget_files[ $class ] . '.php';
+			}
+			if ( ! class_exists( $class ) || ! isset( \Elementor\Plugin::$instance->elements_manager ) ) {
+				ob_end_clean();
+				return false;
+			}
+			$data = array(
+				'id'         => substr( md5( 'agris-global-' . $seed ), 0, 7 ),
+				'elType'     => 'widget',
+				'widgetType' => $type,
+				'settings'   => $settings,
+			);
+			$widget = \Elementor\Plugin::$instance->elements_manager->create_element_instance( $data );
+			if ( ! $widget ) {
+				ob_end_clean();
+				return false;
+			}
 			$widget->print_element();
+			$output = ob_get_clean();
+			echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			return true;
+		} catch ( \Throwable $error ) {
+			while ( ob_get_level() > $buffer_level ) {
+				ob_end_clean();
+			}
+			$this->report_render_error( $type, $error );
+			return false;
 		}
+	}
+
+	private function render_native_header( string $language, array $copy, array $routes ): void {
+		$menu_id = $this->menu_id( $language );
+		echo '<div id="top" class="agris-header-wrap agris-render-fallback"><header class="agris-site-header"><div class="agris-shell agris-header-inner">';
+		echo '<a class="agris-brand" href="' . esc_url( $routes['home'] ) . '"><span class="agris-brand-mark">CA</span><span><strong>' . esc_html( $copy['brand'] ) . '</strong><small>' . esc_html( $copy['subtitle'] ) . '</small></span></a>';
+		if ( $menu_id ) {
+			wp_nav_menu( array( 'menu' => (int) $menu_id, 'container' => 'nav', 'container_class' => 'agris-main-nav', 'menu_class' => 'agris-menu', 'fallback_cb' => false, 'depth' => 4 ) );
+		}
+		echo '<a class="agris-button agris-button-primary" href="' . esc_url( $routes['monitor'] ) . '">' . esc_html( $copy['monitor'] ) . '</a></div></header></div>';
+	}
+
+	private function render_native_content( array $copy, array $routes ): void {
+		echo '<main id="main-content" class="agris-global-main agris-render-fallback"><div class="agris-shell">';
+		if ( is_singular( array( 'post', 'agris_document' ) ) ) {
+			$post_id = get_queried_object_id();
+			echo '<article class="agris-single"><header><div class="agris-breadcrumbs"><a href="' . esc_url( $routes['home'] ) . '">' . esc_html( $copy['home'] ) . '</a></div><h1>' . esc_html( get_the_title( $post_id ) ) . '</h1><div class="agris-single-meta"><time>' . esc_html( get_the_date( '', $post_id ) ) . '</time></div></header>';
+			if ( has_post_thumbnail( $post_id ) ) {
+				echo '<figure class="agris-single-image">' . get_the_post_thumbnail( $post_id, 'full' ) . '</figure>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			}
+			echo '<div class="agris-single-content">' . wp_kses_post( wpautop( (string) get_post_field( 'post_content', $post_id ) ) ) . '</div></article>';
+		} else {
+			$title = is_search() ? str_replace( '%s', get_search_query(), $copy['search_prefix'] ) : ( is_archive() ? get_the_archive_title() : $copy['archive_kicker'] );
+			echo '<header class="agris-archive-header"><div class="agris-kicker">' . esc_html( $copy['archive_kicker'] ) . '</div><h1>' . wp_kses_post( $title ) . '</h1></header><div class="agris-grid agris-grid-3">';
+			global $wp_query;
+			if ( $wp_query instanceof \WP_Query ) {
+				$wp_query->rewind_posts();
+			}
+			$has_posts = false;
+			while ( have_posts() ) {
+				$has_posts = true;
+				the_post();
+				echo '<article class="agris-news-card"><a href="' . esc_url( get_permalink() ) . '"><div class="agris-news-body"><time>' . esc_html( get_the_date() ) . '</time><h2>' . esc_html( get_the_title() ) . '</h2><p>' . esc_html( wp_trim_words( get_the_excerpt(), 24 ) ) . '</p><strong class="agris-read-more">' . esc_html( $copy['read_more'] ) . '</strong></div></a></article>';
+			}
+			echo '</div>';
+			if ( ! $has_posts ) {
+				echo '<div class="agris-empty">' . esc_html( $copy['empty'] ) . '</div>';
+			}
+			echo '<nav class="agris-pagination" aria-label="' . esc_attr( $copy['pagination'] ) . '">' . wp_kses_post( paginate_links( array( 'type' => 'list' ) ) ) . '</nav>';
+		}
+		echo '</div></main>';
+	}
+
+	private function render_native_footer( array $copy ): void {
+		echo '<footer class="agris-footer agris-render-fallback"><div class="agris-shell agris-footer-bottom"><span>&copy; ' . esc_html( wp_date( 'Y' ) ) . ' ' . esc_html( $copy['copyright'] ) . '</span><a href="mailto:primaria@comunaagris.ro">primaria@comunaagris.ro</a></div></footer>';
 	}
 
 	public function render(): void {
@@ -191,26 +259,58 @@ final class Frontend_Templates {
 			? array( array( 'code' => 'HU', 'label' => 'Magyar', 'url' => $this->link( $this->current_url() ) ), array( 'code' => 'RO', 'label' => 'Română', 'url' => $this->link( $this->other_language_url( $other ) ) ) )
 			: array( array( 'code' => 'RO', 'label' => 'Română', 'url' => $this->link( $this->current_url() ) ), array( 'code' => 'HU', 'label' => 'Magyar', 'url' => $this->link( $this->other_language_url( $other ) ) ) );
 
-		$this->render_widget( '\\ComunaAgris\\Widgets\\Site_Header', 'agris-site-header', array(
+		$header_rendered = $this->render_widget( '\\ComunaAgris\\Widgets\\Site_Header', 'agris-site-header', array(
 			'official_text' => $copy['official'], 'trust_text' => $copy['trust'], 'mail_url' => $this->link( 'mailto:primaria@comunaagris.ro' ), 'logo' => array( 'id' => '', 'url' => '' ),
 			'brand_title' => $copy['brand'], 'brand_subtitle' => $copy['subtitle'], 'home_url' => $this->link( $routes['home'] ), 'menu_id' => $this->menu_id( $language ), 'cta_text' => $copy['monitor'], 'cta_link' => $this->link( $routes['monitor'] ), 'sticky' => 'yes', 'language_items' => $languages,
 			'skip_label' => $copy['skip'], 'language_label' => $copy['language'], 'nav_label' => $copy['nav'], 'search_label' => $copy['search'], 'menu_open_label' => $copy['open'], 'menu_close_label' => $copy['close_menu'], 'submenu_label' => $copy['submenu'],
 		), 'header-' . $language );
+		if ( ! $header_rendered ) {
+			$this->render_native_header( $language, $copy, $routes );
+		}
 		$this->render_widget( '\\ComunaAgris\\Widgets\\Search_Box', 'agris-search-box', array( 'title' => $copy['search_title'], 'placeholder' => $copy['search_placeholder'], 'button_text' => $copy['search_button'], 'close_label' => $copy['close'], 'language' => $language, 'modal' => 'yes' ), 'search-' . $language );
 
-		echo '<main id="main-content" class="agris-global-main"><div class="agris-shell">';
+		ob_start();
 		if ( is_singular( array( 'post', 'agris_document' ) ) ) {
-			$this->render_widget( '\\ComunaAgris\\Widgets\\Single_Post', 'agris-single-post', array( 'show_image' => 'yes', 'show_author' => '', 'show_share' => 'yes', 'home_label' => $copy['home'], 'home_url' => $this->link( $routes['home'] ), 'article_label' => $copy['article'], 'share_label' => $copy['share'], 'copy_label' => $copy['copy_link'] ), 'single-' . $language );
+			$content_rendered = $this->render_widget( '\\ComunaAgris\\Widgets\\Single_Post', 'agris-single-post', array( 'show_image' => 'yes', 'show_author' => '', 'show_share' => 'yes', 'home_label' => $copy['home'], 'home_url' => $this->link( $routes['home'] ), 'article_label' => $copy['article'], 'share_label' => $copy['share'], 'copy_label' => $copy['copy_link'] ), 'single-' . $language );
 		} else {
-			$this->render_widget( '\\ComunaAgris\\Widgets\\Post_Archive', 'agris-post-archive', array( 'columns' => '3', 'show_archive_header' => 'yes', 'fallback_title' => $copy['archive_kicker'], 'excerpt_words' => 24, 'archive_kicker' => $copy['archive_kicker'], 'search_prefix' => $copy['search_prefix'], 'read_more_text' => $copy['read_more'], 'pagination_label' => $copy['pagination'], 'empty_text' => $copy['empty'], 'article_label' => $copy['article'] ), 'archive-' . $language );
+			$content_rendered = $this->render_widget( '\\ComunaAgris\\Widgets\\Post_Archive', 'agris-post-archive', array( 'columns' => '3', 'show_archive_header' => 'yes', 'fallback_title' => $copy['archive_kicker'], 'excerpt_words' => 24, 'archive_kicker' => $copy['archive_kicker'], 'search_prefix' => $copy['search_prefix'], 'read_more_text' => $copy['read_more'], 'pagination_label' => $copy['pagination'], 'empty_text' => $copy['empty'], 'article_label' => $copy['article'] ), 'archive-' . $language );
 		}
-		echo '</div></main>';
+		$content_output = ob_get_clean();
+		if ( $content_rendered ) {
+			echo '<main id="main-content" class="agris-global-main"><div class="agris-shell">' . $content_output . '</div></main>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		} else {
+			$this->render_native_content( $copy, $routes );
+		}
 
 		$footer_links = array(
 			array( 'column' => $copy['office'], 'label' => $copy['leadership'], 'url' => $this->link( $routes['mayor'] ) ), array( 'column' => $copy['office'], 'label' => $copy['council'], 'url' => $this->link( $routes['council'] ) ),
 			array( 'column' => $copy['public'], 'label' => $copy['announcements'], 'url' => $this->link( $routes['announcements'] ) ), array( 'column' => $copy['public'], 'label' => $copy['monitor'], 'url' => $this->link( $routes['monitor'] ) ),
 		);
-		$this->render_widget( '\\ComunaAgris\\Widgets\\Site_Footer', 'agris-site-footer', array( 'title' => $copy['brand'], 'subtitle' => $copy['subtitle'], 'description' => $copy['description'], 'links' => $footer_links, 'phone' => '0261 878 112', 'email' => 'primaria@comunaagris.ro', 'address' => $copy['address'], 'copyright' => $copy['copyright'], 'contact_url' => $this->link( $routes['contact'] ), 'monitor_url' => $this->link( $routes['monitor'] ), 'contact_title' => $copy['contact'], 'contact_link_text' => $copy['contact'], 'monitor_link_text' => $copy['monitor'], 'footer_nav_label' => $copy['footer_nav'], 'back_to_top_label' => $copy['back_top'] ), 'footer-' . $language );
+		$footer_rendered = $this->render_widget( '\\ComunaAgris\\Widgets\\Site_Footer', 'agris-site-footer', array( 'title' => $copy['brand'], 'subtitle' => $copy['subtitle'], 'description' => $copy['description'], 'links' => $footer_links, 'phone' => '0261 878 112', 'email' => 'primaria@comunaagris.ro', 'address' => $copy['address'], 'copyright' => $copy['copyright'], 'contact_url' => $this->link( $routes['contact'] ), 'monitor_url' => $this->link( $routes['monitor'] ), 'contact_title' => $copy['contact'], 'contact_link_text' => $copy['contact'], 'monitor_link_text' => $copy['monitor'], 'footer_nav_label' => $copy['footer_nav'], 'back_to_top_label' => $copy['back_top'] ), 'footer-' . $language );
+		if ( ! $footer_rendered ) {
+			$this->render_native_footer( $copy );
+		}
 		$this->render_widget( '\\ComunaAgris\\Widgets\\Accessibility_Tools', 'agris-accessibility', array( 'title' => $copy['accessibility'], 'position' => 'right', 'text_size_label' => $copy['text_size'], 'contrast_label' => $copy['contrast'], 'grayscale_label' => $copy['grayscale'], 'underline_label' => $copy['underline'], 'reset_label' => $copy['reset'], 'options_label' => $copy['options'], 'back_to_top_label' => $copy['back_top'] ), 'accessibility-' . $language );
+	}
+
+	public function render_safely(): void {
+		$buffer_level = ob_get_level();
+		ob_start();
+		try {
+			$this->render();
+			$output = ob_get_clean();
+			echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		} catch ( \Throwable $error ) {
+			while ( ob_get_level() > $buffer_level ) {
+				ob_end_clean();
+			}
+			$this->report_render_error( 'global-template', $error );
+			$language = $this->language();
+			$copy = $this->copy( $language );
+			$routes = $this->routes( $language );
+			$this->render_native_header( $language, $copy, $routes );
+			$this->render_native_content( $copy, $routes );
+			$this->render_native_footer( $copy );
+		}
 	}
 }

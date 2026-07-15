@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 <div class="elementor agris-global-elementor" data-elementor-type="agris-global">
-	<?php \ComunaAgris\Frontend_Templates::instance()->render(); ?>
+	<?php \ComunaAgris\Frontend_Templates::instance()->render_safely(); ?>
 </div>
 <?php wp_footer(); ?>
 </body>
