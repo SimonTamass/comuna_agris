@@ -17,6 +17,9 @@ $checks = array(
 	'localized field labels' => array( $form, "add_control( 'name_label'" ),
 	'contact language field' => array( $form, 'name="language"' ),
 	'localized server response' => array( $plugin, "'hu' === \$language" ),
+	'live contact fallback hook' => array( $plugin, "append_contact_fallback" ),
+	'fallback contact form' => array( $plugin, "agris-contact-fallback" ),
+	'fallback map coordinates' => array( $plugin, "47.8816707,23.0048293" ),
 	'client-side form initialization' => array( $js, "all('.agris-contact-form:not([data-ready])'" ),
 	'native validity check' => array( $js, 'form.reportValidity()' ),
 );

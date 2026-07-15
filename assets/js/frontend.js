@@ -332,6 +332,8 @@
     '.agris-legacy-media > img',
     '.agris-single-image img',
     '.agris-single-content img',
+    '.wp-block-image img',
+    '.wp-caption img',
     '.agris-richtext img',
     '.agris-media-frame img',
     '.agris-person-photo img',
@@ -514,6 +516,8 @@
   });
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => init()); else init();
+  window.addEventListener('load', () => init());
+  window.setTimeout(() => init(), 500);
   window.addEventListener('elementor/frontend/init', () => {
     window.elementorFrontend.hooks.addAction('frontend/element_ready/global', ($scope) => init($scope[0]));
   });

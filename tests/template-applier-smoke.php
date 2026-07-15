@@ -41,7 +41,7 @@ if ( preg_match( '/letter-spacing:\s*-/', $css ) || ! str_contains( $css, 'font-
 	exit( 1 );
 }
 
-if ( ! str_contains( $plugin, "AGRIS_WIDGETS_VERSION', '2.1.9'" ) ) {
+if ( ! str_contains( $plugin, "AGRIS_WIDGETS_VERSION', '2.1.10'" ) ) {
 	fwrite( STDERR, "Plugin version was not bumped.\n" );
 	exit( 1 );
 }
