@@ -55,10 +55,13 @@
 .agris-flag-ro i:nth-child(1) { background: #002b7f; }.agris-flag-ro i:nth-child(2) { background: #fcd116; }.agris-flag-ro i:nth-child(3) { background: #ce1126; }
 .agris-flag-hu { flex-direction: column; }.agris-flag-hu i:nth-child(1) { background: #ce2939; }.agris-flag-hu i:nth-child(2) { background: #fff; }.agris-flag-hu i:nth-child(3) { background: #477050; }
 .agris-lang { position: relative; }
-.agris-lang-trigger { padding: 4px 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 999px; background: rgba(255,255,255,.06); color: #fff; font-size: .78rem; font-weight: 700; cursor: pointer; }
-.agris-lang-menu { position: absolute; z-index: 1000; top: calc(100% + 8px); right: 0; min-width: 180px; display: none; padding: 6px; border: 1px solid var(--agris-line); border-radius: var(--agris-radius); background: #fff; box-shadow: var(--agris-shadow); }
-.agris-lang.is-open .agris-lang-menu { display: grid; }
-.agris-lang-menu a { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--agris-radius); color: var(--agris-ink); font-size: .88rem; font-weight: 700; }
+.agris-lang-trigger { min-height: 28px; padding: 4px 10px 4px 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 999px; background: rgba(255,255,255,.06); color: #fff; font-size: .78rem; font-weight: 700; cursor: pointer; }
+.agris-lang-trigger .dashicons { width: 15px; height: 15px; margin-left: 1px; font-size: 15px; transition: transform .18s ease; }
+.agris-lang-menu { position: absolute; z-index: 1000; top: calc(100% + 7px); right: 0; min-width: 190px; display: grid; padding: 7px; border: 1px solid var(--agris-line); border-radius: var(--agris-radius); background: #fff; box-shadow: 0 18px 48px rgba(15,47,31,.18); opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-6px); transition: opacity .16s ease, transform .16s ease, visibility .16s; }
+.agris-lang-menu::before { position: absolute; right: 0; bottom: 100%; width: 100%; height: 10px; content: ""; }
+.agris-lang.is-open .agris-lang-menu { opacity: 1; visibility: visible; pointer-events: auto; transform: none; }
+.agris-lang.is-open .agris-lang-trigger .dashicons { transform: rotate(180deg); }
+.agris-lang-menu a { min-height: 42px; display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: var(--agris-radius); color: var(--agris-ink); font-size: .88rem; font-weight: 700; }
 .agris-lang-menu a:hover { background: var(--agris-brand-soft); }
 .agris-site-header { border-bottom: 1px solid var(--agris-line); background: rgba(255,255,255,.92); backdrop-filter: blur(14px); }
 .agris-header-inner { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
@@ -70,15 +73,22 @@
 .agris-brand small { margin-top: 3px; color: var(--agris-muted); font: 700 .74rem/1 var(--agris-body); letter-spacing: .08em; text-transform: uppercase; }
 .agris-main-nav { margin-left: auto; }
 .agris-menu, .agris-menu ul { margin: 0; padding: 0; list-style: none; }
-.agris-menu { display: flex; align-items: center; gap: 2px; }
+.agris-menu { display: flex; align-items: center; gap: 3px; }
 .agris-menu > li { position: relative; }
-.agris-menu > li > a { min-height: 40px; display: flex; align-items: center; gap: 5px; padding: 9px 12px; border-radius: var(--agris-radius); color: var(--agris-ink-soft); font-size: .94rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.agris-menu > li > a { min-height: 44px; display: flex; align-items: center; gap: 5px; padding: 10px 12px; border-radius: var(--agris-radius); color: var(--agris-ink-soft); font-size: .92rem; font-weight: 700; text-decoration: none; white-space: nowrap; transition: background .16s ease, color .16s ease; }
+.agris-menu > .menu-item-has-children > a { padding-right: 37px; }
 .agris-menu > .lang-item { display: none; }
-.agris-menu > li.current-menu-item > a, .agris-menu > li.current-menu-ancestor > a, .agris-menu > li > a:hover { background: var(--agris-brand-soft); color: var(--agris-brand); }
-.agris-menu .sub-menu { position: absolute; top: calc(100% + 8px); left: 0; min-width: 250px; display: none; padding: 8px; border: 1px solid var(--agris-line); border-radius: var(--agris-radius); background: #fff; box-shadow: var(--agris-shadow); }
-.agris-menu li:hover > .sub-menu, .agris-menu li:focus-within > .sub-menu { display: grid; }
-.agris-menu .sub-menu a { display: block; padding: 9px 10px; border-radius: var(--agris-radius); color: var(--agris-ink-soft); font-size: .92rem; font-weight: 650; text-decoration: none; }
-.agris-menu .sub-menu a:hover { background: var(--agris-brand-soft); }
+.agris-menu > li.current-menu-item > a, .agris-menu > li.current-menu-ancestor > a, .agris-menu > li > a:hover, .agris-menu > li.is-submenu-open > a { background: var(--agris-brand-soft); color: var(--agris-brand); }
+.agris-submenu-toggle { position: absolute; z-index: 2; top: 50%; right: 5px; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--agris-muted); cursor: pointer; transform: translateY(-50%); }
+.agris-submenu-toggle:hover, .agris-submenu-toggle:focus-visible { background: rgba(27,94,32,.09); color: var(--agris-brand); outline: 0; }
+.agris-submenu-toggle .dashicons { width: 17px; height: 17px; font-size: 17px; transition: transform .18s ease; }
+.agris-menu > li.is-submenu-open > .agris-submenu-toggle .dashicons { transform: rotate(180deg); }
+.agris-menu .sub-menu { position: absolute; z-index: 1100; top: calc(100% + 7px); left: 0; width: max-content; min-width: 290px; max-width: 360px; display: grid; gap: 3px; padding: 9px; border: 1px solid var(--agris-line); border-radius: var(--agris-radius); background: #fff; box-shadow: 0 22px 55px rgba(15,47,31,.18); opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-7px); transition: opacity .16s ease, transform .16s ease, visibility .16s; }
+.agris-menu .sub-menu::before { position: absolute; bottom: 100%; left: 0; width: 100%; height: 11px; content: ""; }
+.agris-menu > li:nth-last-child(-n+2) > .sub-menu { right: 0; left: auto; }
+.agris-menu li.is-submenu-open > .sub-menu { opacity: 1; visibility: visible; pointer-events: auto; transform: none; }
+.agris-menu .sub-menu a { min-height: 44px; display: flex; align-items: center; padding: 10px 12px; border-radius: var(--agris-radius); color: var(--agris-ink-soft); font-size: .92rem; font-weight: 650; line-height: 1.3; text-decoration: none; white-space: normal; }
+.agris-menu .sub-menu a:hover, .agris-menu .sub-menu a:focus-visible, .agris-menu .sub-menu .current-menu-item > a { background: var(--agris-brand-soft); color: var(--agris-brand); outline: 0; }
 .agris-header-actions { display: flex; align-items: center; gap: 8px; }
 .agris-header-actions .agris-button { min-height: 42px; white-space: nowrap; }
 .agris-icon-button { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid transparent; border-radius: var(--agris-radius); background: #f1f5f9; color: var(--agris-ink-soft); cursor: pointer; }
@@ -247,7 +257,26 @@
 body.agris-high-contrast { --agris-ink:#000;--agris-muted:#222;--agris-line:#000;--agris-brand:#005a38;--agris-bg:#fff; }.agris-grayscale { filter: grayscale(1); }.agris-underline a { text-decoration: underline !important; }
 
 @media (max-width: 1040px) {
-  .agris-nav-toggle { display: grid; }.agris-main-nav { position: absolute; top: calc(100% + 8px); left: 24px; right: 24px; display: none; padding: 10px; border: 1px solid var(--agris-line); border-radius: var(--agris-radius); background: #fff; box-shadow: var(--agris-shadow); }.agris-main-nav.is-open { display: block; }.agris-menu { display: grid; }.agris-menu > li > a { width: 100%; }.agris-menu .sub-menu { position: static; display: grid; padding-left: 16px; border: 0; box-shadow: none; }.agris-hero-grid { grid-template-columns: 1fr; gap: 35px; }.agris-hero-panel { align-self: auto; margin: 0; }.agris-grid-4 { grid-template-columns: repeat(2,minmax(0,1fr)); }.agris-footer-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.agris-content-media, .agris-contact-layout { grid-template-columns: 1fr; }.agris-content-media.is-left > div:first-child { order: 0; }
+  .agris-nav-toggle { display: grid; }
+  .agris-main-nav { position: absolute; top: calc(100% + 8px); left: 24px; right: 24px; max-height: calc(100vh - 130px); display: none; overflow-y: auto; overscroll-behavior: contain; padding: 10px; border: 1px solid var(--agris-line); border-radius: var(--agris-radius); background: #fff; box-shadow: 0 24px 60px rgba(15,47,31,.2); }
+  .agris-main-nav.is-open { display: block; }
+  .agris-menu { display: grid; gap: 2px; }
+  .agris-menu > li { display: grid; grid-template-columns: minmax(0,1fr) 44px; align-items: center; }
+  .agris-menu > li:not(.menu-item-has-children) { grid-template-columns: 1fr; }
+  .agris-menu > li > a { width: 100%; min-height: 46px; padding: 10px 12px; }
+  .agris-menu > .menu-item-has-children > a { padding-right: 12px; }
+  .agris-submenu-toggle { position: static; width: 40px; height: 40px; justify-self: end; margin-right: 2px; transform: none; }
+  .agris-menu .sub-menu { position: static; width: auto; min-width: 0; max-width: none; display: none; grid-column: 1 / -1; margin: 2px 4px 8px; padding: 6px 6px 6px 14px; border: 0; border-left: 2px solid #dce9de; border-radius: 0; background: #f8faf9; box-shadow: none; opacity: 1; visibility: visible; pointer-events: auto; transform: none; transition: none; }
+  .agris-menu .sub-menu::before { display: none; }
+  .agris-menu li:hover > .sub-menu, .agris-menu li:focus-within > .sub-menu { display: none; }
+  .agris-menu li.is-submenu-open > .sub-menu { display: grid; }
+  .agris-menu .sub-menu a { min-height: 42px; }
+  .agris-hero-grid { grid-template-columns: 1fr; gap: 35px; }.agris-hero-panel { align-self: auto; margin: 0; }.agris-grid-4 { grid-template-columns: repeat(2,minmax(0,1fr)); }.agris-footer-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.agris-content-media, .agris-contact-layout { grid-template-columns: 1fr; }.agris-content-media.is-left > div:first-child { order: 0; }
+}
+@media (min-width: 1041px) and (max-width: 1180px) {
+  .agris-brand { min-width: 190px; }
+  .agris-menu > li > a { padding-inline: 10px; font-size: .88rem; }
+  .agris-header-actions > .agris-button { display: none; }
 }
 @media (max-width: 782px) { .admin-bar .agris-header-wrap.is-sticky { top: 46px; } }
 @media (max-width: 720px) {

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace {
 	define( 'ABSPATH', __DIR__ );
 	define( 'AGRIS_WIDGETS_PATH', dirname( __DIR__ ) . DIRECTORY_SEPARATOR );
+	class Walker_Nav_Menu {
+		public function start_el( &$output, $data_object, $depth = 0, $args = null, $current_object_id = 0 ): void {}
+	}
 }
 
 namespace Elementor {

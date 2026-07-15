@@ -9,6 +9,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+final class Header_Menu_Walker extends \Walker_Nav_Menu {
+	public function start_el( &$output, $data_object, $depth = 0, $args = null, $current_object_id = 0 ): void {
+		parent::start_el( $output, $data_object, $depth, $args, $current_object_id );
+
+		if ( 0 !== (int) $depth || ! in_array( 'menu-item-has-children', (array) $data_object->classes, true ) ) {
+			return;
+		}
+
+		$label = sprintf(
+			/* translators: %s: parent menu item label. */
+			esc_attr__( 'Deschide submeniul pentru %s', 'comuna-agris' ),
+			wp_strip_all_tags( $data_object->title )
+		);
+		$output .= '<button class="agris-submenu-toggle" type="button" data-agris-submenu-toggle aria-expanded="false" aria-label="' . esc_attr( $label ) . '" title="' . esc_attr( $label ) . '"><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span></button>';
+	}
+}
+
 final class Site_Header extends Base {
 	public function get_name(): string { return 'agris-site-header'; }
 	public function get_title(): string { return __( '01 · Header complet', 'comuna-agris' ); }
@@ -54,7 +71,7 @@ final class Site_Header extends Base {
 			<div class="agris-govbar"><div class="agris-shell agris-govbar-inner">
 				<div class="agris-official"><span class="agris-flag agris-flag-ro" aria-hidden="true"><i></i><i></i><i></i></span><span><?php echo esc_html( $s['official_text'] ); ?></span><?php if ( $s['trust_text'] ) : ?><span class="agris-trust"><?php echo esc_html( $s['trust_text'] ); ?></span><?php endif; ?></div>
 				<div class="agris-gov-actions"><?php if ( ! empty( $s['mail_url']['url'] ) ) : ?><a <?php echo self::link_attrs( $s['mail_url'] ); ?>>Mail</a><?php endif; ?>
-					<div class="agris-lang"><button type="button" class="agris-lang-trigger" aria-expanded="false" aria-controls="<?php echo esc_attr( $lang_id ); ?>"><span class="agris-flag agris-flag-<?php echo esc_attr( $current_flag ); ?>" aria-hidden="true"><i></i><i></i><i></i></span><?php echo esc_html( $current['code'] ); ?></button>
+					<div class="agris-lang"><button type="button" class="agris-lang-trigger" aria-expanded="false" aria-controls="<?php echo esc_attr( $lang_id ); ?>" aria-label="<?php esc_attr_e( 'Alege limba', 'comuna-agris' ); ?>"><span class="agris-flag agris-flag-<?php echo esc_attr( $current_flag ); ?>" aria-hidden="true"><i></i><i></i><i></i></span><?php echo esc_html( $current['code'] ); ?><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span></button>
 						<div id="<?php echo esc_attr( $lang_id ); ?>" class="agris-lang-menu"><?php foreach ( $s['language_items'] as $item ) : ?><?php $flag = strtolower( sanitize_key( $item['code'] ?? 'ro' ) ); ?><a <?php echo self::link_attrs( $item['url'] ); ?>><span class="agris-flag agris-flag-<?php echo esc_attr( in_array( $flag, array( 'ro', 'hu' ), true ) ? $flag : 'ro' ); ?>" aria-hidden="true"><i></i><i></i><i></i></span><strong><?php echo esc_html( $item['code'] ); ?></strong><?php echo esc_html( $item['label'] ); ?></a><?php endforeach; ?></div>
 					</div>
 				</div>
@@ -67,13 +84,13 @@ final class Site_Header extends Base {
 				<nav id="<?php echo esc_attr( $nav_id ); ?>" class="agris-main-nav" aria-label="<?php esc_attr_e( 'Navigație principală', 'comuna-agris' ); ?>">
 				<?php
 				if ( $s['menu_id'] ) {
-					wp_nav_menu( array( 'menu' => (int) $s['menu_id'], 'container' => false, 'menu_class' => 'agris-menu', 'fallback_cb' => false, 'depth' => 2 ) );
+					wp_nav_menu( array( 'menu' => (int) $s['menu_id'], 'container' => false, 'menu_class' => 'agris-menu', 'fallback_cb' => false, 'depth' => 2, 'walker' => new Header_Menu_Walker() ) );
 				} elseif ( \Elementor\Plugin::$instance->editor->is_edit_mode() ) {
 					echo '<div class="agris-editor-note">' . esc_html__( 'Selectați un meniu WordPress în panoul din stânga.', 'comuna-agris' ) . '</div>';
 				}
 				?>
 				</nav>
-				<div class="agris-header-actions"><button class="agris-icon-button" type="button" data-agris-search aria-label="<?php esc_attr_e( 'Caută', 'comuna-agris' ); ?>" title="<?php esc_attr_e( 'Caută', 'comuna-agris' ); ?>"><span class="dashicons dashicons-search" aria-hidden="true"></span></button><?php if ( $s['cta_text'] ) : ?><a class="agris-button agris-button-primary" <?php echo self::link_attrs( $s['cta_link'] ); ?>><?php echo esc_html( $s['cta_text'] ); ?></a><?php endif; ?><button class="agris-icon-button agris-nav-toggle" type="button" aria-expanded="false" aria-controls="<?php echo esc_attr( $nav_id ); ?>" aria-label="<?php esc_attr_e( 'Deschide meniul', 'comuna-agris' ); ?>" title="<?php esc_attr_e( 'Meniu', 'comuna-agris' ); ?>"><span class="dashicons dashicons-menu-alt3" aria-hidden="true"></span></button></div>
+				<div class="agris-header-actions"><button class="agris-icon-button" type="button" data-agris-search aria-label="<?php esc_attr_e( 'Caută', 'comuna-agris' ); ?>" title="<?php esc_attr_e( 'Caută', 'comuna-agris' ); ?>"><span class="dashicons dashicons-search" aria-hidden="true"></span></button><?php if ( $s['cta_text'] ) : ?><a class="agris-button agris-button-primary" <?php echo self::link_attrs( $s['cta_link'] ); ?>><?php echo esc_html( $s['cta_text'] ); ?></a><?php endif; ?><button class="agris-icon-button agris-nav-toggle" type="button" aria-expanded="false" aria-controls="<?php echo esc_attr( $nav_id ); ?>" aria-label="<?php esc_attr_e( 'Deschide meniul', 'comuna-agris' ); ?>" title="<?php esc_attr_e( 'Meniu', 'comuna-agris' ); ?>" data-label-open="<?php esc_attr_e( 'Deschide meniul', 'comuna-agris' ); ?>" data-label-close="<?php esc_attr_e( 'Închide meniul', 'comuna-agris' ); ?>"><span class="dashicons dashicons-menu-alt3" aria-hidden="true"></span></button></div>
 			</div></header>
 		</div>
 		<?php

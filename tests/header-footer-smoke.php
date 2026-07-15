@@ -5,10 +5,13 @@ $header = file_get_contents( $root . '/includes/widgets/class-site-header.php' )
 $footer = file_get_contents( $root . '/includes/widgets/class-site-footer.php' );
 $applier = file_get_contents( $root . '/includes/class-template-applier.php' );
 $css = file_get_contents( $root . '/assets/css/frontend.css' );
+$js = file_get_contents( $root . '/assets/js/frontend.js' );
 
 $checks = array(
 	'dashicons dependency'        => array( $assets, "array( 'agris-fonts', 'dashicons' )" ),
 	'accessible menu connection' => array( $header, 'aria-controls="<?php echo esc_attr( $nav_id ); ?>"' ),
+	'accessible submenu walker'  => array( $header, 'class Header_Menu_Walker' ),
+	'submenu toggle control'     => array( $header, 'data-agris-submenu-toggle' ),
 	'search icon'                => array( $header, 'dashicons-search' ),
 	'menu icon'                  => array( $header, 'dashicons-menu-alt3' ),
 	'language flags'             => array( $header, 'agris-flag-<?php echo esc_attr' ),
@@ -21,6 +24,11 @@ $checks = array(
 	'local footer grid'          => array( $css, 'grid-template-columns: 1.2fr repeat(3, 1fr);' ),
 	'deduplicated language item' => array( $css, '.agris-menu > .lang-item { display: none; }' ),
 	'local mobile breakpoint'    => array( $css, '@media (max-width: 1040px)' ),
+	'hover bridge'               => array( $css, '.agris-menu .sub-menu::before' ),
+	'mobile accordion'           => array( $css, '.agris-menu li.is-submenu-open > .sub-menu { display: grid; }' ),
+	'forgiving close delay'      => array( $js, 'window.setTimeout(() => closeSubmenu(item), 220)' ),
+	'keyboard submenu opening'   => array( $js, "['ArrowDown', 'ArrowUp']" ),
+	'escape focus restoration'   => array( $js, 'closeSubmenu(openItem, true)' ),
 );
 
 foreach ( $checks as $label => $check ) {

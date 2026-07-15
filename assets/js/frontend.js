@@ -9,20 +9,125 @@
       header.dataset.ready = 'true';
       const toggle = one('.agris-nav-toggle', header);
       const nav = one('.agris-main-nav', header);
-      if (toggle && nav) {
-        toggle.addEventListener('click', () => {
-          const open = nav.classList.toggle('is-open');
-          toggle.setAttribute('aria-expanded', String(open));
+      let setNavigation = () => {};
+      const submenuParents = all('.agris-menu > .menu-item-has-children', header);
+      const closeSubmenu = (item, restoreFocus = false) => {
+        window.clearTimeout(item.agrisCloseTimer);
+        item.classList.remove('is-submenu-open');
+        const button = one(':scope > [data-agris-submenu-toggle]', item);
+        button?.setAttribute('aria-expanded', 'false');
+        if (restoreFocus) button?.focus();
+      };
+      const closeAllSubmenus = (except = null) => submenuParents.forEach((item) => {
+        if (item !== except) closeSubmenu(item);
+      });
+      const openSubmenu = (item) => {
+        window.clearTimeout(item.agrisCloseTimer);
+        closeAllSubmenus(item);
+        item.classList.add('is-submenu-open');
+        one(':scope > [data-agris-submenu-toggle]', item)?.setAttribute('aria-expanded', 'true');
+      };
+
+      submenuParents.forEach((item, index) => {
+        const button = one(':scope > [data-agris-submenu-toggle]', item);
+        const submenu = one(':scope > .sub-menu', item);
+        const parentLink = one(':scope > a', item);
+        if (!button || !submenu) return;
+        if (!submenu.id) submenu.id = `agris-submenu-${header.dataset.elementorId || 'header'}-${index}`;
+        button.setAttribute('aria-controls', submenu.id);
+        parentLink?.setAttribute('aria-haspopup', 'true');
+
+        button.addEventListener('click', () => {
+          if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+            openSubmenu(item);
+          } else if (item.classList.contains('is-submenu-open')) {
+            closeSubmenu(item);
+          } else {
+            openSubmenu(item);
+          }
         });
+        button.addEventListener('keydown', (event) => {
+          if (!['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+          event.preventDefault();
+          openSubmenu(item);
+          const links = all('a', submenu);
+          (event.key === 'ArrowDown' ? links[0] : links[links.length - 1])?.focus();
+        });
+        item.addEventListener('pointerenter', () => {
+          if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) openSubmenu(item);
+        });
+        item.addEventListener('pointerleave', () => {
+          if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+            item.agrisCloseTimer = window.setTimeout(() => closeSubmenu(item), 220);
+          }
+        });
+        item.addEventListener('focusin', (event) => {
+          if (event.target !== button) openSubmenu(item);
+        });
+        item.addEventListener('focusout', (event) => {
+          if (!item.contains(event.relatedTarget)) item.agrisCloseTimer = window.setTimeout(() => closeSubmenu(item), 80);
+        });
+      });
+
+      if (toggle && nav) {
+        setNavigation = (open) => {
+          nav.classList.toggle('is-open', open);
+          toggle.setAttribute('aria-expanded', String(open));
+          toggle.setAttribute('aria-label', toggle.dataset[open ? 'labelClose' : 'labelOpen'] || 'Meniu');
+          const icon = one('.dashicons', toggle);
+          icon?.classList.toggle('dashicons-menu-alt3', !open);
+          icon?.classList.toggle('dashicons-no-alt', open);
+          if (!open) closeAllSubmenus();
+        };
+        toggle.addEventListener('click', () => {
+          setNavigation(!nav.classList.contains('is-open'));
+        });
+        all('a', nav).forEach((link) => link.addEventListener('click', () => {
+          if (window.matchMedia('(max-width: 1040px)').matches) setNavigation(false);
+        }));
       }
       const lang = one('.agris-lang', header);
       const langTrigger = one('.agris-lang-trigger', header);
       if (lang && langTrigger) {
-        langTrigger.addEventListener('click', () => {
-          const open = lang.classList.toggle('is-open');
+        let langTimer;
+        const setLanguage = (open) => {
+          window.clearTimeout(langTimer);
+          lang.classList.toggle('is-open', open);
           langTrigger.setAttribute('aria-expanded', String(open));
+        };
+        langTrigger.addEventListener('click', () => {
+          if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+            setLanguage(true);
+          } else {
+            setLanguage(!lang.classList.contains('is-open'));
+          }
         });
+        lang.addEventListener('pointerenter', () => {
+          if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) setLanguage(true);
+        });
+        lang.addEventListener('pointerleave', () => {
+          if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) langTimer = window.setTimeout(() => setLanguage(false), 220);
+        });
+        lang.addEventListener('focusin', (event) => {
+          if (event.target !== langTrigger) setLanguage(true);
+        });
+        lang.addEventListener('focusout', (event) => { if (!lang.contains(event.relatedTarget)) setLanguage(false); });
       }
+
+      header.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        const openItem = one('.menu-item-has-children.is-submenu-open', header);
+        if (openItem) { closeSubmenu(openItem, true); return; }
+        if (lang?.classList.contains('is-open')) { lang.classList.remove('is-open'); langTrigger?.setAttribute('aria-expanded', 'false'); langTrigger?.focus(); return; }
+        if (nav?.classList.contains('is-open')) { setNavigation(false); toggle?.focus(); }
+      });
+      document.addEventListener('click', (event) => {
+        if (!header.contains(event.target)) {
+          closeAllSubmenus();
+          lang?.classList.remove('is-open');
+          langTrigger?.setAttribute('aria-expanded', 'false');
+        }
+      });
     });
   }
 
@@ -161,7 +266,6 @@
 
   document.addEventListener('click', (event) => {
     if (event.target.closest('[data-agris-search]')) openSearch();
-    if (!event.target.closest('.agris-lang')) all('.agris-lang.is-open').forEach((item) => item.classList.remove('is-open'));
   });
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') all('[data-agris-search-modal].is-modal').forEach((modal) => { modal.hidden = true; });
