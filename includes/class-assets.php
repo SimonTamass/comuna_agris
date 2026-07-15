@@ -57,6 +57,7 @@ final class Assets {
 					'previousImage' => $is_hungarian ? 'Előző kép' : esc_html__( 'Imaginea anterioară', 'comuna-agris' ),
 					'nextImage'     => $is_hungarian ? 'Következő kép' : esc_html__( 'Imaginea următoare', 'comuna-agris' ),
 					'imageCounter'  => $is_hungarian ? '%1$d / %2$d kép' : esc_html__( 'Imaginea %1$d din %2$d', 'comuna-agris' ),
+					'downloadFile'  => $is_hungarian ? 'Dokumentum letöltése' : esc_html__( 'Descarcă documentul', 'comuna-agris' ),
 				),
 			)
 		);

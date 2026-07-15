@@ -28,8 +28,9 @@ $checks = array(
 	'WordPress document shell' => array( $template, 'wp_head();' ),
 	'safe template entrypoint' => array( $template, 'render_safely();' ),
 	'localized archive labels' => array( $archive, "\$s['read_more_text']" ),
-	'localized single labels' => array( $single, "\$settings['share_label']" ),
+	'document-aware single content' => array( $single, "' has-document-list'" ),
 	'global template layout' => array( $css, '.agris-global-main' ),
+	'download card layout' => array( $css, '.agris-download-item' ),
 );
 
 foreach ( $checks as $label => $check ) {
@@ -37,6 +38,11 @@ foreach ( $checks as $label => $check ) {
 		fwrite( STDERR, "Missing {$label}.\n" );
 		exit( 1 );
 	}
+}
+
+if ( str_contains( $single, 'agris-share' ) || str_contains( $frontend, "'show_share' => 'yes'" ) ) {
+	fwrite( STDERR, "Single-post sharing UI was not removed.\n" );
+	exit( 1 );
 }
 
 echo "Frontend templates smoke passed.\n";

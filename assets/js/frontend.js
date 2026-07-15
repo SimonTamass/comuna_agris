@@ -271,12 +271,58 @@
     });
   }
 
-  function initCopy(root = document) {
-    all('[data-agris-copy]:not([data-ready])', root).forEach((button) => {
-      button.dataset.ready = 'true';
-      button.addEventListener('click', async () => {
-        try { await navigator.clipboard.writeText(button.dataset.agrisCopy); button.textContent = 'Link copiat ✓'; } catch (e) { window.prompt('Copiați linkul:', button.dataset.agrisCopy); }
-      });
+  const documentExtension = (link) => {
+    const match = (link.getAttribute('href') || '').match(/\.(csv|docx?|od[st]|pdf|pptx?|rtf|xlsx?|zip)(?:[?#]|$)/i);
+    return match ? match[1].toUpperCase() : '';
+  };
+
+  function decorateDocumentLink(link, extension, listItem = null) {
+    if (link.dataset.agrisDownloadReady) return;
+    link.dataset.agrisDownloadReady = 'true';
+    const downloadLabel = window.agrisWidgets?.i18n?.downloadFile || 'Download document';
+    const icon = document.createElement('span');
+    icon.className = `dashicons ${listItem ? 'dashicons-media-document agris-file-icon' : 'dashicons-download'}`;
+    icon.setAttribute('aria-hidden', 'true');
+
+    if (!listItem) {
+      link.classList.add('agris-inline-download');
+      link.prepend(icon);
+      return;
+    }
+
+    listItem.classList.add('agris-download-item');
+    listItem.dataset.fileType = extension;
+    link.before(icon);
+    const detail = document.createElement('small');
+    detail.className = 'agris-file-detail';
+    detail.textContent = `${extension} · ${downloadLabel}`;
+    link.appendChild(detail);
+    const action = document.createElement('span');
+    action.className = 'dashicons dashicons-download agris-file-action';
+    action.setAttribute('aria-hidden', 'true');
+    listItem.appendChild(action);
+  }
+
+  function initDocumentLists(root = document) {
+    all('.agris-single-content ul:not([data-agris-download-ready])', root).forEach((list) => {
+      list.dataset.agrisDownloadReady = 'true';
+      const items = all(':scope > li', list);
+      const documents = items.map((item) => {
+        const link = one(':scope > a', item);
+        const extension = link ? documentExtension(link) : '';
+        return extension ? { item, link, extension } : null;
+      }).filter(Boolean);
+      if (!documents.length) return;
+
+      list.classList.add('agris-download-list');
+      list.closest('.agris-single')?.classList.add('has-document-list');
+      documents.forEach((documentItem) => decorateDocumentLink(documentItem.link, documentItem.extension, documentItem.item));
+      items.filter((item) => !item.classList.contains('agris-download-item')).forEach((item) => item.classList.add('agris-download-heading'));
+    });
+
+    all('.agris-single-content a:not([data-agris-download-ready])', root).forEach((link) => {
+      const extension = documentExtension(link);
+      if (extension) decorateDocumentLink(link, extension);
     });
   }
 
@@ -456,7 +502,7 @@
   }
 
   function init(root = document) {
-    initHeader(root); initFilters(root); initContact(root); initAccessibility(root); initSearch(root); initCopy(root); initLightbox(root);
+    initHeader(root); initFilters(root); initContact(root); initAccessibility(root); initSearch(root); initDocumentLists(root); initLightbox(root);
   }
 
   document.addEventListener('click', (event) => {

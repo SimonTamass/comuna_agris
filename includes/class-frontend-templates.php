@@ -297,7 +297,7 @@ final class Frontend_Templates {
 
 		ob_start();
 		if ( is_singular( array( 'post', 'agris_document' ) ) ) {
-			$content_rendered = $this->render_widget( '\\ComunaAgris\\Widgets\\Single_Post', 'agris-single-post', array( 'show_image' => 'yes', 'show_author' => '', 'show_share' => 'yes', 'home_label' => $copy['home'], 'home_url' => $this->link( $routes['home'] ), 'article_label' => $copy['article'], 'share_label' => $copy['share'], 'copy_label' => $copy['copy_link'] ), 'single-' . $language );
+			$content_rendered = $this->render_widget( '\\ComunaAgris\\Widgets\\Single_Post', 'agris-single-post', array( 'show_image' => 'yes', 'show_author' => '', 'home_label' => $copy['home'], 'home_url' => $this->link( $routes['home'] ), 'article_label' => $copy['article'] ), 'single-' . $language );
 		} else {
 			$content_rendered = $this->render_widget( '\\ComunaAgris\\Widgets\\Post_Archive', 'agris-post-archive', array( 'columns' => '3', 'show_archive_header' => 'yes', 'fallback_title' => $copy['archive_kicker'], 'excerpt_words' => 24, 'archive_kicker' => $copy['archive_kicker'], 'search_prefix' => $copy['search_prefix'], 'read_more_text' => $copy['read_more'], 'pagination_label' => $copy['pagination'], 'empty_text' => $copy['empty'], 'article_label' => $copy['article'] ), 'archive-' . $language );
 		}
