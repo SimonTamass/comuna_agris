@@ -23,6 +23,7 @@ $checks = array(
 	'explicit search language' => array( $frontend, "\$_GET['lang']" ),
 	'explicit query language scope' => array( $frontend, "\$query->set( 'lang', \$language )" ),
 	'localized HTML language' => array( $frontend, "'hu-HU' : 'ro-RO'" ),
+	'configured Elementor frontend' => array( $frontend, 'frontend->enqueue_scripts();' ),
 	'language-aware shared footer' => array( $frontend, "'agris-site-footer'" ),
 	'WordPress document shell' => array( $template, 'wp_head();' ),
 	'safe template entrypoint' => array( $template, 'render_safely();' ),
@@ -36,11 +37,6 @@ foreach ( $checks as $label => $check ) {
 		fwrite( STDERR, "Missing {$label}.\n" );
 		exit( 1 );
 	}
-}
-
-if ( str_contains( $frontend, "wp_enqueue_script( 'elementor-frontend'" ) ) {
-	fwrite( STDERR, "Global templates must not enqueue an unconfigured Elementor frontend runtime.\n" );
-	exit( 1 );
 }
 
 echo "Frontend templates smoke passed.\n";

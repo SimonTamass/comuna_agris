@@ -42,6 +42,9 @@ final class Frontend_Templates {
 		}
 		wp_enqueue_style( 'elementor-frontend' );
 		wp_enqueue_style( 'agris-widgets' );
+		if ( isset( \Elementor\Plugin::$instance->frontend ) ) {
+			\Elementor\Plugin::$instance->frontend->enqueue_scripts();
+		}
 		wp_enqueue_script( 'agris-widgets' );
 	}
 
