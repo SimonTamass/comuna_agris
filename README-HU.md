@@ -25,6 +25,8 @@ Az **Összes magyar oldal átépítése** művelet a meglévő `hu` nyelvű inde
 
 Ha egy céloldalnak van Polylang-fordítása, a rendszer azt használja. Ha nincs magyar párja, csak már létező publikus útvonalra mutat; új vagy feltételezett slugot nem hoz létre.
 
+A kategória-, taxonómia-, keresési, blog- és egyedi bejegyzésnézeteket a plugin automatikusan a közös Elementor widgetrendszerrel jeleníti meg. Ezekhez nem kell külön oldalt létrehozni vagy a WordPress menüben új URL-t beállítani; a megfelelő magyar vagy román header, footer és feliratok az aktuális nyelv alapján töltődnek be.
+
 ## Elementor widgetek
 
 A 24 widget az Elementor bal oldali paneljén, a **Comuna Agriș** kategóriában található. A készlet tartalmaz globális headert és footert, keresőt, akadálymentesítést, hero elemeket, tartalmi blokkokat, szolgáltatásokat, vezetői profilt, fogadóórákat, tanácstagokat, kapcsolati elemeket, galériát, adattáblát, híreket, dokumentumtárat, blogarchívumot és egyedi bejegyzéssablont.

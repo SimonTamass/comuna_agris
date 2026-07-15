@@ -19,6 +19,7 @@ final class Plugin {
 		require_once AGRIS_WIDGETS_PATH . 'includes/class-assets.php';
 		require_once AGRIS_WIDGETS_PATH . 'includes/class-widget-registry.php';
 		require_once AGRIS_WIDGETS_PATH . 'includes/class-elementor.php';
+		require_once AGRIS_WIDGETS_PATH . 'includes/class-frontend-templates.php';
 
 		add_action( 'init', array( $this, 'register_document_type' ) );
 		add_action( 'add_meta_boxes_agris_document', array( $this, 'add_document_meta_box' ) );
@@ -27,6 +28,7 @@ final class Plugin {
 		add_action( 'wp_ajax_nopriv_agris_contact', array( $this, 'handle_contact' ) );
 		add_action( 'admin_notices', array( $this, 'dependency_notice' ) );
 		Assets::instance();
+		Frontend_Templates::instance();
 
 		if ( is_admin() ) {
 			require_once AGRIS_WIDGETS_PATH . 'includes/class-template-applier.php';

@@ -79,6 +79,11 @@
 .agris-menu > li > a { min-height: 44px; display: flex; align-items: center; gap: 5px; padding: 10px 12px; border-radius: var(--agris-radius); color: var(--agris-ink-soft); font-size: .92rem; font-weight: 700; text-decoration: none; white-space: nowrap; transition: background .16s ease, color .16s ease; }
 .agris-menu > .menu-item-has-children > a { padding-right: 37px; }
 .agris-menu > .lang-item, .agris-menu > .pll-parent-menu-item { display: none; }
+.agris-global-template { margin: 0; background: #f6f8f7; }
+.agris-global-elementor { min-height: 100vh; }
+.agris-global-main { min-height: 52vh; padding: 72px 0 88px; }
+.agris-global-main .elementor-widget-agris-post-archive > .elementor-widget-container,
+.agris-global-main .elementor-widget-agris-single-post > .elementor-widget-container { padding: 0; background: transparent; }
 .agris-menu > li.current-menu-item > a, .agris-menu > li.current-menu-ancestor > a, .agris-menu > li > a:hover, .agris-menu > li.is-submenu-open > a { background: var(--agris-brand-soft); color: var(--agris-brand); }
 .agris-submenu-toggle { position: absolute; z-index: 2; top: 50%; right: 5px; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--agris-muted); cursor: pointer; transform: translateY(-50%); }
 .agris-submenu-toggle:hover, .agris-submenu-toggle:focus-visible { background: rgba(27,94,32,.09); color: var(--agris-brand); outline: 0; }
