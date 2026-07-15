@@ -12,6 +12,7 @@ $js = file_get_contents( $root . '/assets/js/frontend.js' );
 $checks = array(
 	'dashicons dependency'        => array( $assets, "array( 'agris-fonts', 'dashicons' )" ),
 	'accessible menu connection' => array( $header, 'aria-controls="<?php echo esc_attr( $nav_id ); ?>"' ),
+	'namespaced sticky control'  => array( $header, "add_control( 'agris_sticky'" ),
 	'accessible submenu walker'  => array( $header, 'class Header_Menu_Walker' ),
 	'submenu toggle control'     => array( $header, 'data-agris-submenu-toggle' ),
 	'localized submenu control'  => array( $header, "new Header_Menu_Walker( \$s['submenu_label'] )" ),
@@ -48,6 +49,11 @@ foreach ( $checks as $label => $check ) {
 		fwrite( STDERR, "Missing {$label}.\n" );
 		exit( 1 );
 	}
+}
+
+if ( str_contains( $header, "add_control( 'sticky'" ) || ! str_contains( $applier, "'agris_sticky' => 'yes'" ) ) {
+	fwrite( STDERR, "Header sticky control still conflicts with Elementor Pro.\n" );
+	exit( 1 );
 }
 
 echo "Header and footer smoke passed.\n";

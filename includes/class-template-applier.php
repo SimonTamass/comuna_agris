@@ -1224,7 +1224,7 @@ final class Template_Applier {
 		return array(
 			'official_text' => $copy['official'], 'trust_text' => $copy['trust'], 'mail_url' => $this->link( 'mailto:primaria@comunaagris.ro' ), 'logo' => $this->media(),
 			'brand_title' => 'hu' === $language ? 'Egri Község' : 'Comuna Agriș', 'brand_subtitle' => $copy['brand_subtitle'], 'home_url' => $this->link( $routes[ 'home_' . $language ] ), 'menu_id' => $this->menu_id( $language ),
-			'cta_text' => $copy['cta'], 'cta_link' => $this->link( $routes['monitor'] ), 'sticky' => 'yes', 'language_items' => $this->repeater( $seed . '-languages', $language_items ),
+			'cta_text' => $copy['cta'], 'cta_link' => $this->link( $routes['monitor'] ), 'agris_sticky' => 'yes', 'language_items' => $this->repeater( $seed . '-languages', $language_items ),
 			'skip_label' => $copy['skip'], 'language_label' => $copy['language'], 'nav_label' => $copy['nav'], 'search_label' => $copy['search'],
 			'menu_open_label' => $copy['menu_open'], 'menu_close_label' => $copy['menu_close'], 'submenu_label' => $copy['submenu'],
 		);
@@ -1377,7 +1377,7 @@ final class Template_Applier {
 							'menu_id'        => $menu_id,
 							'cta_text'       => 'Monitorul Oficial',
 							'cta_link'       => $this->link( $routes['monitor'] ),
-							'sticky'         => 'yes',
+							'agris_sticky'   => 'yes',
 							'language_items' => $this->repeater( 'lang', array(
 								array( 'code' => 'RO', 'label' => 'Română', 'url' => $this->link( $routes['home_ro'] ) ),
 								array( 'code' => 'HU', 'label' => 'Magyar', 'url' => $this->link( $routes['home_hu'] ) ),
@@ -1678,7 +1678,7 @@ final class Template_Applier {
 							'menu_id'        => $menu_id,
 							'cta_text'       => 'Monitorul Oficial',
 							'cta_link'       => $this->link( $routes['monitor'] ),
-							'sticky'         => 'yes',
+							'agris_sticky'   => 'yes',
 							'language_items' => $this->repeater( 'mayor-lang', array(
 								array( 'code' => 'RO', 'label' => 'Română', 'url' => $this->link( $routes['mayor'] ) ),
 								array( 'code' => 'HU', 'label' => 'Magyar', 'url' => $this->link( $mayor_hu ) ),

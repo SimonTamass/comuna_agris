@@ -287,7 +287,7 @@ final class Frontend_Templates {
 
 		$header_rendered = $this->render_widget( '\\ComunaAgris\\Widgets\\Site_Header', 'agris-site-header', array(
 			'official_text' => $copy['official'], 'trust_text' => $copy['trust'], 'mail_url' => $this->link( 'mailto:primaria@comunaagris.ro' ), 'logo' => array( 'id' => '', 'url' => '' ),
-			'brand_title' => $copy['brand'], 'brand_subtitle' => $copy['subtitle'], 'home_url' => $this->link( $routes['home'] ), 'menu_id' => $this->menu_id( $language ), 'cta_text' => $copy['monitor'], 'cta_link' => $this->link( $routes['monitor'] ), 'sticky' => 'yes', 'language_items' => $languages,
+			'brand_title' => $copy['brand'], 'brand_subtitle' => $copy['subtitle'], 'home_url' => $this->link( $routes['home'] ), 'menu_id' => $this->menu_id( $language ), 'cta_text' => $copy['monitor'], 'cta_link' => $this->link( $routes['monitor'] ), 'agris_sticky' => 'yes', 'language_items' => $languages,
 			'skip_label' => $copy['skip'], 'language_label' => $copy['language'], 'nav_label' => $copy['nav'], 'search_label' => $copy['search'], 'menu_open_label' => $copy['open'], 'menu_close_label' => $copy['close_menu'], 'submenu_label' => $copy['submenu'],
 		), 'header-' . $language );
 		if ( ! $header_rendered ) {

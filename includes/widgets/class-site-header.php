@@ -50,7 +50,7 @@ final class Site_Header extends Base {
 		$this->add_control( 'menu_id', array( 'label' => __( 'Meniu WordPress', 'comuna-agris' ), 'type' => Controls_Manager::SELECT, 'options' => self::menus() ) );
 		$this->add_control( 'cta_text', array( 'label' => __( 'Text buton', 'comuna-agris' ), 'type' => Controls_Manager::TEXT, 'default' => 'Monitorul Oficial' ) );
 		$this->add_control( 'cta_link', array( 'label' => __( 'Link buton', 'comuna-agris' ), 'type' => Controls_Manager::URL ) );
-		$this->add_control( 'sticky', array( 'label' => __( 'Header fix la derulare', 'comuna-agris' ), 'type' => Controls_Manager::SWITCHER, 'return_value' => 'yes', 'default' => 'yes' ) );
+		$this->add_control( 'agris_sticky', array( 'label' => __( 'Header fix la derulare', 'comuna-agris' ), 'type' => Controls_Manager::SWITCHER, 'return_value' => 'yes', 'default' => 'yes' ) );
 		$this->end_controls_section();
 
 		$this->start_controls_section( 'interface_labels', array( 'label' => __( 'Etichete interfață', 'comuna-agris' ) ) );
@@ -82,7 +82,7 @@ final class Site_Header extends Base {
 		$nav_id = 'agris-main-nav-' . $this->get_id();
 		$lang_id = 'agris-lang-menu-' . $this->get_id();
 		?>
-		<div id="top" class="agris-header-wrap <?php echo 'yes' === $s['sticky'] ? 'is-sticky' : ''; ?>">
+		<div id="top" class="agris-header-wrap <?php echo 'yes' === $s['agris_sticky'] ? 'is-sticky' : ''; ?>">
 			<a class="agris-skip-link" href="#main-content"><?php echo esc_html( $s['skip_label'] ); ?></a>
 			<div class="agris-govbar"><div class="agris-shell agris-govbar-inner">
 				<div class="agris-official"><span class="agris-flag agris-flag-<?php echo esc_attr( $current_flag ); ?>" aria-hidden="true"><i></i><i></i><i></i></span><span><?php echo esc_html( $s['official_text'] ); ?></span><?php if ( $s['trust_text'] ) : ?><span class="agris-trust"><?php echo esc_html( $s['trust_text'] ); ?></span><?php endif; ?></div>

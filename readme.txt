@@ -3,7 +3,7 @@ Contributors: comunaagris
 Tags: elementor, municipality, documents, accessibility, theme builder
 Requires at least: 6.4
 Requires PHP: 8.0
-Stable tag: 2.1.4
+Stable tag: 2.1.5
 License: GPLv2 or later
 
 A complete modular Elementor widget suite for the Comuna Agriș website.
@@ -51,6 +51,9 @@ Page-building widgets:
 6. Add official files under the new Documents menu.
 
 == Changelog ==
+
+= 2.1.5 =
+* Namespace the header sticky control and migrate legacy header settings at render time to avoid Elementor Pro motion-effect collisions.
 
 = 2.1.4 =
 * Initialize Elementor's frontend runtime through its public frontend service so global templates receive the required JavaScript configuration.
