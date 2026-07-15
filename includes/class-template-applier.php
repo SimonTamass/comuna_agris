@@ -1272,6 +1272,8 @@ final class Template_Applier {
 			'galleries'      => array( 'Galerie', 'Imagini din viața și istoria Comunei Agriș.' ),
 		);
 		$label = $labels[ $type ] ?? $labels['community'];
+		$page_identity = strtolower( remove_accents( $page->post_name . ' ' . $page->post_title ) );
+		$is_contact_page = (bool) preg_match( '/contact|elerhet/', $page_identity );
 		$excerpt = trim( wp_strip_all_tags( (string) $page->post_excerpt ) );
 		$description = $excerpt;
 		$source_content = $this->original_page_content( $page );
@@ -1314,6 +1316,45 @@ final class Template_Applier {
 				array( 'padding' => array( 'unit' => 'px', 'top' => '72', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) )
 			),
 		);
+		if ( $is_contact_page ) {
+			array_pop( $data );
+			$is_hungarian = 'hu' === $language;
+			$data[] = $this->container(
+				$seed . '-contact-details',
+				array( $this->widget( $seed . '-contact-details-widget', 'agris-contact-details', array(
+					'kicker'      => $is_hungarian ? 'Elérhetőség' : 'Contact',
+					'title'       => $is_hungarian ? 'Egri Község Polgármesteri Hivatala' : 'Primăria Comunei Agriș',
+					'description' => $is_hungarian ? 'Hivatali elérhetőségek és ügyfélfogadási információk.' : 'Date de contact și program de lucru pentru cetățeni.',
+					'address'     => $is_hungarian ? 'Románia, 447066, Egri, Csűry Bálint utca 68., Szatmár megye' : 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, Satu Mare',
+					'address_code' => $is_hungarian ? 'CÍM' : 'LOC',
+					'phone'       => '0261 878 112',
+					'fax'         => '0261 878 111',
+					'email'       => 'primaria@comunaagris.ro',
+					'hours'       => $is_hungarian ? 'Hétfő–péntek: 8:00–16:00' : 'Luni–Vineri: 8:00–16:00',
+					'hours_code'  => $is_hungarian ? 'IDŐ' : 'ORĂ',
+					'map_embed'   => $this->link( 'https://www.google.com/maps?q=47.8816707,23.0048293&z=15&output=embed' ),
+					'map_title'   => $is_hungarian ? 'Térkép' : 'Hartă',
+				) ) ),
+				array( 'padding' => array( 'unit' => 'px', 'top' => '72', 'right' => '0', 'bottom' => '32', 'left' => '0', 'isLinked' => false ) )
+			);
+			$data[] = $this->container(
+				$seed . '-contact-form',
+				array( $this->widget( $seed . '-contact-form-widget', 'agris-contact-form', array(
+					'kicker'        => $is_hungarian ? 'Üzenet' : 'Mesaj',
+					'title'         => $is_hungarian ? 'Írjon nekünk' : 'Trimiteți-ne un mesaj',
+					'description'   => $is_hungarian ? 'Az űrlap kötelező mezőinek kitöltése után üzenete közvetlenül a hivatalhoz érkezik.' : 'Completați câmpurile obligatorii pentru a trimite mesajul direct către primărie.',
+					'recipient'     => 'primaria@comunaagris.ro',
+					'language'      => $language,
+					'name_label'    => $is_hungarian ? 'Név' : 'Nume și prenume',
+					'email_label'   => 'Email',
+					'subject_label' => $is_hungarian ? 'Tárgy' : 'Subiect',
+					'message_label' => $is_hungarian ? 'Üzenet' : 'Mesaj',
+					'button_text'   => $is_hungarian ? 'Üzenet küldése' : 'Trimite mesajul',
+					'privacy_text'  => $is_hungarian ? 'Az adatokat kizárólag a megkeresés megválaszolására használjuk.' : 'Datele sunt folosite exclusiv pentru a răspunde solicitării.',
+				) ) ),
+				array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) )
+			);
+		}
 
 		if ( 'galleries' === $type ) {
 			$gallery_items = $this->gallery_items( $page, '', $source_content );

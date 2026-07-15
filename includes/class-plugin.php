@@ -125,13 +125,21 @@ final class Plugin {
 
 	public function handle_contact(): void {
 		check_ajax_referer( 'agris-contact', 'nonce' );
+		$language = sanitize_key( wp_unslash( $_POST['language'] ?? 'ro' ) );
+		$is_hungarian = 'hu' === $language;
+		$messages = array(
+			'sent'    => $is_hungarian ? 'Az üzenetet elküldtük. Köszönjük!' : 'Mesajul a fost trimis. Vă mulțumim!',
+			'wait'    => $is_hungarian ? 'Kérjük, várjon egy percet az újabb üzenet elküldése előtt.' : 'Așteptați un minut înainte de a trimite din nou.',
+			'invalid' => $is_hungarian ? 'Kérjük, töltse ki helyesen az összes kötelező mezőt.' : 'Completați corect toate câmpurile obligatorii.',
+			'failed'  => $is_hungarian ? 'Az üzenetet nem sikerült elküldeni. Kérjük, ellenőrizze az email-beállításokat.' : 'Mesajul nu a putut fi trimis. Verificați configurarea emailului.',
+		);
 		if ( ! empty( $_POST['website'] ) ) {
-			wp_send_json_success( array( 'message' => __( 'Mesaj trimis.', 'comuna-agris' ) ) );
+			wp_send_json_success( array( 'message' => $messages['sent'] ) );
 		}
 
 		$ip_key = 'agris_contact_' . md5( sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '' ) ) );
 		if ( get_transient( $ip_key ) ) {
-			wp_send_json_error( array( 'message' => __( 'Așteptați un minut înainte de a trimite din nou.', 'comuna-agris' ) ), 429 );
+			wp_send_json_error( array( 'message' => $messages['wait'] ), 429 );
 		}
 
 		$name    = sanitize_text_field( wp_unslash( $_POST['name'] ?? '' ) );
@@ -142,17 +150,17 @@ final class Plugin {
 		$to_hash = sanitize_text_field( wp_unslash( $_POST['recipient_hash'] ?? '' ) );
 
 		if ( ! $name || ! is_email( $email ) || ! $subject || ! $message || ! is_email( $to ) || ! hash_equals( wp_hash( $to . '|agris_contact' ), $to_hash ) ) {
-			wp_send_json_error( array( 'message' => __( 'Completați corect toate câmpurile obligatorii.', 'comuna-agris' ) ), 422 );
+			wp_send_json_error( array( 'message' => $messages['invalid'] ), 422 );
 		}
 
 		$body = sprintf( "Nume: %s\nEmail: %s\n\n%s", $name, $email, $message );
 		$sent = wp_mail( $to, '[Comuna Agriș] ' . $subject, $body, array( 'Reply-To: ' . $name . ' <' . $email . '>' ) );
 		if ( ! $sent ) {
-			wp_send_json_error( array( 'message' => __( 'Mesajul nu a putut fi trimis. Verificați configurarea emailului.', 'comuna-agris' ) ), 500 );
+			wp_send_json_error( array( 'message' => $messages['failed'] ), 500 );
 		}
 
 		set_transient( $ip_key, 1, MINUTE_IN_SECONDS );
-		wp_send_json_success( array( 'message' => __( 'Mesajul a fost trimis. Vă mulțumim!', 'comuna-agris' ) ) );
+		wp_send_json_success( array( 'message' => $messages['sent'] ) );
 	}
 
 	public function dependency_notice(): void {
