@@ -13,7 +13,7 @@ final class Header_Menu_Walker extends \Walker_Nav_Menu {
 	public function start_el( &$output, $data_object, $depth = 0, $args = null, $current_object_id = 0 ): void {
 		parent::start_el( $output, $data_object, $depth, $args, $current_object_id );
 
-		if ( 0 !== (int) $depth || ! in_array( 'menu-item-has-children', (array) $data_object->classes, true ) ) {
+		if ( ! in_array( 'menu-item-has-children', (array) $data_object->classes, true ) ) {
 			return;
 		}
 
@@ -22,7 +22,8 @@ final class Header_Menu_Walker extends \Walker_Nav_Menu {
 			esc_attr__( 'Deschide submeniul pentru %s', 'comuna-agris' ),
 			wp_strip_all_tags( $data_object->title )
 		);
-		$output .= '<button class="agris-submenu-toggle" type="button" data-agris-submenu-toggle aria-expanded="false" aria-label="' . esc_attr( $label ) . '" title="' . esc_attr( $label ) . '"><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span></button>';
+		$icon = 0 === (int) $depth ? 'dashicons-arrow-down-alt2' : 'dashicons-arrow-right-alt2';
+		$output .= '<button class="agris-submenu-toggle" type="button" data-agris-submenu-toggle aria-expanded="false" aria-label="' . esc_attr( $label ) . '" title="' . esc_attr( $label ) . '"><span class="dashicons ' . esc_attr( $icon ) . '" aria-hidden="true"></span></button>';
 	}
 }
 
@@ -84,7 +85,7 @@ final class Site_Header extends Base {
 				<nav id="<?php echo esc_attr( $nav_id ); ?>" class="agris-main-nav" aria-label="<?php esc_attr_e( 'Navigație principală', 'comuna-agris' ); ?>">
 				<?php
 				if ( $s['menu_id'] ) {
-					wp_nav_menu( array( 'menu' => (int) $s['menu_id'], 'container' => false, 'menu_class' => 'agris-menu', 'fallback_cb' => false, 'depth' => 2, 'walker' => new Header_Menu_Walker() ) );
+					wp_nav_menu( array( 'menu' => (int) $s['menu_id'], 'container' => false, 'menu_class' => 'agris-menu', 'fallback_cb' => false, 'depth' => 4, 'walker' => new Header_Menu_Walker() ) );
 				} elseif ( \Elementor\Plugin::$instance->editor->is_edit_mode() ) {
 					echo '<div class="agris-editor-note">' . esc_html__( 'Selectați un meniu WordPress în panoul din stânga.', 'comuna-agris' ) . '</div>';
 				}

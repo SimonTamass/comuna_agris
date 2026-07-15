@@ -10,22 +10,41 @@
       const toggle = one('.agris-nav-toggle', header);
       const nav = one('.agris-main-nav', header);
       let setNavigation = () => {};
-      const submenuParents = all('.agris-menu > .menu-item-has-children', header);
+      const submenuParents = all('.agris-menu .menu-item-has-children', header);
+      const topLevelParents = submenuParents.filter((item) => item.parentElement?.classList.contains('agris-menu'));
       const closeSubmenu = (item, restoreFocus = false) => {
         window.clearTimeout(item.agrisCloseTimer);
+        all('.menu-item-has-children.is-submenu-open', item).reverse().forEach((child) => {
+          window.clearTimeout(child.agrisCloseTimer);
+          child.classList.remove('is-submenu-open', 'opens-left');
+          one(':scope > [data-agris-submenu-toggle]', child)?.setAttribute('aria-expanded', 'false');
+        });
         item.classList.remove('is-submenu-open');
+        item.classList.remove('opens-left');
         const button = one(':scope > [data-agris-submenu-toggle]', item);
         button?.setAttribute('aria-expanded', 'false');
         if (restoreFocus) button?.focus();
       };
-      const closeAllSubmenus = (except = null) => submenuParents.forEach((item) => {
+      const closeAllSubmenus = (except = null) => topLevelParents.forEach((item) => {
         if (item !== except) closeSubmenu(item);
       });
+      const closeSiblingSubmenus = (item) => {
+        Array.from(item.parentElement?.children || []).forEach((sibling) => {
+          if (sibling !== item && sibling.classList.contains('menu-item-has-children')) closeSubmenu(sibling);
+        });
+      };
+      const positionSubmenu = (item) => {
+        item.classList.remove('opens-left');
+        if (window.matchMedia('(max-width: 1040px)').matches || item.parentElement?.classList.contains('agris-menu')) return;
+        const submenu = one(':scope > .sub-menu', item);
+        if (submenu && submenu.getBoundingClientRect().right > window.innerWidth - 16) item.classList.add('opens-left');
+      };
       const openSubmenu = (item) => {
         window.clearTimeout(item.agrisCloseTimer);
-        closeAllSubmenus(item);
+        closeSiblingSubmenus(item);
         item.classList.add('is-submenu-open');
         one(':scope > [data-agris-submenu-toggle]', item)?.setAttribute('aria-expanded', 'true');
+        positionSubmenu(item);
       };
 
       submenuParents.forEach((item, index) => {
@@ -47,11 +66,15 @@
           }
         });
         button.addEventListener('keydown', (event) => {
-          if (!['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+          if (!['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft'].includes(event.key)) return;
           event.preventDefault();
+          if (event.key === 'ArrowLeft') {
+            closeSubmenu(item, true);
+            return;
+          }
           openSubmenu(item);
           const links = all('a', submenu);
-          (event.key === 'ArrowDown' ? links[0] : links[links.length - 1])?.focus();
+          (event.key === 'ArrowUp' ? links[links.length - 1] : links[0])?.focus();
         });
         item.addEventListener('pointerenter', () => {
           if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) openSubmenu(item);
@@ -116,7 +139,8 @@
 
       header.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') return;
-        const openItem = one('.menu-item-has-children.is-submenu-open', header);
+        const openItems = all('.menu-item-has-children.is-submenu-open', header);
+        const openItem = event.target.closest?.('.menu-item-has-children.is-submenu-open') || openItems[openItems.length - 1];
         if (openItem) { closeSubmenu(openItem, true); return; }
         if (lang?.classList.contains('is-open')) { lang.classList.remove('is-open'); langTrigger?.setAttribute('aria-expanded', 'false'); langTrigger?.focus(); return; }
         if (nav?.classList.contains('is-open')) { setNavigation(false); toggle?.focus(); }
@@ -128,6 +152,9 @@
           langTrigger?.setAttribute('aria-expanded', 'false');
         }
       });
+      window.addEventListener('resize', () => {
+        all('.menu-item-has-children.is-submenu-open', header).forEach(positionSubmenu);
+      }, { passive: true });
     });
   }
 
