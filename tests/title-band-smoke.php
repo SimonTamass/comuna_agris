@@ -10,11 +10,17 @@ $css = file_get_contents( $root . '/assets/css/frontend.css' );
 
 $checks = array(
 	'page title band markup' => array( $page_hero, 'agris-page-hero agris-title-band' ),
+	'editable home hero image' => array( $home_hero, "add_control( 'background'" ),
+	'editable page hero image' => array( $page_hero, "add_control( 'background'" ),
+	'home hero image variable' => array( $home_hero, '--agris-hero-image' ),
+	'page hero image variable' => array( $page_hero, '--agris-page-image' ),
 	'single title band markup' => array( $single, '<header class="agris-title-band">' ),
 	'archive title band markup' => array( $archive, 'agris-archive-header agris-title-band' ),
 	'native fallback title band' => array( $frontend, 'agris-title-band-inner' ),
 	'shared title background' => array( $css, '--agris-title-bg: #163c38;' ),
-	'forced image-free title bands' => array( $css, '.agris-title-band { background: var(--agris-title-bg); background-image: none !important;' ),
+	'image-free shared title bands' => array( $css, '.agris-title-band { background: var(--agris-title-bg); background-image: none !important;' ),
+	'local homepage image composition' => array( $css, 'var(--agris-hero-image,none)' ),
+	'local page image composition' => array( $css, 'var(--agris-page-image,none)' ),
 	'full-width single title band' => array( $css, '.agris-single > .agris-title-band, .agris-archive-header.agris-title-band' ),
 );
 
@@ -26,20 +32,8 @@ foreach ( $checks as $label => $check ) {
 	}
 }
 
-foreach ( array( $home_hero, $page_hero ) as $hero ) {
-	if ( str_contains( $hero, "add_control( 'background'" ) || str_contains( $hero, '--agris-hero-image' ) || str_contains( $hero, '--agris-page-image' ) ) {
-		fwrite( STDERR, "A top hero still exposes a background image.\n" );
-		exit( 1 );
-	}
-}
-
-if ( str_contains( $applier, "'background' =>" ) || str_contains( $applier, "'background'     =>" ) || str_contains( $applier, "'background'    =>" ) ) {
-	fwrite( STDERR, "The automatic Elementor rebuild still assigns a hero background image.\n" );
-	exit( 1 );
-}
-
-if ( str_contains( $css, '--agris-hero-image' ) || str_contains( $css, '--agris-page-image' ) ) {
-	fwrite( STDERR, "Legacy hero image CSS variables remain.\n" );
+if ( ! str_contains( $applier, "'background' => \$this->design_media" ) && ! str_contains( $applier, "'background'     => \$hero_image" ) ) {
+	fwrite( STDERR, "The automatic Elementor rebuild does not assign local hero imagery.\n" );
 	exit( 1 );
 }
 

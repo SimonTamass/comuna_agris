@@ -43,8 +43,8 @@ foreach ( array( 'revslider_sliders', 'revslider_slides', 'home_ro_data( \\WP_Po
 	}
 }
 
-if ( str_contains( $applier_source, '2018/07/hatter-slider-46.jpg' ) ) {
-	fwrite( STDERR, "The retired homepage background image is still assigned.\n" );
+if ( ! str_contains( $applier_source, "design_media( '2018/07/hatter-slider-46.jpg'" ) ) {
+	fwrite( STDERR, "The approved local hero image is not assigned through widget media.\n" );
 	exit( 1 );
 }
 

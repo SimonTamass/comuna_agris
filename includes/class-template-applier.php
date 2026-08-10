@@ -659,7 +659,7 @@ final class Template_Applier {
 		$this->routes_cache['ro'] = array(
 			'home_ro'       => $this->page_url( array( 'home-ro' ), '/ro/home-ro/' ),
 			'home_hu'       => $this->page_url( array( 'home-hu' ), '/hu/home-hu/', 'hu' ),
-			'public_info'   => $this->page_url( array( 'informatii-publice' ), '/ro/informatii-publice/' ),
+			'public_info'   => $this->page_url( array( 'informatii-publice', 'formulare-tipizate' ), '/ro/formulare-tipizate/' ),
 			'monitor'       => $this->page_url( array( 'monitorul-oficial-local' ), '/ro/monitorul-oficial-local/' ),
 			'contact'       => $this->page_url( array( 'contact' ), '/ro/contact/' ),
 			'announcements' => $this->page_url( array( 'anunti' ), '/ro/anunti/' ),
@@ -668,9 +668,11 @@ final class Template_Applier {
 			'taxes'         => $this->page_url( array( 'taxe-si-impozite-locale' ), '/ro/taxe-si-impozite-locale/' ),
 			'urbanism'      => $this->page_url( array( 'urbanism' ), '/ro/urbanism/' ),
 			'agricultural'  => $this->page_url( array( 'registru-agricol' ), '/ro/registru-agricol/' ),
+			'departments'   => $this->page_url( array( 'departamente' ), '/ro/departamente/' ),
 			'mayor'         => $this->page_url( array( 'primar' ), '/ro/primar/' ),
 			'council'       => $this->page_url( array( 'conponenta-consiliul-local' ), '/ro/conponenta-consiliul-local/' ),
 			'history'       => $this->page_url( array( 'istoria-comunei' ), '/ro/istoria-comunei/' ),
+			'location'      => $this->page_url( array( 'localizarea-comuna' ), '/ro/localizarea-comuna/' ),
 			'monuments'     => $this->page_url( array( 'monumente-istorice' ), '/ro/monumente-istorice/' ),
 			'tourism'       => $this->page_url( array( 'ekoturisma' ), '/ro/ekoturisma/' ),
 			'twinned'       => $this->page_url( array( 'comune-infratite' ), '/ro/comune-infratite/' ),
@@ -731,6 +733,15 @@ final class Template_Applier {
 			'id'  => '',
 			'url' => '',
 		);
+	}
+
+	private function design_media( string $relative_path, string $origin = 'local-redesign' ): array {
+		$uploads = wp_get_upload_dir();
+		if ( empty( $uploads['baseurl'] ) ) {
+			return $this->media();
+		}
+		$item = $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . ltrim( $relative_path, '/' ), $origin );
+		return $item ? $item['image'] : $this->media();
 	}
 
 	private function media_item_from_id( int $attachment_id, string $origin ): ?array {
@@ -1201,11 +1212,11 @@ final class Template_Applier {
 		}
 		return array(
 			'official' => 'Site oficial al Primăriei Comunei Agriș, județul Satu Mare, România', 'trust' => 'Conexiune securizată',
-			'brand_subtitle' => 'Primăria Comunei Agriș', 'cta' => 'Monitorul Oficial', 'home' => 'Acasă',
+			'brand_subtitle' => 'Primăria · Egri Község', 'cta' => 'Monitorul Oficial', 'home' => 'Acasă',
 			'skip' => 'Sari la conținut', 'language' => 'Alege limba', 'nav' => 'Navigație principală', 'search' => 'Caută',
 			'menu_open' => 'Deschide meniul', 'menu_close' => 'Închide meniul', 'submenu' => 'Deschide submeniul pentru %s',
 			'search_title' => 'Căutare în portal', 'search_placeholder' => 'Căutați documente, anunțuri, servicii…', 'search_button' => 'Caută', 'close' => 'Închide',
-			'footer_description' => 'Portal oficial pentru cetățeni, documente publice și comunicări administrative.',
+			'footer_description' => 'Portal oficial modernizat pentru cetățeni, documente publice și comunicări administrative.',
 			'office' => 'Primăria', 'leadership' => 'Conducere', 'council' => 'Consiliul Local', 'public' => 'Informații publice', 'announcements' => 'Anunțuri', 'monitor' => 'Monitorul Oficial',
 			'contact' => 'Contact', 'footer_nav' => 'Linkuri subsol', 'back_top' => 'Înapoi sus', 'copyright' => 'Toate drepturile rezervate Comuna Agriș.',
 			'address' => 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, Satu Mare',
@@ -1222,7 +1233,7 @@ final class Template_Applier {
 			? array( array( 'code' => 'HU', 'label' => 'Magyar', 'url' => $this->link( get_permalink( $page ) ) ), array( 'code' => 'RO', 'label' => 'Română', 'url' => $this->link( $other_url ) ) )
 			: array( array( 'code' => 'RO', 'label' => 'Română', 'url' => $this->link( get_permalink( $page ) ) ), array( 'code' => 'HU', 'label' => 'Magyar', 'url' => $this->link( $other_url ) ) );
 		return array(
-			'official_text' => $copy['official'], 'trust_text' => $copy['trust'], 'mail_url' => $this->link( 'mailto:primaria@comunaagris.ro' ), 'logo' => $this->media(),
+			'official_text' => $copy['official'], 'trust_text' => $copy['trust'], 'mail_url' => $this->link( 'https://server84.romania-webhosting.com:2096/' ), 'logo' => $this->media(),
 			'brand_title' => 'hu' === $language ? 'Egri Község' : 'Comuna Agriș', 'brand_subtitle' => $copy['brand_subtitle'], 'home_url' => $this->link( $routes[ 'home_' . $language ] ), 'menu_id' => $this->menu_id( $language ),
 			'cta_text' => $copy['cta'], 'cta_link' => $this->link( $routes['monitor'] ), 'agris_sticky' => 'yes', 'language_items' => $this->repeater( $seed . '-languages', $language_items ),
 			'skip_label' => $copy['skip'], 'language_label' => $copy['language'], 'nav_label' => $copy['nav'], 'search_label' => $copy['search'],
@@ -1237,14 +1248,19 @@ final class Template_Applier {
 
 	private function footer_settings( string $language, array $routes, string $seed ): array {
 		$copy = $this->interface_copy( $language );
+		$links = array(
+			array( 'column' => $copy['office'], 'label' => $copy['leadership'], 'url' => $this->link( $routes['mayor'] ) ),
+			array( 'column' => $copy['office'], 'label' => $copy['council'], 'url' => $this->link( $routes['council'] ) ),
+			array( 'column' => $copy['public'], 'label' => $copy['announcements'], 'url' => $this->link( $routes['announcements'] ) ),
+			array( 'column' => $copy['public'], 'label' => $copy['monitor'], 'url' => $this->link( $routes['monitor'] ) ),
+		);
+		if ( 'ro' === $language ) {
+			array_splice( $links, 1, 0, array( array( 'column' => $copy['office'], 'label' => 'Departamente', 'url' => $this->link( $routes['departments'] ) ) ) );
+			array_splice( $links, 4, 0, array( array( 'column' => $copy['public'], 'label' => 'Formulare tipizate', 'url' => $this->link( $routes['forms'] ) ) ) );
+		}
 		return array(
 			'title' => 'hu' === $language ? 'Egri Község' : 'Comuna Agriș', 'subtitle' => $copy['brand_subtitle'], 'description' => $copy['footer_description'],
-			'links' => $this->repeater( $seed . '-links', array(
-				array( 'column' => $copy['office'], 'label' => $copy['leadership'], 'url' => $this->link( $routes['mayor'] ) ),
-				array( 'column' => $copy['office'], 'label' => $copy['council'], 'url' => $this->link( $routes['council'] ) ),
-				array( 'column' => $copy['public'], 'label' => $copy['announcements'], 'url' => $this->link( $routes['announcements'] ) ),
-				array( 'column' => $copy['public'], 'label' => $copy['monitor'], 'url' => $this->link( $routes['monitor'] ) ),
-			) ),
+			'links' => $this->repeater( $seed . '-links', $links ),
 			'phone' => '0261 878 112', 'email' => 'primaria@comunaagris.ro', 'address' => $copy['address'], 'copyright' => $copy['copyright'],
 			'contact_url' => $this->link( $routes['contact'] ), 'monitor_url' => $this->link( $routes['monitor'] ), 'contact_title' => $copy['contact'],
 			'contact_link_text' => $copy['contact'], 'monitor_link_text' => $copy['monitor'], 'footer_nav_label' => $copy['footer_nav'], 'back_to_top_label' => $copy['back_top'],
@@ -1256,7 +1272,337 @@ final class Template_Applier {
 		return array( 'title' => $copy['accessibility'], 'position' => 'right', 'text_size_label' => $copy['text_size'], 'contrast_label' => $copy['contrast'], 'grayscale_label' => $copy['grayscale'], 'underline_label' => $copy['underline'], 'reset_label' => $copy['reset'], 'options_label' => $copy['options'], 'back_to_top_label' => $copy['back_top'] );
 	}
 
+	private function specialized_ro_page_data( \WP_Post $page ): array {
+		$identity = strtolower( remove_accents( $page->post_name . ' ' . $page->post_title ) );
+		return match ( true ) {
+			(bool) preg_match( '/localizarea-comuna|comuna-agris/', $identity ) => $this->comuna_ro_data( $page ),
+			(bool) preg_match( '/conponenta-consiliul-local|componenta-consiliul-local/', $identity ) => $this->council_ro_data( $page ),
+			(bool) preg_match( '/formulare-tipizate/', $identity ) => $this->public_info_ro_data( $page ),
+			(bool) preg_match( '/monitorul-oficial-local/', $identity ) => $this->monitor_ro_data( $page ),
+			(bool) preg_match( '/contact/', $identity ) => $this->contact_ro_data( $page ),
+			default => array(),
+		};
+	}
+
+	private function redesign_page_start( \WP_Post $page, string $seed, string $title, string $description, string $kicker, array $background ): array {
+		$routes = $this->routes();
+		return array(
+			$this->container( $seed . '-header', array(
+				$this->widget( $seed . '-header-widget', 'agris-site-header', $this->header_settings( $page, 'ro', $routes, $seed . '-header' ) ),
+				$this->widget( $seed . '-search-widget', 'agris-search-box', $this->search_settings( 'ro' ) ),
+			), array( 'content_width' => 'full' ) ),
+			$this->container( $seed . '-hero', array(
+				$this->widget( $seed . '-hero-widget', 'agris-page-hero', array(
+					'kicker' => $kicker,
+					'title' => $title,
+					'description' => $description,
+					'background' => $background,
+					'parent_label' => 'Acasă',
+					'parent_link' => $this->link( $routes['home_ro'] ),
+					'current_label' => $title,
+				) ),
+			), array( 'content_width' => 'full' ) ),
+		);
+	}
+
+	private function redesign_page_end( string $seed ): array {
+		$routes = $this->routes();
+		return $this->container( $seed . '-footer', array(
+			$this->widget( $seed . '-footer-widget', 'agris-site-footer', $this->footer_settings( 'ro', $routes, $seed . '-footer' ) ),
+			$this->widget( $seed . '-accessibility-widget', 'agris-accessibility', $this->accessibility_settings( 'ro' ) ),
+		), array( 'content_width' => 'full' ) );
+	}
+
+	private function comuna_ro_data( \WP_Post $page ): array {
+		$seed = 'comuna-' . $page->ID;
+		$routes = $this->routes();
+		$source = $this->normalize_legacy_content( $this->original_page_content( $page ) );
+		$data = $this->redesign_page_start(
+			$page,
+			$seed,
+			'Comuna Agriș',
+			'O pagină nativă pentru istorie, localizare, monumente, personalități, sport și turism.',
+			'',
+			$this->design_media( '2019/02/egriii.jpg', 'comuna-page-hero' )
+		);
+		$data[] = $this->container( $seed . '-identity', array(
+			$this->widget( $seed . '-identity-widget', 'agris-content-media', array(
+				'kicker' => 'Identitate locală',
+				'title' => 'Istoria comunei',
+				'description' => '',
+				'content' => '<p>Comuna Agriș păstrează o identitate locală puternică, cu tradiții românești și maghiare vizibile în viața comunității.</p>' . $source,
+				'image' => $this->media(),
+				'image_side' => 'right',
+			) ),
+		), array( 'padding' => array( 'unit' => 'px', 'top' => '72', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->section( $seed . '-location-heading', 'Localizare', 'Agriș, județul Satu Mare', '', 'Vezi adresa primăriei', $routes['contact'], 'light', '#ffffff' );
+		$data[] = $this->container( $seed . '-location', array(
+			$this->widget( $seed . '-location-widget', 'agris-services-grid', array(
+				'columns' => '3',
+				'items_list' => $this->repeater( $seed . '-location-items', array(
+					array( 'icon' => 'SM', 'title' => 'Județ', 'description' => 'Comuna se află în județul Satu Mare, în nord-vestul României.', 'url' => $this->link( $routes['location'] ) ),
+					array( 'icon' => '447066', 'title' => 'Cod poștal', 'description' => 'Codul administrativ folosit în datele de contact este 447066.', 'url' => $this->link( $routes['contact'] ) ),
+					array( 'icon' => '68', 'title' => 'Sediu', 'description' => 'Primăria funcționează pe str. Csury Balint, nr. 68.', 'url' => $this->link( $routes['contact'] ) ),
+				) ),
+			) ),
+		), array( 'background_background' => 'classic', 'background_color' => '#ffffff', 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->section( $seed . '-culture-heading', 'Cultură', 'Monumente istorice și personalități' );
+		$data[] = $this->container( $seed . '-culture', array(
+			$this->widget( $seed . '-culture-widget', 'agris-services-grid', array(
+				'columns' => '4',
+				'items_list' => $this->repeater( $seed . '-culture-items', array(
+					array( 'icon' => 'MH', 'title' => 'Monumente istorice', 'description' => 'Reperele istorice și patrimoniul local.', 'url' => $this->link( $routes['monuments'] ) ),
+					array( 'icon' => 'CB', 'title' => 'CSŰRY BÁLINT', 'description' => 'Personalitate locală prezentă în arhiva comunei.', 'url' => $this->link( home_url( '/ro/csury-balint-ro/' ) ) ),
+					array( 'icon' => 'MG', 'title' => 'DR. MAGOSS GYÖRGY', 'description' => 'Profil păstrat ca reper cultural.', 'url' => $this->link( home_url( '/ro/dr-magoss-gyorgy-ro/' ) ) ),
+					array( 'icon' => 'VF', 'title' => 'VISKY FERENC', 'description' => 'Profil public din arhiva originală.', 'url' => $this->link( home_url( '/ro/visky-ferenc-ro/' ) ) ),
+				) ),
+			) ),
+		), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->section( $seed . '-tourism-heading', 'Turism și sport', 'Ecoturism, agroturism, balta, karting și sport local', '', '', '', 'light', '#ffffff' );
+		$data[] = $this->container( $seed . '-tourism', array(
+			$this->widget( $seed . '-tourism-widget', 'agris-services-grid', array(
+				'columns' => '3',
+				'items_list' => $this->repeater( $seed . '-tourism-items', array(
+					array( 'icon' => 'TUR', 'title' => 'Ecoturism', 'description' => 'Natură, trasee și experiențe locale.', 'url' => $this->link( $routes['tourism'] ) ),
+					array( 'icon' => 'AGR', 'title' => 'Agroturism', 'description' => 'Egri berry, plantație goji și inițiative locale.', 'url' => $this->link( home_url( '/ro/agroturism/' ) ) ),
+					array( 'icon' => 'SPORT', 'title' => 'Karting, fotbal, handbal', 'description' => 'Activități sportive prezente în meniul original.', 'url' => $this->link( home_url( '/ro/sport-ro/' ) ) ),
+				) ),
+			) ),
+		), array( 'background_background' => 'classic', 'background_color' => '#ffffff', 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->section( $seed . '-twinned-heading', 'Relații externe', 'Comune înfrățite', '', '', '', 'dark', '#0f2f1f' );
+		$data[] = $this->container( $seed . '-twinned', array(
+			$this->widget( $seed . '-twinned-widget', 'agris-document-grid', array(
+				'columns' => '3', 'filters' => '',
+				'items_list' => $this->repeater( $seed . '-twinned-items', array(
+					array( 'icon' => 'HU', 'title' => 'Jéke', 'meta' => 'Localitate înfrățită', 'category' => 'Parteneri', 'url' => $this->link( 'http://jeke.hu/' ) ),
+					array( 'icon' => 'HU', 'title' => 'Szamosszeg', 'meta' => 'Localitate înfrățită', 'category' => 'Parteneri', 'url' => $this->link( 'http://www.szamosszeg.hu/index.php' ) ),
+					array( 'icon' => 'HU', 'title' => 'Hecea', 'meta' => 'Localitate înfrățită', 'category' => 'Parteneri', 'url' => $this->link( 'http://users.atw.hu/mezogecse/mainpage.html' ) ),
+				) ),
+			) ),
+		), array( 'background_background' => 'classic', 'background_color' => '#0f2f1f', 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '80', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->redesign_page_end( $seed );
+		return $data;
+	}
+
+	private function council_ro_data( \WP_Post $page ): array {
+		$seed = 'council-' . $page->ID;
+		$routes = $this->routes();
+		$data = $this->redesign_page_start(
+			$page,
+			$seed,
+			'Consiliul Local',
+			'Componența Consiliului Local al Comunei Agriș · Mandat 2024–2028 · 11 membri.',
+			'',
+			$this->design_media( '2018/07/hatter-slider-46.jpg', 'council-page-hero' )
+		);
+		$data[] = $this->section( $seed . '-members-heading', 'Mandat 2024–2028', 'Componența consiliului' );
+		$data[] = $this->container( $seed . '-members', array(
+			$this->widget( $seed . '-members-widget', 'agris-council-members', array(
+				'columns' => '3',
+				'items_list' => $this->repeater( $seed . '-member-items', array(
+					array( 'name' => 'Nița Nicolae', 'party' => 'PNL', 'role' => 'Consilier local', 'email' => '' ),
+					array( 'name' => 'Móra Botond', 'party' => 'AMT', 'role' => 'Consilier local', 'email' => '' ),
+					array( 'name' => 'Márton Zsuzsanna', 'party' => 'AMT', 'role' => 'Consilier local', 'email' => '' ),
+					array( 'name' => 'Deák Zoltán', 'party' => 'AMT', 'role' => 'Consilier local', 'email' => '' ),
+					array( 'name' => 'Barbos Samuel', 'party' => 'PFD', 'role' => 'Consilier local', 'email' => '' ),
+					array( 'name' => 'Kósa Krisztián', 'party' => 'UDMR', 'role' => 'Consilier local', 'email' => '' ),
+					array( 'name' => 'Dolhai Andrei', 'party' => 'UDMR', 'role' => 'Consilier local', 'email' => '' ),
+					array( 'name' => 'Jager Elisabeta-Edith', 'party' => 'UDMR', 'role' => 'Consilier local', 'email' => '' ),
+					array( 'name' => 'Tatar Georghe', 'party' => 'PNL', 'role' => 'Consilier local', 'email' => '' ),
+					array( 'name' => 'Docsa Gábor', 'party' => 'UDMR', 'role' => 'Consilier local', 'email' => '' ),
+					array( 'name' => 'Papp Réka Izabella', 'party' => 'UDMR', 'role' => 'Consilier local', 'email' => '' ),
+				) ),
+			) ),
+		), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '40', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->container( $seed . '-composition', array(
+			$this->widget( $seed . '-composition-widget', 'agris-stats-bars', array(
+				'kicker' => 'Componență pe partide', 'title' => 'UDMR 5 · AMT 3 · PNL 2 · PFD 1', 'description' => '',
+				'items_list' => $this->repeater( $seed . '-composition-items', array(
+					array( 'label' => 'UDMR', 'value' => 45, 'display_value' => '5', 'suffix' => '', 'color' => '#1b5e20' ),
+					array( 'label' => 'AMT', 'value' => 27, 'display_value' => '3', 'suffix' => '', 'color' => '#7c3aed' ),
+					array( 'label' => 'PNL', 'value' => 18, 'display_value' => '2', 'suffix' => '', 'color' => '#1d4ed8' ),
+					array( 'label' => 'PFD', 'value' => 9, 'display_value' => '1', 'suffix' => '', 'color' => '#b45309' ),
+				) ),
+			) ),
+			$this->widget( $seed . '-links-widget', 'agris-link-list', array(
+				'title' => 'Documente utile',
+				'items_list' => $this->repeater( $seed . '-link-items', array(
+					array( 'icon' => 'CL', 'label' => 'Componenta consiliului local', 'meta' => 'Pagina curentă', 'url' => $this->link( get_permalink( $page ) ) ),
+					array( 'icon' => 'MOL', 'label' => 'Hotărâri autoritatea deliberativă', 'meta' => 'Monitorul Oficial Local', 'url' => $this->link( $routes['deliberative'] ) ),
+				) ),
+			) ),
+		), array( 'gap' => array( 'unit' => 'px', 'size' => 32, 'sizes' => array() ), 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->section( $seed . '-decisions-heading', 'Arhivă actualizată', 'Hotărâri recente publicate online', '', 'Arhiva originală', $routes['decisions'], 'light', '#ffffff' );
+		$data[] = $this->container( $seed . '-decisions', array(
+			$this->widget( $seed . '-decisions-widget', 'agris-news-grid', array(
+				'post_type' => 'post', 'category' => 'hotarari-ale-consiului-local-2026', 'language' => 'ro', 'count' => 3, 'columns' => '3', 'orderby' => 'date',
+				'show_excerpt' => 'yes', 'show_category' => 'yes', 'show_date' => 'yes', 'empty_text' => 'Nu există hotărâri publicate pentru această selecție.', 'read_more_text' => 'Vezi documentul →',
+			) ),
+		), array( 'background_background' => 'classic', 'background_color' => '#ffffff', 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->redesign_page_end( $seed );
+		return $data;
+	}
+
+	private function public_info_ro_data( \WP_Post $page ): array {
+		$seed = 'public-info-' . $page->ID;
+		$source = $this->normalize_legacy_content( $this->original_page_content( $page ) );
+		$data = $this->redesign_page_start(
+			$page,
+			$seed,
+			'Informații publice',
+			'Anunțuri, formulare, bugete, dare de seamă, Legea 17, APIA și arhive publice.',
+			'',
+			$this->design_media( '2019/02/egriii.jpg', 'public-info-page-hero' )
+		);
+		$data[] = $this->section( $seed . '-library-heading', 'Documente', 'Bibliotecă publică' );
+		$data[] = $this->container( $seed . '-library', array(
+			$this->widget( $seed . '-library-widget', 'agris-document-grid', array(
+				'columns' => '3', 'filters' => 'yes', 'all_label' => 'Toate',
+				'items_list' => $this->repeater( $seed . '-document-items', array(
+					array( 'icon' => 'AN', 'title' => 'ANUNȚ INDIVIDUAL', 'meta' => 'iulie 2026', 'category' => 'Anunțuri', 'url' => $this->link( home_url( '/ro/anunt-idividual/' ) ) ),
+					array( 'icon' => 'AN', 'title' => 'Anunț individual pentru comunicare prin publicitate', 'meta' => 'iulie 2026', 'category' => 'Anunțuri', 'url' => $this->link( home_url( '/ro/anunt-individual-pentru-comunicare-prin-publicitate/' ) ) ),
+					array( 'icon' => 'PV', 'title' => 'Anunț colectiv – Proces verbal', 'meta' => 'iunie 2026', 'category' => 'Anunțuri', 'url' => $this->link( home_url( '/ro/anunt-colectiv-proces-verbal/' ) ) ),
+					array( 'icon' => 'PV', 'title' => 'Proces-verbal de afișare', 'meta' => 'iunie 2026', 'category' => 'Anunțuri', 'url' => $this->link( home_url( '/ro/proces-verbal-de-afisare-3/' ) ) ),
+					array( 'icon' => 'CI', 'title' => 'Comunicare încheiere', 'meta' => 'iunie 2026', 'category' => 'Anunțuri', 'url' => $this->link( home_url( '/ro/comunicare-incheiere-2/' ) ) ),
+					array( 'icon' => 'IA', 'title' => 'Indicatori de afișare', 'meta' => 'iunie 2026', 'category' => 'Anunțuri', 'url' => $this->link( home_url( '/ro/idicatori-de-afisare/' ) ) ),
+					array( 'icon' => 'FT', 'title' => 'Formulare tipizate', 'meta' => 'Cereri și formulare', 'category' => 'Formulare', 'url' => $this->link( get_permalink( $page ) ) ),
+					array( 'icon' => 'L17', 'title' => 'Legea 17', 'meta' => 'Legislație și oferte de vânzare', 'category' => 'Legea 17', 'url' => $this->link( home_url( '/ro/legea-17/' ) ) ),
+					array( 'icon' => 'OV', 'title' => 'Ofertă de vânzare 2024', 'meta' => 'Arhiva Legea 17', 'category' => 'Legea 17', 'url' => $this->link( home_url( '/ro/oferta-de-vanzare-2024/' ) ) ),
+					array( 'icon' => 'AP', 'title' => 'APIA', 'meta' => 'Informații agricole', 'category' => 'Arhivă', 'url' => $this->link( home_url( '/ro/apia/' ) ) ),
+					array( 'icon' => 'PA', 'title' => 'Amenajamentul Pastoral Agriș', 'meta' => 'Document public', 'category' => 'Arhivă', 'url' => $this->link( home_url( '/ro/amenajamentul-pastoral-agris/' ) ) ),
+					array( 'icon' => 'GR', 'title' => 'Program Fiecare copil în grădiniță', 'meta' => 'Program social', 'category' => 'Arhivă', 'url' => $this->link( home_url( '/ro/program-fiecare-copil-in-gradinita/' ) ) ),
+					array( 'icon' => 'B24', 'title' => 'Buget 2024', 'meta' => 'Documente financiare', 'category' => 'Buget', 'url' => $this->link( home_url( '/ro/buget-2024/' ) ) ),
+					array( 'icon' => 'B23', 'title' => 'Buget 2023', 'meta' => 'Documente financiare', 'category' => 'Buget', 'url' => $this->link( home_url( '/ro/buget-2023/' ) ) ),
+					array( 'icon' => 'B19', 'title' => 'Buget 2019', 'meta' => 'Arhivă buget', 'category' => 'Buget', 'url' => $this->link( home_url( '/ro/buget-2019/' ) ) ),
+					array( 'icon' => 'B18', 'title' => 'Buget 2018', 'meta' => 'Arhivă buget', 'category' => 'Buget', 'url' => $this->link( home_url( '/ro/buget-2018/' ) ) ),
+					array( 'icon' => 'DS', 'title' => 'Dare de seamă 2015/27', 'meta' => 'Arhivă', 'category' => 'Arhivă', 'url' => $this->link( home_url( '/ro/dare-de-seama-201527/' ) ) ),
+					array( 'icon' => 'DS', 'title' => 'Dare de seamă 2015/26', 'meta' => 'Arhivă', 'category' => 'Arhivă', 'url' => $this->link( home_url( '/ro/dare-de-seama-201526/' ) ) ),
+					array( 'icon' => 'DS', 'title' => 'Dare de seamă 2015/25', 'meta' => 'Arhivă', 'category' => 'Arhivă', 'url' => $this->link( home_url( '/ro/dare-de-seama-201525/' ) ) ),
+				) ),
+			) ),
+		), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->container( $seed . '-forms', array(
+			$this->widget( $seed . '-forms-widget', 'agris-content-media', array(
+				'kicker' => 'Formulare', 'title' => 'Formulare tipizate', 'description' => 'Conținutul original al paginii rămâne disponibil în noua structură.',
+				'content' => $source, 'image' => $this->media(), 'image_side' => 'right',
+			) ),
+		), array( 'background_background' => 'classic', 'background_color' => '#ffffff', 'padding' => array( 'unit' => 'px', 'top' => '72', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->section( $seed . '-other-heading', 'Alte secțiuni din site-ul original', 'Galerie, firme și legislație' );
+		$data[] = $this->container( $seed . '-other', array(
+			$this->widget( $seed . '-other-widget', 'agris-services-grid', array(
+				'columns' => '3',
+				'items_list' => $this->repeater( $seed . '-other-items', array(
+					array( 'icon' => 'GF', 'title' => 'Galeria foto', 'description' => 'Arhivă foto, inclusiv galeriile 2018 și 2019.', 'url' => $this->link( home_url( '/ro/galeria-foto/' ) ) ),
+					array( 'icon' => 'FR', 'title' => 'Firme', 'description' => 'Secțiunea firmelor din Comuna Agriș.', 'url' => $this->link( home_url( '/ro/firme/' ) ) ),
+					array( 'icon' => 'LEG', 'title' => 'Legislație', 'description' => 'Documente legislative și trimiteri utile.', 'url' => $this->link( home_url( '/ro/legislatie/' ) ) ),
+				) ),
+			) ),
+		), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->redesign_page_end( $seed );
+		return $data;
+	}
+
+	private function monitor_ro_data( \WP_Post $page ): array {
+		$seed = 'monitor-' . $page->ID;
+		$data = $this->redesign_page_start(
+			$page,
+			$seed,
+			'Monitorul Oficial Local',
+			'Acces organizat la documentele publice obligatorii ale autorității locale.',
+			'',
+			$this->design_media( '2018/07/hatter-slider-46.jpg', 'monitor-page-hero' )
+		);
+		$data[] = $this->section( $seed . '-categories-heading', 'Categorii oficiale', 'Documente publice' );
+		$data[] = $this->container( $seed . '-categories', array(
+			$this->widget( $seed . '-categories-widget', 'agris-services-grid', array(
+				'columns' => '3',
+				'items_list' => $this->repeater( $seed . '-category-items', array(
+					array( 'icon' => 'UAT', 'title' => 'Statutul Unității Administrativ-Teritoriale', 'description' => 'Documentele de bază ale UAT Comuna Agriș.', 'url' => $this->link( home_url( '/ro/statutul-unitatii-administrativ-teritoriale/' ) ) ),
+					array( 'icon' => 'REG', 'title' => 'Regulamentul privind procedurile administrative', 'description' => 'Reguli și proceduri administrative locale.', 'url' => $this->link( home_url( '/ro/regulamentul-privind-procedurile-administrative/' ) ) ),
+					array( 'icon' => 'HCL', 'title' => 'Hotărârile autorității deliberative', 'description' => 'Hotărâri ale Consiliului Local.', 'url' => $this->link( home_url( '/ro/hotararile-autoritatii-deliberative/' ) ) ),
+					array( 'icon' => 'PH', 'title' => 'Convocator și proiecte de hotărâri', 'description' => 'Convocatoare și proiecte supuse dezbaterii.', 'url' => $this->link( home_url( '/ro/convocator-si-proiect-de-hotarari/' ) ) ),
+					array( 'icon' => 'DIS', 'title' => 'Dispoziții autoritatea executivă', 'description' => 'Dispoziții ale autorității executive locale.', 'url' => $this->link( home_url( '/ro/dispozitii-autoritatea-executiva/' ) ) ),
+					array( 'icon' => 'FIN', 'title' => 'Documente și informații financiare', 'description' => 'Buget, execuții și date financiare publice.', 'url' => $this->link( home_url( '/ro/documente-si-informatii-financiare/' ) ) ),
+				) ),
+			) ),
+		), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->section( $seed . '-registers-heading', 'Alte documente', 'Registre, minute și procese verbale', '', '', '', 'light', '#ffffff' );
+		$data[] = $this->container( $seed . '-registers', array(
+			$this->widget( $seed . '-registers-widget', 'agris-document-grid', array(
+				'columns' => '3', 'filters' => '',
+				'items_list' => $this->repeater( $seed . '-register-items', array(
+					array( 'icon' => 'RR', 'title' => 'Registrul privind refuzuri', 'meta' => 'Alte documente', 'category' => 'Registre', 'url' => $this->link( home_url( '/ro/registrul-privind-refuzuri/' ) ) ),
+					array( 'icon' => 'RP', 'title' => 'Registrul propunerilor cu privire la P.H.', 'meta' => 'Alte documente', 'category' => 'Registre', 'url' => $this->link( home_url( '/ro/registrul-pentru-consemnarea-propunerilor-cu-privire-la-p-h/' ) ) ),
+					array( 'icon' => 'IP', 'title' => 'Informare privind problemele de interes public', 'meta' => 'Alte documente', 'category' => 'Informări', 'url' => $this->link( home_url( '/ro/informare-privind-problemelor-de-interes-public/' ) ) ),
+					array( 'icon' => 'PA', 'title' => 'Proiecte de acte administrative', 'meta' => 'Alte documente', 'category' => 'Proiecte', 'url' => $this->link( home_url( '/ro/proiecte-de-acte-administrative/' ) ) ),
+					array( 'icon' => 'MS', 'title' => 'Minute – ședință publică', 'meta' => 'Alte documente', 'category' => 'Ședințe', 'url' => $this->link( home_url( '/ro/minute-sedinta-publica/' ) ) ),
+					array( 'icon' => 'PV', 'title' => 'Procese verbale ale ședințelor', 'meta' => 'Autorități deliberative', 'category' => 'Ședințe', 'url' => $this->link( home_url( '/ro/procese-verbale-ale-sedintelor-autoritatilor-deliberative/' ) ) ),
+					array( 'icon' => 'DC', 'title' => 'Declarații de căsătorie', 'meta' => 'Alte documente', 'category' => 'Declarații', 'url' => $this->link( home_url( '/ro/declaratii-de-casatorie/' ) ) ),
+					array( 'icon' => 'AL', 'title' => 'Altele', 'meta' => 'Documente diverse', 'category' => 'Altele', 'url' => $this->link( home_url( '/ro/altele/' ) ) ),
+				) ),
+			) ),
+		), array( 'background_background' => 'classic', 'background_color' => '#ffffff', 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->section( $seed . '-recent-heading', 'Noutăți utile', 'Hotărâri 2026 publicate recent', '', 'Vezi detalii', home_url( '/ro/conponenta-consiliul-local/' ), 'dark', '#0f2f1f' );
+		$data[] = $this->container( $seed . '-recent', array(
+			$this->widget( $seed . '-recent-widget', 'agris-document-grid', array(
+				'columns' => '3', 'filters' => '',
+				'items_list' => $this->repeater( $seed . '-recent-items', array(
+					array( 'icon' => '13', 'title' => 'H.C.L. nr. 13–16 / 2026', 'meta' => '18 mai 2026', 'category' => 'HCL', 'url' => $this->link( home_url( '/ro/hotararea-consiliului-local-nr-13-16-2026-2/' ) ) ),
+					array( 'icon' => '10', 'title' => 'H.C.L. nr. 10–12 / 2026', 'meta' => '18 mai 2026', 'category' => 'HCL', 'url' => $this->link( home_url( '/ro/hotararea-consiliului-local-nr-10-12-2026/' ) ) ),
+					array( 'icon' => '04', 'title' => 'H.C.L. nr. 4–9 / 2026', 'meta' => '24 martie 2026', 'category' => 'HCL', 'url' => $this->link( home_url( '/ro/hotararea-consiliului-local-nr-4-9-2026/' ) ) ),
+				) ),
+			) ),
+		), array( 'background_background' => 'classic', 'background_color' => '#0f2f1f', 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '80', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->redesign_page_end( $seed );
+		return $data;
+	}
+
+	private function contact_ro_data( \WP_Post $page ): array {
+		$seed = 'contact-' . $page->ID;
+		$data = $this->redesign_page_start(
+			$page,
+			$seed,
+			'Contactați-ne',
+			'Primăria Comunei Agriș vă stă la dispoziție în programul de lucru cu publicul.',
+			'',
+			$this->design_media( '2019/02/egriii.jpg', 'contact-page-hero' )
+		);
+		$data[] = $this->container( $seed . '-details', array(
+			$this->widget( $seed . '-details-widget', 'agris-contact-details', array(
+				'kicker' => 'Locație', 'title' => 'Primăria Comunei Agriș', 'description' => 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, județul Satu Mare.',
+				'address' => 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, județul Satu Mare', 'address_code' => 'AD',
+				'phone' => '0261 878 112', 'fax' => '0261 878 111', 'email' => 'primaria@comunaagris.ro', 'hours' => 'Luni–Vineri: 8:00–16:00', 'hours_code' => 'OR',
+				'map_embed' => $this->link( 'https://www.google.com/maps?q=47.8816707,23.0048293&z=15&output=embed' ), 'map_title' => 'Primăria Comunei Agriș pe hartă',
+			) ),
+		), array( 'padding' => array( 'unit' => 'px', 'top' => '72', 'right' => '0', 'bottom' => '32', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->container( $seed . '-form', array(
+			$this->widget( $seed . '-form-widget', 'agris-contact-form', array(
+				'kicker' => 'Mesaj rapid', 'title' => 'Trimiteți un mesaj', 'description' => 'Completați câmpurile obligatorii pentru a trimite mesajul direct către primărie.',
+				'recipient' => 'primaria@comunaagris.ro', 'language' => 'ro', 'name_label' => 'Nume', 'email_label' => 'Email', 'subject_label' => 'Subiect', 'message_label' => 'Mesaj',
+				'button_text' => 'Trimite mesajul', 'privacy_text' => 'Datele sunt folosite exclusiv pentru a răspunde solicitării.',
+			) ),
+		), array( 'background_background' => 'classic', 'background_color' => '#ffffff', 'padding' => array( 'unit' => 'px', 'top' => '64', 'right' => '0', 'bottom' => '64', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->container( $seed . '-quick-links', array(
+			$this->widget( $seed . '-quick-links-widget', 'agris-services-grid', array(
+				'columns' => '3',
+				'items_list' => $this->repeater( $seed . '-quick-link-items', array(
+					array( 'icon' => 'TEL', 'title' => 'Telefon direct', 'description' => '0261 878 112', 'url' => $this->link( 'tel:0261878112' ) ),
+					array( 'icon' => '@', 'title' => 'Email oficial', 'description' => 'primaria@comunaagris.ro', 'url' => $this->link( 'mailto:primaria@comunaagris.ro' ) ),
+					array( 'icon' => 'MAIL', 'title' => 'Webmail', 'description' => 'Acces poștă electronică', 'url' => $this->link( 'https://server84.romania-webhosting.com:2096/' ) ),
+				) ),
+			) ),
+		), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->redesign_page_end( $seed );
+		return $data;
+	}
+
 	private function generic_page_data( \WP_Post $page, string $type, string $language = 'ro' ): array {
+		if ( 'ro' === $language ) {
+			$redesign = $this->specialized_ro_page_data( $page );
+			if ( $redesign ) {
+				return $redesign;
+			}
+		}
 		$routes = $this->routes( $language );
 		$copy = $this->interface_copy( $language );
 		$seed = 'page-' . $page->ID;
@@ -1297,6 +1643,7 @@ final class Template_Applier {
 					'kicker' => $label[0],
 					'title' => get_the_title( $page ),
 					'description' => $description,
+					'background' => $this->design_media( '2018/07/hatter-slider-46.jpg', 'generic-page-hero' ),
 					'parent_label' => $copy['home'],
 					'parent_link' => $this->link( $routes[ 'home_' . $language ] ),
 					'current_label' => get_the_title( $page ),
@@ -1384,6 +1731,7 @@ final class Template_Applier {
 		$uploads = wp_get_upload_dir();
 		$cta_item = $this->media_item_from_id( 4295, 'shortcode' );
 		$cta_image = $cta_item ? $cta_item['image'] : $this->media();
+		$hero_image = $this->design_media( '2018/07/hatter-slider-46.jpg', 'homepage-hero' );
 		$community_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2019/02/egriii.jpg', 'homepage-community' ) : null;
 		$community_image = $community_item ? $community_item['image'] : $this->media();
 		$community_content = '<p>Noua structură păstrează conținutul esențial din site-ul vechi: istoria comunei, localizarea, monumentele istorice, turismul, sportul și legăturile cu localitățile înfrățite.</p>'
@@ -1404,10 +1752,10 @@ final class Template_Applier {
 						array(
 							'official_text'  => 'Site oficial al Primăriei Comunei Agriș, județul Satu Mare, România',
 							'trust_text'     => 'Conexiune securizată',
-							'mail_url'       => $this->link( 'mailto:primaria@comunaagris.ro' ),
+							'mail_url'       => $this->link( 'https://server84.romania-webhosting.com:2096/' ),
 							'logo'           => $this->media(),
 							'brand_title'    => 'Comuna Agriș',
-							'brand_subtitle' => 'Primăria Comunei Agriș',
+							'brand_subtitle' => 'Primăria · Egri Község',
 							'home_url'       => $this->link( $routes['home_ro'] ),
 							'menu_id'        => $menu_id,
 							'cta_text'       => 'Monitorul Oficial',
@@ -1433,6 +1781,7 @@ final class Template_Applier {
 							'eyebrow'        => 'Ghișeul este deschis · Luni–Vineri 8:00–16:00',
 							'title'          => 'Servicii publice transparente pentru Comuna Agriș.',
 							'description'    => 'Portal modern pentru documente, formulare, hotărâri, anunțuri oficiale și informații utile pentru cetățeni.',
+							'background'     => $hero_image,
 							'primary_text'   => 'Vezi documentele',
 							'primary_link'   => $this->link( $routes['public_info'] ),
 							'secondary_text' => 'Contact rapid',
@@ -1582,27 +1931,7 @@ final class Template_Applier {
 			$this->container(
 				'footer',
 				array(
-					$this->widget(
-						'footer-widget',
-						'agris-site-footer',
-						array(
-							'title'       => 'Comuna Agriș',
-							'subtitle'    => 'Primăria Comunei Agriș',
-							'description' => 'Portal oficial pentru cetățeni, documente publice și comunicări administrative.',
-							'links'       => $this->repeater( 'footer-links', array(
-								array( 'column' => 'Primăria', 'label' => 'Conducere', 'url' => $this->link( $routes['mayor'] ) ),
-								array( 'column' => 'Primăria', 'label' => 'Consiliul Local', 'url' => $this->link( $routes['council'] ) ),
-								array( 'column' => 'Informații publice', 'label' => 'Anunțuri', 'url' => $this->link( $routes['announcements'] ) ),
-								array( 'column' => 'Informații publice', 'label' => 'Monitorul Oficial', 'url' => $this->link( $routes['monitor'] ) ),
-							) ),
-							'phone'       => '0261 878 112',
-							'email'       => 'primaria@comunaagris.ro',
-							'address'     => 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, Satu Mare',
-							'copyright'   => 'Toate drepturile rezervate Comuna Agriș.',
-							'contact_url' => $this->link( $routes['contact'] ),
-							'monitor_url' => $this->link( $routes['monitor'] ),
-						)
-					),
+					$this->widget( 'footer-widget', 'agris-site-footer', $this->footer_settings( 'ro', $routes, 'home-footer' ) ),
 					$this->widget( 'accessibility-widget', 'agris-accessibility', array( 'title' => 'Accesibilitate', 'position' => 'right' ) ),
 				),
 				array( 'content_width' => 'full' )
@@ -1614,6 +1943,7 @@ final class Template_Applier {
 		$routes = $this->routes( 'hu' );
 		$copy = $this->interface_copy( 'hu' );
 		$uploads = wp_get_upload_dir();
+		$hero_image = $this->design_media( '2018/07/hatter-slider-46.jpg', 'homepage-hu-hero' );
 		$community_item = ! empty( $uploads['baseurl'] ) ? $this->media_item_from_url( trailingslashit( $uploads['baseurl'] ) . '2019/02/egriii.jpg', 'homepage-community' ) : null;
 		$community_image = $community_item ? $community_item['image'] : $this->media();
 		$community_content = '<p>Ismerje meg Egri Község történetét, földrajzi elhelyezkedését, emlékműveit, természeti értékeit és testvértelepülési kapcsolatait.</p><div class="agris-home-link-list">'
@@ -1633,6 +1963,7 @@ final class Template_Applier {
 					'eyebrow' => 'Ügyfélfogadás · Hétfő–péntek 8:00–16:00',
 					'title' => 'Isten hozta Önöket Egri Község hivatalos honlapján!',
 					'description' => 'Közérdekű tájékoztatás, hivatali ügyintézés, felhívások, dokumentumok és közösségi hírek egy helyen.',
+					'background' => $hero_image,
 					'primary_text' => 'Közérdekű információk', 'primary_link' => $this->link( $routes['public_info'] ),
 					'secondary_text' => 'Elérhetőség', 'secondary_link' => $this->link( $routes['contact'] ), 'show_search' => 'yes',
 					'search_label' => $copy['search'], 'search_placeholder' => $copy['search_placeholder'], 'search_button' => $copy['search_button'], 'search_language' => 'hu',
@@ -1683,109 +2014,59 @@ final class Template_Applier {
 	}
 
 	private function mayor_ro_data( \WP_Post $page ): array {
-		$menu_id = $this->menu_id();
-		$routes  = $this->routes();
+		$seed = 'mayor-' . $page->ID;
+		$routes = $this->routes();
 		$source_content = $this->original_page_content( $page );
 		$media_items = $this->legacy_media_items( $page, $source_content );
 		$mayor_photo = $media_items ? $media_items[0]['image'] : $this->media();
-		$mayor_hu = $this->translated_url( $this->find_mayor_ro_page(), 'hu', $routes['home_hu'] );
-
-		return array(
-			$this->container(
-				'mayor-header',
-				array(
-					$this->widget(
-						'mayor-header-widget',
-						'agris-site-header',
-						array(
-							'official_text'  => 'Site oficial al Primăriei Comunei Agriș, județul Satu Mare, România',
-							'trust_text'     => 'Conexiune securizată',
-							'mail_url'       => $this->link( 'mailto:primaria@comunaagris.ro' ),
-							'logo'           => $this->media(),
-							'brand_title'    => 'Comuna Agriș',
-							'brand_subtitle' => 'Primăria Comunei Agriș',
-							'home_url'       => $this->link( $routes['home_ro'] ),
-							'menu_id'        => $menu_id,
-							'cta_text'       => 'Monitorul Oficial',
-							'cta_link'       => $this->link( $routes['monitor'] ),
-							'agris_sticky'   => 'yes',
-							'language_items' => $this->repeater( 'mayor-lang', array(
-								array( 'code' => 'RO', 'label' => 'Română', 'url' => $this->link( $routes['mayor'] ) ),
-								array( 'code' => 'HU', 'label' => 'Magyar', 'url' => $this->link( $mayor_hu ) ),
-							) ),
-						)
-					),
-					$this->widget( 'mayor-search-modal', 'agris-search-box' ),
-				),
-				array( 'content_width' => 'full' )
-			),
-			$this->container(
-				'mayor-hero',
-				array(
-					$this->widget(
-						'mayor-hero-widget',
-						'agris-page-hero',
-						array(
-							'kicker'        => '',
-							'title'         => 'Primar',
-							'description'   => '',
-							'parent_label'  => 'Acasă',
-							'parent_link'   => $this->link( $routes['home_ro'] ),
-							'current_label' => 'Primar',
-						)
-					),
-				),
-				array( 'content_width' => 'full' )
-			),
-			$this->container(
-				'mayor-profile',
-				array(
-					$this->widget(
-						'mayor-profile-widget',
-						'agris-person-profile',
-						array(
-							'photo'    => $mayor_photo,
-							'role'     => 'Primar',
-							'name'     => 'Szabo Elek',
-							'subtitle' => '',
-							'bio'      => '<p><strong>Data nașterii:</strong> 03.10.1963</p>',
-							'phone'    => '0261 878 111',
-							'email'    => 'primar@comunaagris.ro',
-							'office'   => 'Luni 9:00–11:00 · Joi 9:00–11:00',
-						)
-					),
-				),
-				array( 'padding' => array( 'unit' => 'px', 'top' => '70', 'right' => '0', 'bottom' => '36', 'left' => '0', 'isLinked' => false ) )
-			),
-			$this->container(
-				'mayor-footer',
-				array(
-					$this->widget(
-						'mayor-footer-widget',
-						'agris-site-footer',
-						array(
-							'title'       => 'Comuna Agriș',
-							'subtitle'    => 'Primăria Comunei Agriș',
-							'description' => 'Portal oficial pentru cetățeni, documente publice și comunicări administrative.',
-							'links'       => $this->repeater( 'mayor-footer-links', array(
-								array( 'column' => 'Primăria', 'label' => 'Conducere', 'url' => $this->link( $routes['mayor'] ) ),
-								array( 'column' => 'Primăria', 'label' => 'Consiliul Local', 'url' => $this->link( $routes['council'] ) ),
-								array( 'column' => 'Informații publice', 'label' => 'Anunțuri', 'url' => $this->link( $routes['announcements'] ) ),
-								array( 'column' => 'Informații publice', 'label' => 'Monitorul Oficial', 'url' => $this->link( $routes['monitor'] ) ),
-							) ),
-							'phone'       => '0261 878 112',
-							'email'       => 'primaria@comunaagris.ro',
-							'address'     => 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, Satu Mare',
-							'copyright'   => 'Toate drepturile rezervate Comuna Agriș.',
-							'contact_url' => $this->link( $routes['contact'] ),
-							'monitor_url' => $this->link( $routes['monitor'] ),
-						)
-					),
-					$this->widget( 'mayor-accessibility-widget', 'agris-accessibility', array( 'title' => 'Accesibilitate', 'position' => 'right' ) ),
-				),
-				array( 'content_width' => 'full' )
-			),
+		$data = $this->redesign_page_start(
+			$page,
+			$seed,
+			'Conducerea Primăriei',
+			'Profilul conducerii și acces rapid către departamentele administrative ale Comunei Agriș.',
+			'',
+			$this->design_media( '2018/07/hatter-slider-46.jpg', 'mayor-page-hero' )
 		);
+		$data[] = $this->container( $seed . '-profile', array(
+			$this->widget( $seed . '-profile-widget', 'agris-person-profile', array(
+				'photo' => $mayor_photo, 'role' => 'Primar', 'name' => 'Szabó Elek', 'subtitle' => 'Primarul Comunei Agriș',
+				'bio' => '<p><strong>Data nașterii:</strong> 03.10.1963</p>', 'phone' => '0261 878 111', 'email' => 'primar@comunaagris.ro', 'office' => '',
+			) ),
+		), array( 'padding' => array( 'unit' => 'px', 'top' => '72', 'right' => '0', 'bottom' => '32', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->container( $seed . '-schedule', array(
+			$this->widget( $seed . '-schedule-widget', 'agris-schedule-grid', array(
+				'kicker' => 'Program audiențe', 'title' => 'Acces la conducere', 'description' => '',
+				'items_list' => $this->repeater( $seed . '-schedule-items', array(
+					array( 'icon' => 'PR', 'title' => 'Primar', 'time' => 'Luni, 10:00–12:00' ),
+					array( 'icon' => 'VP', 'title' => 'Viceprimar', 'time' => 'Miercuri, 10:00–12:00' ),
+					array( 'icon' => 'SG', 'title' => 'Secretar General', 'time' => 'Vineri, 10:00–12:00' ),
+					array( 'icon' => 'GH', 'title' => 'Ghișeu', 'time' => 'Luni–Vineri, 8:00–16:00' ),
+				) ),
+			) ),
+			$this->widget( $seed . '-links-widget', 'agris-link-list', array(
+				'title' => 'Conducere',
+				'items_list' => $this->repeater( $seed . '-link-items', array(
+					array( 'icon' => 'CP', 'label' => 'Cuvântul primarului', 'meta' => 'Arhivă originală', 'url' => $this->link( home_url( '/ro/cuvantul-primarului/' ) ) ),
+					array( 'icon' => 'ROF', 'label' => 'Regulamentul de organizare', 'meta' => 'Primăria Comunei Agriș', 'url' => $this->link( home_url( '/ro/regulamentul-de-organizare-si-functionare-al-primariei-comunei-agris/' ) ) ),
+				) ),
+			) ),
+		), array( 'gap' => array( 'unit' => 'px', 'size' => 32, 'sizes' => array() ), 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->section( $seed . '-departments-heading', 'Departamente', 'Servicii administrative', '', 'Contact departamente', $routes['contact'], 'light', '#ffffff' );
+		$data[] = $this->container( $seed . '-departments', array(
+			$this->widget( $seed . '-departments-widget', 'agris-services-grid', array(
+				'columns' => '3',
+				'items_list' => $this->repeater( $seed . '-department-items', array(
+					array( 'icon' => 'TAX', 'title' => 'Taxe și Impozite Locale', 'description' => 'Informații fiscale și comunicări pentru contribuabili.', 'url' => $this->link( $routes['taxes'] ) ),
+					array( 'icon' => 'AGR', 'title' => 'Registru Agricol', 'description' => 'Servicii pentru terenuri, gospodării și evidențe agricole.', 'url' => $this->link( $routes['agricultural'] ) ),
+					array( 'icon' => 'URB', 'title' => 'Urbanism', 'description' => 'Certificate de urbanism și autorizații de construire.', 'url' => $this->link( $routes['urbanism'] ) ),
+					array( 'icon' => 'SOC', 'title' => 'Asistența Socială', 'description' => 'Sprijin pentru persoane și familii vulnerabile.', 'url' => $this->link( home_url( '/ro/asistenta-sociala/' ) ) ),
+					array( 'icon' => 'SC', 'title' => 'Stare Civilă', 'description' => 'Acte, certificate și proceduri de stare civilă.', 'url' => $this->link( home_url( '/ro/stare-civila/' ) ) ),
+					array( 'icon' => 'FIN', 'title' => 'Contabilitate', 'description' => 'Date financiare și gestiune bugetară locală.', 'url' => $this->link( home_url( '/ro/contabilitate/' ) ) ),
+				) ),
+			) ),
+		), array( 'background_background' => 'classic', 'background_color' => '#ffffff', 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
+		$data[] = $this->redesign_page_end( $seed );
+		return $data;
 	}
 
 	private function mayor_hu_data( \WP_Post $page ): array {
@@ -1801,7 +2082,7 @@ final class Template_Applier {
 				$this->widget( 'mayor-hu-search-modal', 'agris-search-box', $this->search_settings( 'hu' ) ),
 			), array( 'content_width' => 'full' ) ),
 			$this->container( 'mayor-hu-hero', array(
-				$this->widget( 'mayor-hu-hero-widget', 'agris-page-hero', array( 'kicker' => 'Polgármesteri Hivatal', 'title' => get_the_title( $page ), 'description' => '', 'parent_label' => 'Kezdőlap', 'parent_link' => $this->link( $routes['home_hu'] ), 'current_label' => get_the_title( $page ) ) ),
+				$this->widget( 'mayor-hu-hero-widget', 'agris-page-hero', array( 'kicker' => 'Polgármesteri Hivatal', 'title' => get_the_title( $page ), 'description' => '', 'background' => $this->design_media( '2018/07/hatter-slider-46.jpg', 'mayor-hu-page-hero' ), 'parent_label' => 'Kezdőlap', 'parent_link' => $this->link( $routes['home_hu'] ), 'current_label' => get_the_title( $page ) ) ),
 			), array( 'content_width' => 'full' ) ),
 			$this->container( 'mayor-hu-profile', array(
 				$this->widget( 'mayor-hu-profile-widget', 'agris-person-profile', array( 'photo' => $mayor_photo, 'role' => 'Polgármester', 'name' => 'Szabó Elek', 'subtitle' => '', 'bio' => '<p><strong>Születési idő:</strong> 1963. október 3.</p>', 'phone' => '0261 878 111', 'email' => 'primar@comunaagris.ro', 'office' => 'Hétfő 9:00–11:00 · Csütörtök 9:00–11:00' ) ),
