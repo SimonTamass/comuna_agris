@@ -203,8 +203,8 @@
         button.textContent = window.agrisWidgets?.i18n?.sending || 'Se trimite…';
         status.className = 'agris-form-status';
         const data = new FormData(form);
-        data.append('action', 'agris_contact');
-        data.append('nonce', window.agrisWidgets?.nonce || '');
+        if (!data.has('action')) data.append('action', 'agris_contact');
+        if (!data.has('nonce')) data.append('nonce', window.agrisWidgets?.nonce || '');
         try {
           const response = await fetch(window.agrisWidgets?.ajaxUrl || '/wp-admin/admin-ajax.php', { method: 'POST', body: data, credentials: 'same-origin' });
           const payload = await response.json();

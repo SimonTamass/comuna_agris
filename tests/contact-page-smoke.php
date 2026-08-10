@@ -16,9 +16,14 @@ $checks = array(
 	'preserved fax control' => array( $details, "add_control( 'fax'" ),
 	'localized field labels' => array( $form, "add_control( 'name_label'" ),
 	'contact language field' => array( $form, 'name="language"' ),
+	'secure POST fallback' => array( $form, 'method="post"' ),
+	'direct AJAX fallback action' => array( $form, "admin_url( 'admin-ajax.php' )" ),
+	'fallback action field' => array( $form, 'name="action" value="agris_contact"' ),
+	'fallback nonce field' => array( $form, "wp_create_nonce( 'agris-contact' )" ),
 	'localized server response' => array( $plugin, "'hu' === \$language" ),
 	'client-side form initialization' => array( $js, "all('.agris-contact-form:not([data-ready])'" ),
 	'native validity check' => array( $js, 'form.reportValidity()' ),
+	'no duplicate AJAX action' => array( $js, "if (!data.has('action'))" ),
 );
 
 foreach ( $checks as $label => $check ) {

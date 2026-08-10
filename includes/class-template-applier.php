@@ -1446,6 +1446,11 @@ final class Template_Applier {
 	private function public_info_ro_data( \WP_Post $page ): array {
 		$seed = 'public-info-' . $page->ID;
 		$source = $this->normalize_legacy_content( $this->original_page_content( $page ) );
+		$source = str_replace(
+			'/ro/formulare-tipizate/acordarea-indemizatiei-de-crestere-a-copilului/',
+			'/wp-content/uploads/2016/11/acordarea-indemizatiei-de-crestere-a-copilului.pdf',
+			$source
+		);
 		$data = $this->redesign_page_start(
 			$page,
 			$seed,
@@ -1466,13 +1471,13 @@ final class Template_Applier {
 					array( 'icon' => 'CI', 'title' => 'Comunicare încheiere', 'meta' => 'iunie 2026', 'category' => 'Anunțuri', 'url' => $this->link( home_url( '/ro/comunicare-incheiere-2/' ) ) ),
 					array( 'icon' => 'IA', 'title' => 'Indicatori de afișare', 'meta' => 'iunie 2026', 'category' => 'Anunțuri', 'url' => $this->link( home_url( '/ro/idicatori-de-afisare/' ) ) ),
 					array( 'icon' => 'FT', 'title' => 'Formulare tipizate', 'meta' => 'Cereri și formulare', 'category' => 'Formulare', 'url' => $this->link( get_permalink( $page ) ) ),
-					array( 'icon' => 'L17', 'title' => 'Legea 17', 'meta' => 'Legislație și oferte de vânzare', 'category' => 'Legea 17', 'url' => $this->link( home_url( '/ro/legea-17/' ) ) ),
-					array( 'icon' => 'OV', 'title' => 'Ofertă de vânzare 2024', 'meta' => 'Arhiva Legea 17', 'category' => 'Legea 17', 'url' => $this->link( home_url( '/ro/oferta-de-vanzare-2024/' ) ) ),
-					array( 'icon' => 'AP', 'title' => 'APIA', 'meta' => 'Informații agricole', 'category' => 'Arhivă', 'url' => $this->link( home_url( '/ro/apia/' ) ) ),
+					array( 'icon' => 'L17', 'title' => 'Legea 17', 'meta' => 'Legislație și oferte de vânzare', 'category' => 'Legea 17', 'url' => $this->link( home_url( '/ro/category/legea17/' ) ) ),
+					array( 'icon' => 'OV', 'title' => 'Ofertă de vânzare 2024', 'meta' => 'Arhiva Legea 17', 'category' => 'Legea 17', 'url' => $this->link( home_url( '/ro/category/legea17/oferta-de-vanzare-2024/' ) ) ),
+					array( 'icon' => 'AP', 'title' => 'APIA', 'meta' => 'Informații agricole', 'category' => 'Arhivă', 'url' => $this->link( home_url( '/ro/category/apia/' ) ) ),
 					array( 'icon' => 'PA', 'title' => 'Amenajamentul Pastoral Agriș', 'meta' => 'Document public', 'category' => 'Arhivă', 'url' => $this->link( home_url( '/ro/amenajamentul-pastoral-agris/' ) ) ),
 					array( 'icon' => 'GR', 'title' => 'Program Fiecare copil în grădiniță', 'meta' => 'Program social', 'category' => 'Arhivă', 'url' => $this->link( home_url( '/ro/program-fiecare-copil-in-gradinita/' ) ) ),
-					array( 'icon' => 'B24', 'title' => 'Buget 2024', 'meta' => 'Documente financiare', 'category' => 'Buget', 'url' => $this->link( home_url( '/ro/buget-2024/' ) ) ),
-					array( 'icon' => 'B23', 'title' => 'Buget 2023', 'meta' => 'Documente financiare', 'category' => 'Buget', 'url' => $this->link( home_url( '/ro/buget-2023/' ) ) ),
+					array( 'icon' => 'B24', 'title' => 'Buget 2024', 'meta' => 'Documente financiare', 'category' => 'Buget', 'url' => $this->link( home_url( '/ro/category/buget/buget-2024/' ) ) ),
+					array( 'icon' => 'B23', 'title' => 'Buget 2023', 'meta' => 'Documente financiare', 'category' => 'Buget', 'url' => $this->link( home_url( '/ro/category/buget/buget-2023/' ) ) ),
 					array( 'icon' => 'B19', 'title' => 'Buget 2019', 'meta' => 'Arhivă buget', 'category' => 'Buget', 'url' => $this->link( home_url( '/ro/buget-2019/' ) ) ),
 					array( 'icon' => 'B18', 'title' => 'Buget 2018', 'meta' => 'Arhivă buget', 'category' => 'Buget', 'url' => $this->link( home_url( '/ro/buget-2018/' ) ) ),
 					array( 'icon' => 'DS', 'title' => 'Dare de seamă 2015/27', 'meta' => 'Arhivă', 'category' => 'Arhivă', 'url' => $this->link( home_url( '/ro/dare-de-seama-201527/' ) ) ),
@@ -1492,7 +1497,7 @@ final class Template_Applier {
 			$this->widget( $seed . '-other-widget', 'agris-services-grid', array(
 				'columns' => '3',
 				'items_list' => $this->repeater( $seed . '-other-items', array(
-					array( 'icon' => 'GF', 'title' => 'Galeria foto', 'description' => 'Arhivă foto, inclusiv galeriile 2018 și 2019.', 'url' => $this->link( home_url( '/ro/galeria-foto/' ) ) ),
+					array( 'icon' => 'GF', 'title' => 'Galeria foto', 'description' => 'Arhivă foto, inclusiv galeriile 2018 și 2019.', 'url' => $this->link( home_url( '/ro/category/galeria-foto/' ) ) ),
 					array( 'icon' => 'FR', 'title' => 'Firme', 'description' => 'Secțiunea firmelor din Comuna Agriș.', 'url' => $this->link( home_url( '/ro/firme/' ) ) ),
 					array( 'icon' => 'LEG', 'title' => 'Legislație', 'description' => 'Documente legislative și trimiteri utile.', 'url' => $this->link( home_url( '/ro/legislatie/' ) ) ),
 				) ),
@@ -1521,7 +1526,7 @@ final class Template_Applier {
 					array( 'icon' => 'REG', 'title' => 'Regulamentul privind procedurile administrative', 'description' => 'Reguli și proceduri administrative locale.', 'url' => $this->link( home_url( '/ro/regulamentul-privind-procedurile-administrative/' ) ) ),
 					array( 'icon' => 'HCL', 'title' => 'Hotărârile autorității deliberative', 'description' => 'Hotărâri ale Consiliului Local.', 'url' => $this->link( home_url( '/ro/hotararile-autoritatii-deliberative/' ) ) ),
 					array( 'icon' => 'PH', 'title' => 'Convocator și proiecte de hotărâri', 'description' => 'Convocatoare și proiecte supuse dezbaterii.', 'url' => $this->link( home_url( '/ro/convocator-si-proiect-de-hotarari/' ) ) ),
-					array( 'icon' => 'DIS', 'title' => 'Dispoziții autoritatea executivă', 'description' => 'Dispoziții ale autorității executive locale.', 'url' => $this->link( home_url( '/ro/dispozitii-autoritatea-executiva/' ) ) ),
+					array( 'icon' => 'DIS', 'title' => 'Dispoziții autoritatea executivă', 'description' => 'Dispoziții ale autorității executive locale.', 'url' => $this->link( home_url( '/ro/dispozitii-autoritatii-executive/' ) ) ),
 					array( 'icon' => 'FIN', 'title' => 'Documente și informații financiare', 'description' => 'Buget, execuții și date financiare publice.', 'url' => $this->link( home_url( '/ro/documente-si-informatii-financiare/' ) ) ),
 				) ),
 			) ),
@@ -1536,7 +1541,7 @@ final class Template_Applier {
 					array( 'icon' => 'IP', 'title' => 'Informare privind problemele de interes public', 'meta' => 'Alte documente', 'category' => 'Informări', 'url' => $this->link( home_url( '/ro/informare-privind-problemelor-de-interes-public/' ) ) ),
 					array( 'icon' => 'PA', 'title' => 'Proiecte de acte administrative', 'meta' => 'Alte documente', 'category' => 'Proiecte', 'url' => $this->link( home_url( '/ro/proiecte-de-acte-administrative/' ) ) ),
 					array( 'icon' => 'MS', 'title' => 'Minute – ședință publică', 'meta' => 'Alte documente', 'category' => 'Ședințe', 'url' => $this->link( home_url( '/ro/minute-sedinta-publica/' ) ) ),
-					array( 'icon' => 'PV', 'title' => 'Procese verbale ale ședințelor', 'meta' => 'Autorități deliberative', 'category' => 'Ședințe', 'url' => $this->link( home_url( '/ro/procese-verbale-ale-sedintelor-autoritatilor-deliberative/' ) ) ),
+					array( 'icon' => 'PV', 'title' => 'Procese verbale ale ședințelor', 'meta' => 'Autorități deliberative', 'category' => 'Ședințe', 'url' => $this->link( home_url( '/ro/procese-verbale-ale-sedintelor-autoritatiilor-deliberative/' ) ) ),
 					array( 'icon' => 'DC', 'title' => 'Declarații de căsătorie', 'meta' => 'Alte documente', 'category' => 'Declarații', 'url' => $this->link( home_url( '/ro/declaratii-de-casatorie/' ) ) ),
 					array( 'icon' => 'AL', 'title' => 'Altele', 'meta' => 'Documente diverse', 'category' => 'Altele', 'url' => $this->link( home_url( '/ro/altele/' ) ) ),
 				) ),

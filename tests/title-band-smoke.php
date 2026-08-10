@@ -22,6 +22,7 @@ $checks = array(
 	'local homepage image composition' => array( $css, 'var(--agris-hero-image,none)' ),
 	'local page image composition' => array( $css, 'var(--agris-page-image,none)' ),
 	'full-width single title band' => array( $css, '.agris-single > .agris-title-band, .agris-archive-header.agris-title-band' ),
+	'clipped full-bleed overflow' => array( $css, '.agris-global-main { overflow-x: hidden; overflow-x: clip; }' ),
 );
 
 foreach ( $checks as $label => $check ) {
