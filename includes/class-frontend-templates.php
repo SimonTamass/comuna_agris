@@ -17,11 +17,27 @@ final class Frontend_Templates {
 	}
 
 	private function __construct() {
+		add_action( 'template_redirect', array( $this, 'redirect_attachment_page' ), 1 );
 		add_filter( 'template_include', array( $this, 'template_include' ), 99 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ), 30 );
 		add_action( 'pre_get_posts', array( $this, 'scope_explicit_language' ), 1 );
 		add_filter( 'body_class', array( $this, 'body_classes' ) );
 		add_filter( 'language_attributes', array( $this, 'language_attributes' ) );
+	}
+
+	public function redirect_attachment_page(): void {
+		if ( is_admin() || is_feed() || is_embed() || wp_doing_ajax() || ! is_attachment() ) {
+			return;
+		}
+
+		$attachment_id = get_queried_object_id();
+		$media_url = $attachment_id ? wp_get_attachment_url( $attachment_id ) : '';
+		if ( ! $media_url ) {
+			return;
+		}
+
+		wp_safe_redirect( $media_url, 301, 'Comuna Agris' );
+		exit;
 	}
 
 	private function applies(): bool {
