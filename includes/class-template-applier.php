@@ -988,6 +988,90 @@ final class Template_Applier {
 		return 'hu' === $language ? '<p>Az oldal tartalmának frissítése folyamatban van.</p>' : '<p>Conținutul acestei pagini este în curs de actualizare.</p>';
 	}
 
+	private function content_matches_language( \WP_Post $post, string $language ): bool {
+		if ( function_exists( 'pll_get_post_language' ) ) {
+			$post_language = (string) pll_get_post_language( $post->ID, 'slug' );
+			if ( $post_language ) {
+				return $language === $post_language;
+			}
+		}
+
+		$path = (string) wp_parse_url( get_permalink( $post ), PHP_URL_PATH );
+		if ( preg_match( '#/(ro|hu)(?:/|$)#', $path, $matches ) ) {
+			return $language === $matches[1];
+		}
+		return true;
+	}
+
+	private function same_slug_post_content( \WP_Post $page, string $language ): string {
+		$posts = get_posts( array(
+			'post_type'        => 'post',
+			'post_status'      => 'publish',
+			'name'             => $page->post_name,
+			'posts_per_page'   => 10,
+			'orderby'          => 'ID',
+			'order'            => 'DESC',
+			'suppress_filters' => false,
+			'lang'             => $language,
+		) );
+
+		foreach ( $posts as $post ) {
+			if ( ! $post instanceof \WP_Post || ! $this->content_matches_language( $post, $language ) ) {
+				continue;
+			}
+			$content = trim( (string) $post->post_content );
+			if ( ! $content ) {
+				continue;
+			}
+			$normalized = $this->normalize_legacy_content( $content );
+			$plain = strtolower( remove_accents( trim( wp_strip_all_tags( $normalized ) ) ) );
+			$is_placeholder = str_contains( $plain, 'curs de actualizare' ) || str_contains( $plain, 'frissitese folyamatban' );
+			$has_media = (bool) preg_match( '/<(?:a|audio|figure|iframe|img|video)\b/i', $normalized );
+			if ( ( $plain && ! $is_placeholder ) || $has_media ) {
+				return $content;
+			}
+		}
+		return '';
+	}
+
+	private function sitemap_content( string $language ): string {
+		$items = get_posts( array(
+			'post_type'        => array( 'page', 'post' ),
+			'post_status'      => 'publish',
+			'posts_per_page'   => -1,
+			'orderby'          => 'title',
+			'order'            => 'ASC',
+			'suppress_filters' => false,
+			'lang'             => $language,
+		) );
+		$groups = array( 'page' => array(), 'post' => array() );
+		$seen = array();
+		foreach ( $items as $item ) {
+			if ( ! $item instanceof \WP_Post || ! isset( $groups[ $item->post_type ] ) || ! $this->content_matches_language( $item, $language ) ) {
+				continue;
+			}
+			$url = get_permalink( $item );
+			$key = untrailingslashit( strtolower( (string) $url ) );
+			if ( ! $url || isset( $seen[ $key ] ) ) {
+				continue;
+			}
+			$seen[ $key ] = true;
+			$groups[ $item->post_type ][] = '<li><a href="' . esc_url( $url ) . '">' . esc_html( get_the_title( $item ) ) . '</a></li>';
+		}
+
+		$labels = 'hu' === $language
+			? array( 'page' => 'Oldalak', 'post' => 'Bejegyzések' )
+			: array( 'page' => 'Pagini', 'post' => 'Articole' );
+		$html = '<div class="agris-sitemap">';
+		foreach ( array( 'page', 'post' ) as $post_type ) {
+			if ( ! $groups[ $post_type ] ) {
+				continue;
+			}
+			$html .= '<h2>' . esc_html( $labels[ $post_type ] ) . '</h2><ul>' . implode( '', $groups[ $post_type ] ) . '</ul>';
+		}
+		return $html . '</div>';
+	}
+
 	private function legacy_image_markup( array $ids, bool $gallery = false ): string {
 		if ( ! function_exists( 'wp_get_attachment_image' ) ) {
 			return '';
@@ -1429,6 +1513,7 @@ final class Template_Applier {
 				'items_list' => $this->repeater( $seed . '-link-items', array(
 					array( 'icon' => 'CL', 'label' => 'Componenta consiliului local', 'meta' => 'Pagina curentă', 'url' => $this->link( get_permalink( $page ) ) ),
 					array( 'icon' => 'MOL', 'label' => 'Hotărâri autoritatea deliberativă', 'meta' => 'Monitorul Oficial Local', 'url' => $this->link( $routes['deliberative'] ) ),
+					array( 'icon' => 'DA', 'label' => 'Declarații de avere și interese', 'meta' => 'Transparență', 'url' => $this->link( home_url( '/ro/declaratii-de-avere-si-interese/' ) ) ),
 				) ),
 			) ),
 		), array( 'gap' => array( 'unit' => 'px', 'size' => 32, 'sizes' => array() ), 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
@@ -1528,6 +1613,10 @@ final class Template_Applier {
 					array( 'icon' => 'PH', 'title' => 'Convocator și proiecte de hotărâri', 'description' => 'Convocatoare și proiecte supuse dezbaterii.', 'url' => $this->link( home_url( '/ro/convocator-si-proiect-de-hotarari/' ) ) ),
 					array( 'icon' => 'DIS', 'title' => 'Dispoziții autoritatea executivă', 'description' => 'Dispoziții ale autorității executive locale.', 'url' => $this->link( home_url( '/ro/dispozitii-autoritatii-executive/' ) ) ),
 					array( 'icon' => 'FIN', 'title' => 'Documente și informații financiare', 'description' => 'Buget, execuții și date financiare publice.', 'url' => $this->link( home_url( '/ro/documente-si-informatii-financiare/' ) ) ),
+					array( 'icon' => 'DOC', 'title' => 'Alte documente', 'description' => 'Documente publice care nu aparțin categoriilor principale.', 'url' => $this->link( home_url( '/ro/alte-documente/' ) ) ),
+					array( 'icon' => 'DI', 'title' => 'Declarații de interese', 'description' => 'Declarațiile de interese publicate de instituție.', 'url' => $this->link( home_url( '/ro/declaratii-de-interese/' ) ) ),
+					array( 'icon' => 'DA', 'title' => 'Declarații de avere', 'description' => 'Declarațiile de avere publicate de instituție.', 'url' => $this->link( home_url( '/ro/declaratii-de-avere/' ) ) ),
+					array( 'icon' => 'BEC', 'title' => 'Biroul de circumscripție nr. 8 Agriș', 'description' => 'Anunțuri și documente electorale ale circumscripției.', 'url' => $this->link( home_url( '/ro/biroul-de-circumscriptie-nr-8-agris/' ) ) ),
 				) ),
 			) ),
 		), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) );
@@ -1576,7 +1665,7 @@ final class Template_Applier {
 			$this->widget( $seed . '-details-widget', 'agris-contact-details', array(
 				'kicker' => 'Locație', 'title' => 'Primăria Comunei Agriș', 'description' => 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, județul Satu Mare.',
 				'address' => 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, județul Satu Mare', 'address_code' => 'AD',
-				'phone' => '0261 878 112', 'fax' => '0261 878 111', 'email' => 'primaria@comunaagris.ro', 'hours' => 'Luni–Vineri: 8:00–16:00', 'hours_code' => 'OR',
+				'phone' => '0261 878 112', 'phone_secondary' => '0261 878 111', 'fax' => '0261 878 111', 'email' => 'primaria@comunaagris.ro', 'hours' => 'Luni–Vineri: 8:00–16:00', 'hours_code' => 'OR',
 				'map_embed' => $this->link( 'https://www.google.com/maps?q=47.8816707,23.0048293&z=15&output=embed' ), 'map_title' => 'Primăria Comunei Agriș pe hartă',
 			) ),
 		), array( 'padding' => array( 'unit' => 'px', 'top' => '72', 'right' => '0', 'bottom' => '32', 'left' => '0', 'isLinked' => false ) ) );
@@ -1589,9 +1678,10 @@ final class Template_Applier {
 		), array( 'background_background' => 'classic', 'background_color' => '#ffffff', 'padding' => array( 'unit' => 'px', 'top' => '64', 'right' => '0', 'bottom' => '64', 'left' => '0', 'isLinked' => false ) ) );
 		$data[] = $this->container( $seed . '-quick-links', array(
 			$this->widget( $seed . '-quick-links-widget', 'agris-services-grid', array(
-				'columns' => '3',
+				'columns' => '4',
 				'items_list' => $this->repeater( $seed . '-quick-link-items', array(
 					array( 'icon' => 'TEL', 'title' => 'Telefon direct', 'description' => '0261 878 112', 'url' => $this->link( 'tel:0261878112' ) ),
+					array( 'icon' => 'TEL', 'title' => 'Telefon și fax', 'description' => '0261 878 111', 'url' => $this->link( 'tel:0261878111' ) ),
 					array( 'icon' => '@', 'title' => 'Email oficial', 'description' => 'primaria@comunaagris.ro', 'url' => $this->link( 'mailto:primaria@comunaagris.ro' ) ),
 					array( 'icon' => 'MAIL', 'title' => 'Webmail', 'description' => 'Acces poștă electronică', 'url' => $this->link( 'https://server84.romania-webhosting.com:2096/' ) ),
 				) ),
@@ -1628,6 +1718,13 @@ final class Template_Applier {
 		$excerpt = trim( wp_strip_all_tags( (string) $page->post_excerpt ) );
 		$description = $excerpt;
 		$source_content = $this->original_page_content( $page );
+		$same_slug_content = $this->same_slug_post_content( $page, $language );
+		if ( $same_slug_content ) {
+			$source_content = $same_slug_content;
+		}
+		if ( 'sitemap' === sanitize_title( $page->post_name ) ) {
+			$source_content = $this->sitemap_content( $language );
+		}
 		$media_items = $this->legacy_media_items( $page, $source_content );
 		$normalized_content = $this->normalize_legacy_content( $source_content );
 		$unplaced_media = $this->unplaced_media_items( $media_items, $normalized_content, $this->media() );
@@ -1680,6 +1777,7 @@ final class Template_Applier {
 					'address'     => $is_hungarian ? 'Románia, 447066, Egri, Csűry Bálint utca 68., Szatmár megye' : 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, Satu Mare',
 					'address_code' => $is_hungarian ? 'CÍM' : 'LOC',
 					'phone'       => '0261 878 112',
+					'phone_secondary' => '0261 878 111',
 					'fax'         => '0261 878 111',
 					'email'       => 'primaria@comunaagris.ro',
 					'hours'       => $is_hungarian ? 'Hétfő–péntek: 8:00–16:00' : 'Luni–Vineri: 8:00–16:00',
@@ -1793,11 +1891,7 @@ final class Template_Applier {
 							'secondary_link' => $this->link( $routes['contact'] ),
 							'show_search'    => 'yes',
 							'updates_title'  => 'Noutăți din portal',
-							'updates_items'  => $this->repeater( 'home-updates', array(
-								array( 'day' => '08', 'title' => 'ANUNȚ INDIVIDUAL', 'meta' => 'Publicat în iulie 2026', 'url' => $this->link( home_url( '/ro/anunt-idividual/' ) ) ),
-								array( 'day' => '18', 'title' => 'H.C.L. nr. 13–16 / 2026', 'meta' => 'Hotărâri publicate pe 18 mai 2026', 'url' => $this->link( home_url( '/ro/hotararea-consiliului-local-nr-13-16-2026-2/' ) ) ),
-								array( 'day' => '24', 'title' => 'H.C.L. nr. 4–9 / 2026', 'meta' => 'Arhivă Consiliul Local', 'url' => $this->link( home_url( '/ro/hotararea-consiliului-local-nr-4-9-2026/' ) ) ),
-							) ),
+							'updates_items'  => $this->recent_updates( 'ro', 3 ),
 						)
 					),
 				),
@@ -1841,7 +1935,8 @@ final class Template_Applier {
 						array(
 							'post_type'    => 'post',
 							'category'     => 'anunturi',
-							'count'        => 3,
+							'language'     => 'ro',
+							'count'        => 6,
 							'columns'      => '3',
 							'orderby'      => 'date',
 							'show_excerpt' => 'yes',
@@ -1860,15 +1955,19 @@ final class Template_Applier {
 				array(
 					$this->widget(
 						'decisions-widget',
-						'agris-document-grid',
+						'agris-news-grid',
 						array(
-							'columns'    => '3',
-							'filters'    => '',
-							'items_list' => $this->repeater( 'home-decisions', array(
-								array( 'icon' => 'HCL', 'title' => 'H.C.L. nr. 13–16 / 2026', 'meta' => '18 mai 2026', 'category' => 'Hotărâri', 'url' => $this->link( home_url( '/ro/hotararea-consiliului-local-nr-13-16-2026-2/' ) ) ),
-								array( 'icon' => 'HCL', 'title' => 'H.C.L. nr. 10–12 / 2026', 'meta' => '18 mai 2026', 'category' => 'Hotărâri', 'url' => $this->link( home_url( '/ro/hotararea-consiliului-local-nr-10-12-2026/' ) ) ),
-								array( 'icon' => 'HCL', 'title' => 'H.C.L. nr. 4–9 / 2026', 'meta' => '24 martie 2026', 'category' => 'Hotărâri', 'url' => $this->link( home_url( '/ro/hotararea-consiliului-local-nr-4-9-2026/' ) ) ),
-							) ),
+							'post_type'    => 'post',
+							'category'     => 'hotarari-ale-consiului-local',
+							'language'     => 'ro',
+							'count'        => 6,
+							'columns'      => '3',
+							'orderby'      => 'date',
+							'show_excerpt' => 'yes',
+							'show_category'=> 'yes',
+							'show_date'    => 'yes',
+							'empty_text'   => 'Nu există hotărâri publicate.',
+							'read_more_text' => 'Vezi documentul →',
 						)
 					),
 				),
@@ -1993,15 +2092,15 @@ final class Template_Applier {
 			), array( 'padding' => array( 'unit' => 'px', 'top' => '72', 'right' => '0', 'bottom' => '72', 'left' => '0', 'isLinked' => false ) ) ),
 			$this->section( 'hu-announcements-head', 'Közérdekű', 'Felhívások', '', 'Minden felhívás', $routes['announcements'] ),
 			$this->container( 'hu-announcements', array(
-				$this->widget( 'hu-announcements-widget', 'agris-news-grid', array( 'post_type' => 'post', 'category' => 'felhivasok', 'language' => 'hu', 'count' => 3, 'columns' => '3', 'orderby' => 'date', 'show_excerpt' => 'yes', 'show_category' => 'yes', 'show_date' => 'yes', 'empty_text' => $copy['empty_posts'], 'read_more_text' => $copy['read_more'] ) ),
+				$this->widget( 'hu-announcements-widget', 'agris-news-grid', array( 'post_type' => 'post', 'category' => 'felhivasok', 'language' => 'hu', 'count' => 6, 'columns' => '3', 'orderby' => 'date', 'show_excerpt' => 'yes', 'show_category' => 'yes', 'show_date' => 'yes', 'empty_text' => $copy['empty_posts'], 'read_more_text' => $copy['read_more'] ) ),
 			), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '70', 'left' => '0', 'isLinked' => false ) ) ),
 			$this->section( 'hu-events-head', 'Közösség', 'Események', '', 'Minden esemény', $routes['events'], 'dark', '#0f2f1f' ),
 			$this->container( 'hu-events', array(
-				$this->widget( 'hu-events-widget', 'agris-news-grid', array( 'post_type' => 'post', 'category' => 'esemenyek', 'language' => 'hu', 'count' => 3, 'columns' => '3', 'orderby' => 'date', 'show_excerpt' => 'yes', 'show_category' => 'yes', 'show_date' => 'yes', 'empty_text' => $copy['empty_posts'], 'read_more_text' => $copy['read_more'] ) ),
+				$this->widget( 'hu-events-widget', 'agris-news-grid', array( 'post_type' => 'post', 'category' => 'esemenyek', 'language' => 'hu', 'count' => 6, 'columns' => '3', 'orderby' => 'date', 'show_excerpt' => 'yes', 'show_category' => 'yes', 'show_date' => 'yes', 'empty_text' => $copy['empty_posts'], 'read_more_text' => $copy['read_more'] ) ),
 			), array( 'background_background' => 'classic', 'background_color' => '#0f2f1f', 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '76', 'left' => '0', 'isLinked' => false ) ) ),
 			$this->section( 'hu-journal-head', 'Helyi kiadvány', 'Egri Napló', '', 'Az Egri Napló archívuma', $routes['journal'] ),
 			$this->container( 'hu-journal', array(
-				$this->widget( 'hu-journal-widget', 'agris-news-grid', array( 'post_type' => 'post', 'category' => 'egri-naplo', 'language' => 'hu', 'count' => 3, 'columns' => '3', 'orderby' => 'date', 'show_excerpt' => 'yes', 'show_category' => 'yes', 'show_date' => 'yes', 'empty_text' => $copy['empty_posts'], 'read_more_text' => $copy['read_more'] ) ),
+				$this->widget( 'hu-journal-widget', 'agris-news-grid', array( 'post_type' => 'post', 'category' => 'egri-naplo', 'language' => 'hu', 'count' => 6, 'columns' => '3', 'orderby' => 'date', 'show_excerpt' => 'yes', 'show_category' => 'yes', 'show_date' => 'yes', 'empty_text' => $copy['empty_posts'], 'read_more_text' => $copy['read_more'] ) ),
 			), array( 'padding' => array( 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '70', 'left' => '0', 'isLinked' => false ) ) ),
 			$this->section( 'hu-monitor-head', 'Önkormányzati átláthatóság', 'Helyi hivatalos közlöny', '', 'Közlöny megnyitása', $routes['monitor'], 'light', '#ffffff' ),
 			$this->container( 'hu-monitor', array(
@@ -2042,7 +2141,7 @@ final class Template_Applier {
 			$this->widget( $seed . '-schedule-widget', 'agris-schedule-grid', array(
 				'kicker' => 'Program audiențe', 'title' => 'Acces la conducere', 'description' => '',
 				'items_list' => $this->repeater( $seed . '-schedule-items', array(
-					array( 'icon' => 'PR', 'title' => 'Primar', 'time' => 'Luni, 10:00–12:00' ),
+					array( 'icon' => 'PR', 'title' => 'Primar', 'time' => 'Luni, 9:00–11:00 · Joi, 9:00–11:00' ),
 					array( 'icon' => 'VP', 'title' => 'Viceprimar', 'time' => 'Miercuri, 10:00–12:00' ),
 					array( 'icon' => 'SG', 'title' => 'Secretar General', 'time' => 'Vineri, 10:00–12:00' ),
 					array( 'icon' => 'GH', 'title' => 'Ghișeu', 'time' => 'Luni–Vineri, 8:00–16:00' ),

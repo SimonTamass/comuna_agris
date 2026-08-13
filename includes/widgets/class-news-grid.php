@@ -37,7 +37,17 @@ final class News_Grid extends Base {
 		if ( $s['category'] && 'post' === $s['post_type'] ) {
 			$slugs = array_filter( array_map( 'sanitize_title', preg_split( '/\s*,\s*/', $s['category'] ) ?: array() ) );
 			$term_ids = array();
-			foreach ( $slugs as $slug ) { $term = get_category_by_slug( $slug ); if ( $term ) { $term_ids[] = (int) $term->term_id; } }
+			foreach ( $slugs as $slug ) {
+				$term = get_category_by_slug( $slug );
+				if ( ! $term ) {
+					continue;
+				}
+				$term_ids[] = (int) $term->term_id;
+				$children = get_term_children( (int) $term->term_id, 'category' );
+				if ( ! is_wp_error( $children ) ) {
+					$term_ids = array_merge( $term_ids, array_map( 'intval', $children ) );
+				}
+			}
 			$args['category__in'] = $term_ids ? array_values( array_unique( $term_ids ) ) : array( 0 );
 		}
 		$q = new WP_Query( $args );

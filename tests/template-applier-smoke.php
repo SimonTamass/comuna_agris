@@ -41,7 +41,7 @@ if ( preg_match( '/letter-spacing:\s*-/', $css ) || ! str_contains( $css, 'font-
 	exit( 1 );
 }
 
-if ( ! str_contains( $plugin, "AGRIS_WIDGETS_VERSION', '2.1.14'" ) ) {
+if ( ! str_contains( $plugin, "AGRIS_WIDGETS_VERSION', '2.1.15'" ) ) {
 	fwrite( STDERR, "Plugin version was not bumped.\n" );
 	exit( 1 );
 }
@@ -73,7 +73,7 @@ if ( 8 !== substr_count( $services_block, "array( 'icon' =>" ) ) {
 	exit( 1 );
 }
 
-foreach ( array( "'theme'       => \$theme", "'background_color' => \$background", "'monitor-services-widget'", "'show_search'    => 'yes'", "'count'        => 3" ) as $needle ) {
+foreach ( array( "'theme'       => \$theme", "'background_color' => \$background", "'monitor-services-widget'", "'show_search'    => 'yes'", "'count'        => 6" ) as $needle ) {
 	if ( ! str_contains( $applier, $needle ) ) {
 		fwrite( STDERR, "Homepage local-design structure is incomplete: {$needle}.\n" );
 		exit( 1 );
