@@ -18,6 +18,8 @@ $checks = array(
 	'mobile modal spacing'         => '.agris-search-widget.is-modal { padding: max(20px,6vh) 14px 14px; }',
 	'compact navigation css'       => '@media (max-width: 1320px)',
 	'compact navigation behavior'  => "window.matchMedia('(max-width: 1320px)')",
+	'closed nested menu exclusion' => '.agris-menu .sub-menu .sub-menu { display: none; }',
+	'landscape a11y containment'    => '.agris-a11y-panel { max-height: calc(100vh - 110px); max-height: calc(100dvh - 110px); overflow-y: auto; overscroll-behavior: contain; }',
 );
 
 foreach ( $checks as $label => $needle ) {
