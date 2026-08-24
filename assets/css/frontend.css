@@ -29,10 +29,13 @@
 .agris-button { display: inline-flex; min-height: 46px; align-items: center; justify-content: center; gap: 8px; padding: 11px 18px; border: 1px solid transparent; border-radius: 8px; font: 800 .94rem/1 var(--agris-body); text-decoration: none !important; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
 .agris-button:hover { transform: translateY(-2px); }
 .agris-button-primary { background: var(--agris-brand); color: #fff !important; box-shadow: 0 9px 22px rgba(27, 94, 32, .22); }
-.agris-button-primary:hover { background: var(--agris-brand-dark); }
+.agris-button.agris-button-primary:hover, .agris-button.agris-button-primary:focus { background: var(--agris-brand-dark); color: #fff !important; }
 .agris-button-light { background: #fff; color: var(--agris-ink) !important; }
 .agris-button-outline { border-color: var(--agris-brand); background: transparent; color: var(--agris-brand) !important; }
 .agris-button-soft { background: var(--agris-brand-soft); color: var(--agris-brand) !important; }
+.agris-button.agris-button-light:hover, .agris-button.agris-button-light:focus { background: var(--agris-brand-soft); color: var(--agris-ink) !important; }
+.agris-button.agris-button-outline:hover, .agris-button.agris-button-outline:focus, .agris-button.agris-button-soft:hover, .agris-button.agris-button-soft:focus { border-color: var(--agris-brand); background: var(--agris-brand-soft); color: var(--agris-brand) !important; }
+.agris-button:focus-visible { outline: 3px solid rgba(27,94,32,.24); outline-offset: 3px; }
 .agris-grid { display: grid; gap: 20px; }
 .agris-grid-1 { grid-template-columns: 1fr; }
 .agris-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -65,14 +68,14 @@
 .agris-lang-menu a { min-height: 42px; display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: var(--agris-radius); color: var(--agris-ink); font-size: .88rem; font-weight: 700; }
 .agris-lang-menu a:hover { background: var(--agris-brand-soft); }
 .agris-site-header { border-bottom: 1px solid var(--agris-line); background: rgba(255,255,255,.92); backdrop-filter: blur(14px); }
-.agris-header-inner { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.agris-header-inner { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .agris-brand { min-width: 220px; display: inline-flex; align-items: center; gap: 13px; color: var(--agris-ink) !important; text-decoration: none !important; }
 .agris-brand-mark, .agris-brand-logo { width: 50px; height: 50px; display: grid; place-items: center; flex: 0 0 auto; overflow: hidden; border-radius: 12px; background: linear-gradient(145deg, #0d3b18, var(--agris-brand)); color: #fff; box-shadow: 0 8px 22px rgba(27,94,32,.25); font: 800 1.05rem/1 var(--agris-heading); }
 .agris-brand-logo img { width: 42px; height: 42px; object-fit: contain; }
 .agris-brand strong, .agris-brand small { display: block; }
 .agris-brand strong { font: 800 1.08rem/1.1 var(--agris-heading); letter-spacing: 0; }
 .agris-brand small { margin-top: 3px; color: var(--agris-muted); font: 700 .74rem/1 var(--agris-body); letter-spacing: .08em; text-transform: uppercase; }
-.agris-main-nav { margin-left: auto; }
+.agris-main-nav { min-width: 0; margin-left: auto; }
 .agris-menu, .agris-menu ul { margin: 0; padding: 0; list-style: none; }
 .agris-menu a { box-sizing: border-box; }
 .agris-menu { display: flex; align-items: center; gap: 3px; }
@@ -102,10 +105,12 @@
 .agris-menu li.is-submenu-open > .sub-menu { opacity: 1; visibility: visible; pointer-events: auto; transform: none; }
 .agris-menu .sub-menu a { min-height: 44px; display: flex; align-items: center; padding: 10px 12px; border-radius: var(--agris-radius); color: var(--agris-ink-soft); font-size: .92rem; font-weight: 650; line-height: 1.3; text-decoration: none; white-space: normal; }
 .agris-menu .sub-menu a:hover, .agris-menu .sub-menu a:focus-visible, .agris-menu .sub-menu .current-menu-item > a { background: var(--agris-brand-soft); color: var(--agris-brand); outline: 0; }
-.agris-header-actions { display: flex; align-items: center; gap: 8px; }
+.agris-header-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; }
 .agris-header-actions .agris-button { min-height: 42px; white-space: nowrap; }
+.agris-header-actions > .agris-button { display: none; }
 .agris-icon-button { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid transparent; border-radius: var(--agris-radius); background: #f1f5f9; color: var(--agris-ink-soft); cursor: pointer; }
-.agris-icon-button:hover { border-color: #d6dee8; background: #e8edf4; }
+.agris-header-actions button.agris-icon-button:hover, .agris-header-actions button.agris-icon-button:focus { border-color: #d6dee8; background: #e8edf4; color: var(--agris-ink-soft); }
+.agris-icon-button:focus-visible { outline: 3px solid rgba(27,94,32,.24); outline-offset: 2px; }
 .agris-icon-button .dashicons { width: 20px; height: 20px; font-size: 20px; }
 .agris-nav-toggle { display: none; }
 
@@ -318,18 +323,31 @@ body.agris-lightbox-open { overflow: hidden; }
 .agris-inline-download:hover { border-color: var(--agris-brand); background: var(--agris-brand-soft); }
 
 /* Search modal */
-.agris-search-widget { font-family: var(--agris-body); }.agris-search-widget.is-modal { position: fixed; z-index: 99999; inset: 0; padding: 8vh 20px 20px; background: rgba(5,26,17,.78); backdrop-filter: blur(7px); }.agris-search-widget.is-modal:not([hidden]) { display: block; }.agris-search-dialog { position: relative; width: min(760px,100%); margin: auto; padding: 30px; border-radius: var(--agris-radius-lg); background: #fff; box-shadow: 0 30px 80px rgba(0,0,0,.3); }.agris-search-dialog h2 { margin: 0 0 20px; color: var(--agris-ink); font: 800 1.8rem var(--agris-heading); }.agris-search-dialog > button { position: absolute; top: 14px; right: 14px; width: 38px; height: 38px; border: 0; border-radius: 50%; background: var(--agris-bg); font-size: 1.6rem; cursor: pointer; }.agris-search-dialog form { display: grid; grid-template-columns: 1fr auto; gap: 8px; }.agris-search-dialog input { min-width: 0; padding: 13px; border: 1px solid var(--agris-line); border-radius: 8px; font-size: 1rem; }
+.agris-search-widget { font-family: var(--agris-body); }
+.agris-search-widget.is-modal { position: fixed; z-index: 99999; inset: 0; padding: 8vh 20px 20px; background: rgba(5,26,17,.78); backdrop-filter: blur(7px); }
+.agris-search-widget.is-modal:not([hidden]) { display: block; }
+.agris-search-dialog { box-sizing: border-box; position: relative; width: min(760px,100%); margin: auto; padding: 30px; border-radius: var(--agris-radius-lg); background: #fff; box-shadow: 0 30px 80px rgba(0,0,0,.3); }
+.agris-search-dialog h2 { margin: 0 0 20px; padding-right: 42px; color: var(--agris-ink); font: 800 1.8rem var(--agris-heading); }
+.agris-search-dialog > button { position: absolute; top: 14px; right: 14px; width: 38px; height: 38px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--agris-bg); color: var(--agris-ink-soft); font: 400 1.6rem/1 var(--agris-body); cursor: pointer; }
+.agris-search-widget .agris-search-dialog > button:hover, .agris-search-widget .agris-search-dialog > button:focus { background: var(--agris-brand-soft); color: var(--agris-brand); }
+.agris-search-dialog > button:focus-visible { outline: 3px solid rgba(27,94,32,.24); outline-offset: 2px; }
+.agris-search-dialog form { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; }
+.agris-search-dialog input { box-sizing: border-box; width: 100%; min-width: 0; padding: 13px; border: 1px solid var(--agris-line); border-radius: 8px; background: #fff; color: var(--agris-ink); font: 400 1rem/1.4 var(--agris-body); -webkit-appearance: none; appearance: none; }
+.agris-search-widget .agris-search-dialog input:focus { border-color: var(--agris-brand); outline: 3px solid rgba(27,94,32,.16); outline-offset: 1px; box-shadow: none; }
 
 /* Accessibility */
 .agris-a11y { position: fixed; z-index: 9999; right: 20px; bottom: 20px; font-family: var(--agris-body); }
 .agris-a11y-left { right: auto; left: 20px; }
 .agris-floating { display: grid; justify-items: end; gap: 10px; }
 .agris-floating button { width: 52px; height: 52px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--agris-brand); color: #fff; box-shadow: 0 10px 28px rgba(27,94,32,.35); cursor: pointer; }
+.agris-a11y .agris-floating button:first-child:hover, .agris-a11y .agris-floating button:first-child:focus { background: var(--agris-brand-dark); color: #fff; }
+.agris-floating button:focus-visible { outline: 3px solid rgba(27,94,32,.24); outline-offset: 3px; }
 .agris-floating .agris-accessibility-icon,
 .agris-a11y-title-icon svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .agris-floating .agris-accessibility-icon circle,
 .agris-a11y-title-icon svg circle { fill: currentColor; stroke: none; }
 .agris-floating button + button { display: none; width: 45px; height: 45px; border: 1px solid var(--agris-line); background: #fff; color: var(--agris-brand); font-weight: 900; }
+.agris-a11y .agris-floating button + button:hover, .agris-a11y .agris-floating button + button:focus { border-color: var(--agris-brand); background: var(--agris-brand-soft); color: var(--agris-brand); }
 .agris-floating button + button.is-visible { display: grid; }
 .agris-a11y-panel { position: absolute; right: 0; bottom: 66px; width: min(340px,calc(100vw - 40px)); padding: 18px 18px 20px; border: 1px solid var(--agris-line); border-radius: var(--agris-radius-lg); background: #fff; box-shadow: var(--agris-shadow); }
 .agris-a11y-left .agris-a11y-panel { right: auto; left: 0; }
@@ -341,14 +359,32 @@ body.agris-lightbox-open { overflow: hidden; }
 .agris-scale-controls { display: inline-grid; grid-template-columns: 34px minmax(48px,auto) 34px; align-items: center; gap: 7px; padding: 4px; border-radius: 12px; background: #f3f7f3; }
 .agris-scale-controls strong { min-width: 46px; color: var(--agris-ink); font-size: .9rem; text-align: center; }
 .agris-scale-button { width: 34px; height: 34px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 9px; background: #fff; color: var(--agris-brand); box-shadow: inset 0 0 0 1px #dfe8df; cursor: pointer; font-weight: 900; }
-.agris-scale-button:hover { background: var(--agris-brand); color: #fff; }
+.agris-a11y button.agris-scale-button:hover, .agris-a11y button.agris-scale-button:focus { background: var(--agris-brand); color: #fff; }
+.agris-scale-button:focus-visible, .agris-switch:focus-visible { outline: 3px solid rgba(27,94,32,.24); outline-offset: 2px; }
 .agris-switch { width: 42px; height: 24px; padding: 3px; border: 0; border-radius: 999px; background: #cbd5e1; cursor: pointer; }
+.agris-a11y button.agris-switch:focus { background: #cbd5e1; }
 .agris-switch i { width: 18px; height: 18px; display: block; border-radius: 50%; background: #fff; transition: transform .15s ease; }
 .agris-switch.is-on { background: var(--agris-brand); }
+.agris-a11y button.agris-switch.is-on:focus { background: var(--agris-brand); }
 .agris-switch.is-on i { transform: translateX(18px); }
 body.agris-high-contrast { --agris-ink:#000;--agris-muted:#222;--agris-line:#000;--agris-brand:#005a38;--agris-bg:#fff; }.agris-grayscale { filter: grayscale(1); }.agris-underline a { text-decoration: underline !important; }
 
-@media (max-width: 1040px) {
+/* Keep component states stable when Elementor's global form styles load later. */
+.agris-header-wrap button.agris-lang-trigger:hover, .agris-header-wrap button.agris-lang-trigger:focus { border-color: rgba(184,244,194,.4); background: rgba(184,244,194,.12); color: #fff; }
+.agris-lang-trigger:focus-visible { outline: 3px solid rgba(184,244,194,.35); outline-offset: 2px; }
+.agris-header-wrap button.agris-submenu-toggle:hover, .agris-header-wrap button.agris-submenu-toggle:focus { background: rgba(27,94,32,.09); color: var(--agris-brand); }
+.agris-submenu-toggle:focus-visible { outline: 3px solid rgba(27,94,32,.24); outline-offset: 1px; }
+.agris-home-hero .agris-hero-search input:focus { border-color: transparent; outline: 3px solid rgba(27,94,32,.2); outline-offset: -2px; box-shadow: none; }
+.agris-home-hero .agris-hero-search button:hover, .agris-home-hero .agris-hero-search button:focus { background: var(--agris-brand-dark); color: #fff; }
+.agris-hero-search button:focus-visible { outline: 3px solid rgba(184,244,194,.55); outline-offset: 2px; }
+.agris-form-card .agris-contact-form input:focus, .agris-form-card .agris-contact-form textarea:focus { border-color: var(--agris-brand); outline: 3px solid rgba(27,94,32,.1); box-shadow: none; }
+.agris-lightbox button.agris-lightbox-close:hover, .agris-lightbox button.agris-lightbox-nav:hover, .agris-lightbox button.agris-lightbox-close:focus, .agris-lightbox button.agris-lightbox-nav:focus { border-color: #fff; background: #fff; color: #102419; }
+.agris-lightbox-close:focus-visible, .agris-lightbox-nav:focus-visible { outline: 3px solid #f6c344; outline-offset: 3px; }
+.agris-filters button.is-active, .agris-filters button:hover, .agris-filters button:focus { border-color: var(--agris-brand); background: var(--agris-brand-soft); color: var(--agris-brand); }
+.agris-filters button:focus-visible { outline: 3px solid rgba(27,94,32,.24); outline-offset: 2px; }
+.agris-document-library .agris-library-search input:focus { border-color: var(--agris-brand); outline: 3px solid rgba(27,94,32,.14); outline-offset: 1px; box-shadow: none; }
+
+@media (max-width: 1320px) {
   .agris-nav-toggle { display: grid; }
   .agris-main-nav { position: absolute; top: calc(100% + 8px); left: 24px; right: 24px; max-height: calc(100vh - 130px); display: none; overflow-y: auto; overscroll-behavior: contain; padding: 10px; border: 1px solid var(--agris-line); border-radius: var(--agris-radius); background: #fff; box-shadow: 0 24px 60px rgba(15,47,31,.2); }
   .agris-main-nav.is-open { display: block; }
@@ -364,6 +400,9 @@ body.agris-high-contrast { --agris-ink:#000;--agris-muted:#222;--agris-line:#000
   .agris-menu li:hover > .sub-menu, .agris-menu li:focus-within > .sub-menu { display: none; }
   .agris-menu li.is-submenu-open > .sub-menu { display: grid; }
   .agris-menu .sub-menu a { min-height: 42px; }
+}
+
+@media (max-width: 1040px) {
   .agris-hero-grid { grid-template-columns: 1fr; gap: 35px; }.agris-hero-panel { align-self: auto; margin: 0; }.agris-grid-4 { grid-template-columns: repeat(2,minmax(0,1fr)); }.agris-footer-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.agris-content-media, .agris-contact-layout { grid-template-columns: 1fr; }.agris-content-media.is-left > div:first-child { order: 0; }
 }
 
@@ -376,15 +415,10 @@ body.agris-high-contrast { --agris-ink:#000;--agris-muted:#222;--agris-line:#000
   .agris-lightbox-nav.is-previous { grid-column: 1; grid-row: 2; justify-self: end; }
   .agris-lightbox-nav.is-next { grid-column: 2; grid-row: 2; justify-self: start; }
 }
-@media (min-width: 1041px) and (max-width: 1180px) {
-  .agris-brand { min-width: 190px; }
-  .agris-menu > li > a { padding-inline: 10px; font-size: .88rem; }
-  .agris-header-actions > .agris-button { display: none; }
-}
 @media (max-width: 782px) { .admin-bar .agris-header-wrap.is-sticky { top: 46px; } }
 @media (max-width: 720px) {
 	.agris-lang-menu { right: auto; left: 0; }
-  .agris-shell { width: min(var(--agris-max), calc(100% - 28px)); }.agris-govbar-inner { align-items: flex-start; flex-direction: column; gap: 6px; padding-block: 8px; }.agris-trust { display: none; }.agris-header-inner { min-height: 68px; gap: 10px; }.agris-brand { min-width: 0; }.agris-brand strong { font-size: .94rem; }.agris-brand small { display: none; }.agris-brand-mark, .agris-brand-logo { width: 44px; height: 44px; }.agris-header-actions > .agris-button { display: none; }.agris-main-nav { left: 14px; right: 14px; }.agris-home-hero, .agris-hero-grid { min-height: 650px; }.agris-hero-grid { padding-block: 55px; }.agris-home-hero h1 { font-size: clamp(2.8rem,14vw,4.4rem); }.agris-hero-search, .agris-search-dialog form { grid-template-columns: 1fr; }.agris-page-hero { padding-block: 45px 52px; }.agris-section-heading { align-items: flex-start; flex-direction: column; }.agris-grid-2, .agris-grid-3, .agris-grid-4, .agris-form-two, .agris-gallery { grid-template-columns: 1fr; }.agris-media-frame, .agris-media-frame img { min-height: 280px; }.agris-person-photo { min-height: 280px; }.agris-footer-grid { grid-template-columns: 1fr; padding-top: 42px; }.agris-footer-bottom { flex-direction: column; }.agris-library-tools { align-items: stretch; flex-direction: column; }.agris-library-search input { width: 100%; min-width: 0; }.agris-cta { align-items: flex-start; flex-direction: column; }.agris-cta-image { width: 100%; flex-basis: auto; }.agris-single-layout { display: block; }.agris-a11y { right: 14px; bottom: 14px; }
+  .agris-shell { width: min(var(--agris-max), calc(100% - 28px)); }.agris-govbar-inner { align-items: flex-start; flex-direction: column; gap: 6px; padding-block: 8px; }.agris-trust { display: none; }.agris-header-inner { min-height: 68px; gap: 10px; }.agris-brand { min-width: 0; }.agris-brand strong { font-size: .94rem; }.agris-brand small { display: none; }.agris-brand-mark, .agris-brand-logo { width: 44px; height: 44px; }.agris-main-nav { left: 14px; right: 14px; }.agris-home-hero, .agris-hero-grid { min-height: 650px; }.agris-hero-grid { padding-block: 55px; }.agris-home-hero h1 { font-size: clamp(2.8rem,14vw,4.4rem); }.agris-hero-search, .agris-search-dialog form { grid-template-columns: 1fr; }.agris-search-widget.is-modal { padding: max(20px,6vh) 14px 14px; }.agris-search-dialog { padding: 26px 20px 20px; }.agris-search-dialog h2 { font-size: 1.45rem; }.agris-page-hero { padding-block: 45px 52px; }.agris-section-heading { align-items: flex-start; flex-direction: column; }.agris-grid-2, .agris-grid-3, .agris-grid-4, .agris-form-two, .agris-gallery { grid-template-columns: 1fr; }.agris-media-frame, .agris-media-frame img { min-height: 280px; }.agris-person-photo { min-height: 280px; }.agris-footer-grid { grid-template-columns: 1fr; padding-top: 42px; }.agris-footer-bottom { flex-direction: column; }.agris-library-tools { align-items: stretch; flex-direction: column; }.agris-library-search input { width: 100%; min-width: 0; }.agris-cta { align-items: flex-start; flex-direction: column; }.agris-cta-image { width: 100%; flex-basis: auto; }.agris-single-layout { display: block; }.agris-a11y { right: 14px; bottom: 14px; }
 }
 
 /* Local redesign typography contract. */

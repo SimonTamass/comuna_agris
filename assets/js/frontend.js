@@ -35,7 +35,7 @@
       };
       const positionSubmenu = (item) => {
         item.classList.remove('opens-left');
-        if (window.matchMedia('(max-width: 1040px)').matches || item.parentElement?.classList.contains('agris-menu')) return;
+        if (window.matchMedia('(max-width: 1320px)').matches || item.parentElement?.classList.contains('agris-menu')) return;
         const submenu = one(':scope > .sub-menu', item);
         if (submenu && submenu.getBoundingClientRect().right > window.innerWidth - 16) item.classList.add('opens-left');
       };
@@ -106,7 +106,7 @@
           setNavigation(!nav.classList.contains('is-open'));
         });
         all('a', nav).forEach((link) => link.addEventListener('click', () => {
-          if (window.matchMedia('(max-width: 1040px)').matches) setNavigation(false);
+          if (window.matchMedia('(max-width: 1320px)').matches) setNavigation(false);
         }));
       }
       const lang = one('.agris-lang', header);
