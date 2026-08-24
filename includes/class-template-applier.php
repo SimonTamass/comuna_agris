@@ -1290,7 +1290,7 @@ final class Template_Applier {
 				'office' => 'Polgármesteri Hivatal', 'leadership' => 'Vezetőség', 'council' => 'Helyi tanács', 'public' => 'Közérdekű', 'announcements' => 'Felhívások', 'monitor' => 'Helyi hivatalos közlöny',
 				'contact' => 'Elérhetőség', 'footer_nav' => 'Lábléc hivatkozások', 'back_top' => 'Vissza az oldal tetejére', 'copyright' => 'Minden jog fenntartva, Egri Község.',
 				'address' => 'Románia, 447066, Egri, Csűry Bálint utca 68., Szatmár megye',
-				'accessibility' => 'Akadálymentesítés', 'text_size' => 'Szövegméret', 'contrast' => 'Nagy kontraszt', 'grayscale' => 'Szürkeárnyalat', 'underline' => 'Hivatkozások aláhúzása', 'reset' => 'Beállítások visszaállítása', 'options' => 'Akadálymentesítési beállítások',
+				'accessibility' => 'Akadálymentesítés', 'text_size' => 'Szövegméret', 'contrast' => 'Nagy kontraszt', 'grayscale' => 'Szürkeárnyalat', 'underline' => 'Hivatkozások aláhúzása', 'reset' => 'Beállítások visszaállítása', 'options' => 'Akadálymentesítési beállítások', 'decrease_text' => 'Szövegméret csökkentése', 'increase_text' => 'Szövegméret növelése',
 				'empty_posts' => 'Ehhez a válogatáshoz jelenleg nincs közzétett bejegyzés.', 'read_more' => 'Tovább →', 'all' => 'Összes',
 			);
 		}
@@ -1304,7 +1304,7 @@ final class Template_Applier {
 			'office' => 'Primăria', 'leadership' => 'Conducere', 'council' => 'Consiliul Local', 'public' => 'Informații publice', 'announcements' => 'Anunțuri', 'monitor' => 'Monitorul Oficial',
 			'contact' => 'Contact', 'footer_nav' => 'Linkuri subsol', 'back_top' => 'Înapoi sus', 'copyright' => 'Toate drepturile rezervate Comuna Agriș.',
 			'address' => 'România, cod 447066, Agriș, str. Csury Balint, nr. 68, Satu Mare',
-			'accessibility' => 'Accesibilitate', 'text_size' => 'Mărime text', 'contrast' => 'Contrast ridicat', 'grayscale' => 'Tonuri de gri', 'underline' => 'Linkuri subliniate', 'reset' => 'Resetează setările', 'options' => 'Opțiuni de accesibilitate',
+			'accessibility' => 'Accesibilitate', 'text_size' => 'Mărime text', 'contrast' => 'Contrast ridicat', 'grayscale' => 'Tonuri de gri', 'underline' => 'Linkuri subliniate', 'reset' => 'Resetează setările', 'options' => 'Opțiuni de accesibilitate', 'decrease_text' => 'Micșorează textul', 'increase_text' => 'Mărește textul',
 			'empty_posts' => 'Nu există articole publicate pentru această selecție.', 'read_more' => 'Citește mai mult →', 'all' => 'Toate',
 		);
 	}
@@ -1353,7 +1353,7 @@ final class Template_Applier {
 
 	private function accessibility_settings( string $language ): array {
 		$copy = $this->interface_copy( $language );
-		return array( 'title' => $copy['accessibility'], 'position' => 'right', 'text_size_label' => $copy['text_size'], 'contrast_label' => $copy['contrast'], 'grayscale_label' => $copy['grayscale'], 'underline_label' => $copy['underline'], 'reset_label' => $copy['reset'], 'options_label' => $copy['options'], 'back_to_top_label' => $copy['back_top'] );
+		return array( 'title' => $copy['accessibility'], 'position' => 'right', 'text_size_label' => $copy['text_size'], 'contrast_label' => $copy['contrast'], 'grayscale_label' => $copy['grayscale'], 'underline_label' => $copy['underline'], 'reset_label' => $copy['reset'], 'options_label' => $copy['options'], 'decrease_text_label' => $copy['decrease_text'], 'increase_text_label' => $copy['increase_text'], 'back_to_top_label' => $copy['back_top'] );
 	}
 
 	private function specialized_ro_page_data( \WP_Post $page ): array {
