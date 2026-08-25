@@ -41,7 +41,7 @@ final class Frontend_Templates {
 	}
 
 	private function applies(): bool {
-		return ! is_admin() && ! is_feed() && ! is_embed() && ! wp_doing_ajax()
+		return ! is_admin() && ! is_feed() && ! is_embed() && ! wp_doing_ajax() && ! isset( $_GET['elementor-preview'] )
 			&& ( is_archive() || is_home() || is_search() || is_singular( array( 'post', 'agris_document' ) ) );
 	}
 

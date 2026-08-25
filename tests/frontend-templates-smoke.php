@@ -12,6 +12,7 @@ $checks = array(
 	'archive route coverage' => array( $frontend, 'is_archive() || is_home() || is_search()' ),
 	'single route coverage' => array( $frontend, "is_singular( array( 'post', 'agris_document' ) )" ),
 	'URL-preserving template filter' => array( $frontend, "add_filter( 'template_include'" ),
+	'Elementor editor preview exclusion' => array( $frontend, "! isset( \$_GET['elementor-preview'] )" ),
 	'Elementor archive widget' => array( $frontend, "'agris-post-archive'" ),
 	'Elementor single widget' => array( $frontend, "'agris-single-post'" ),
 	'defensive widget loading' => array( $frontend, "require_once AGRIS_WIDGETS_PATH . 'includes/widgets/class-'" ),
@@ -27,6 +28,7 @@ $checks = array(
 	'language-aware shared footer' => array( $frontend, "'agris-site-footer'" ),
 	'WordPress document shell' => array( $template, 'wp_head();' ),
 	'safe template entrypoint' => array( $template, 'render_safely();' ),
+	'non-document global wrapper' => array( $template, '<div class="elementor agris-global-elementor">' ),
 	'localized archive labels' => array( $archive, "\$s['read_more_text']" ),
 	'unified archive title band' => array( $archive, 'agris-archive-header agris-title-band' ),
 	'document-aware single content' => array( $single, "' has-document-list'" ),
@@ -44,6 +46,11 @@ foreach ( $checks as $label => $check ) {
 
 if ( str_contains( $single, 'agris-share' ) || str_contains( $frontend, "'show_share' => 'yes'" ) ) {
 	fwrite( STDERR, "Single-post sharing UI was not removed.\n" );
+	exit( 1 );
+}
+
+if ( str_contains( $template, 'data-elementor-type="agris-global"' ) ) {
+	fwrite( STDERR, "Global frontend wrapper must not masquerade as an Elementor document.\n" );
 	exit( 1 );
 }
 

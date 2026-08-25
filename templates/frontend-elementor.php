@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 </head>
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
-<div class="elementor agris-global-elementor" data-elementor-type="agris-global">
+<div class="elementor agris-global-elementor">
 	<?php \ComunaAgris\Frontend_Templates::instance()->render_safely(); ?>
 </div>
 <?php wp_footer(); ?>
