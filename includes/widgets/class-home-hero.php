@@ -28,22 +28,101 @@ final class Home_Hero extends Base {
 		$this->end_controls_section();
 		$this->start_controls_section( 'updates', array( 'label' => __( 'Kiemelt újdonságok', 'comuna-agris' ) ) );
 		$this->add_control( 'updates_title', array( 'label' => __( 'Panel címe', 'comuna-agris' ), 'type' => Controls_Manager::TEXT, 'default' => 'Noutăți din portal' ) );
+		$this->add_control( 'updates_source', array( 'label' => __( 'Lista forrása', 'comuna-agris' ), 'type' => Controls_Manager::SELECT, 'options' => array( 'dynamic' => __( 'Legújabb bejegyzések (automatikus)', 'comuna-agris' ), 'manual' => __( 'Kézi lista', 'comuna-agris' ) ), 'default' => 'dynamic' ) );
+		$this->add_control( 'updates_count', array( 'label' => __( 'Bejegyzések száma', 'comuna-agris' ), 'type' => Controls_Manager::NUMBER, 'default' => 3, 'min' => 1, 'max' => 5, 'condition' => array( 'updates_source' => 'dynamic' ) ) );
+		$this->add_control( 'updates_language', array( 'label' => __( 'Bejegyzések nyelve', 'comuna-agris' ), 'type' => Controls_Manager::SELECT, 'options' => array( '' => __( 'Automatikus (Polylang)', 'comuna-agris' ), 'ro' => 'Română', 'hu' => 'Magyar' ), 'default' => '', 'condition' => array( 'updates_source' => 'dynamic' ) ) );
 		$r = new Repeater();
 		$r->add_control( 'day', array( 'label' => __( 'Nap / jel', 'comuna-agris' ), 'type' => Controls_Manager::TEXT, 'default' => '08' ) );
 		$r->add_control( 'title', array( 'label' => __( 'Cím', 'comuna-agris' ), 'type' => Controls_Manager::TEXT, 'default' => 'Anunț important' ) );
 		$r->add_control( 'meta', array( 'label' => __( 'Meta', 'comuna-agris' ), 'type' => Controls_Manager::TEXT, 'default' => 'Publicat recent' ) );
 		$r->add_control( 'url', array( 'label' => __( 'Link', 'comuna-agris' ), 'type' => Controls_Manager::URL ) );
-		$this->add_control( 'updates_items', array( 'type' => Controls_Manager::REPEATER, 'fields' => $r->get_controls(), 'title_field' => '{{{ day }}} · {{{ title }}}', 'default' => array( array( 'day' => '08', 'title' => 'ANUNȚ INDIVIDUAL', 'meta' => 'Publicat recent' ), array( 'day' => '18', 'title' => 'H.C.L. nr. 13–16 / 2026', 'meta' => 'Hotărâri publicate' ), array( 'day' => '24', 'title' => 'H.C.L. nr. 4–9 / 2026', 'meta' => 'Arhivă Consiliul Local' ) ) ) );
+		$this->add_control( 'updates_items', array( 'type' => Controls_Manager::REPEATER, 'fields' => $r->get_controls(), 'title_field' => '{{{ day }}} · {{{ title }}}', 'default' => array( array( 'day' => '08', 'title' => 'ANUNȚ INDIVIDUAL', 'meta' => 'Publicat recent' ), array( 'day' => '18', 'title' => 'H.C.L. nr. 13–16 / 2026', 'meta' => 'Hotărâri publicate' ), array( 'day' => '24', 'title' => 'H.C.L. nr. 4–9 / 2026', 'meta' => 'Arhivă Consiliul Local' ) ), 'condition' => array( 'updates_source' => 'manual' ) ) );
 		$this->end_controls_section();
 
 		$this->register_common_style_controls();
 	}
 	protected function render(): void {
 		$s = $this->get_settings_for_display();
+		$updates = $this->updates_for_display( $s );
 		$has_actions = ! empty( $s['primary_text'] ) || ! empty( $s['secondary_text'] );
-		$has_panel = ! empty( $s['updates_title'] ) || ! empty( $s['updates_items'] );
+		$has_panel = ! empty( $s['updates_title'] ) || ! empty( $updates );
 		$background = esc_url_raw( (string) ( $s['background']['url'] ?? '' ) );
 		$style = $background ? '--agris-hero-image:url("' . $background . '")' : '';
-		?><section id="main-content" class="agris-home-hero<?php echo $has_panel ? '' : ' is-simple'; ?>"<?php echo $style ? ' style="' . esc_attr( $style ) . '"' : ''; ?>><div class="agris-shell agris-hero-grid"><div><?php if ( $s['eyebrow'] ) : ?><div class="agris-eyebrow"><i></i><?php echo esc_html( $s['eyebrow'] ); ?></div><?php endif; ?><h1><?php echo esc_html( $s['title'] ); ?></h1><?php if ( $s['description'] ) : ?><p><?php echo esc_html( $s['description'] ); ?></p><?php endif; ?><?php if ( $has_actions ) : ?><div class="agris-actions"><?php if ( $s['primary_text'] ) : ?><a class="agris-button agris-button-primary" <?php echo self::link_attrs( $s['primary_link'] ); ?>><?php echo esc_html( $s['primary_text'] ); ?></a><?php endif; ?><?php if ( $s['secondary_text'] ) : ?><a class="agris-button agris-button-light" <?php echo self::link_attrs( $s['secondary_link'] ); ?>><?php echo esc_html( $s['secondary_text'] ); ?></a><?php endif; ?></div><?php endif; ?><?php if ( 'yes' === $s['show_search'] ) : ?><form class="agris-hero-search" role="search" action="<?php echo esc_url( home_url( '/' ) ); ?>"><?php if ( ! empty( $s['search_language'] ) ) : ?><input type="hidden" name="lang" value="<?php echo esc_attr( $s['search_language'] ); ?>"><?php endif; ?><label class="screen-reader-text" for="agris-s-<?php echo esc_attr( $this->get_id() ); ?>"><?php echo esc_html( $s['search_label'] ); ?></label><input id="agris-s-<?php echo esc_attr( $this->get_id() ); ?>" name="s" type="search" placeholder="<?php echo esc_attr( $s['search_placeholder'] ); ?>"><button><?php echo esc_html( $s['search_button'] ); ?></button></form><?php endif; ?></div><?php if ( $has_panel ) : ?><aside class="agris-hero-panel"><?php if ( $s['updates_title'] ) : ?><h2><?php echo esc_html( $s['updates_title'] ); ?></h2><?php endif; ?><?php foreach ( $s['updates_items'] as $item ) : ?><a class="agris-update" <?php echo self::link_attrs( $item['url'] ); ?>><b><?php echo esc_html( $item['day'] ); ?></b><span><strong><?php echo esc_html( $item['title'] ); ?></strong><small><?php echo esc_html( $item['meta'] ); ?></small></span></a><?php endforeach; ?></aside><?php endif; ?></div></section><?php
+		?><section id="main-content" class="agris-home-hero<?php echo $has_panel ? '' : ' is-simple'; ?>"<?php echo $style ? ' style="' . esc_attr( $style ) . '"' : ''; ?>><div class="agris-shell agris-hero-grid"><div><?php if ( $s['eyebrow'] ) : ?><div class="agris-eyebrow"><i></i><?php echo esc_html( $s['eyebrow'] ); ?></div><?php endif; ?><h1><?php echo esc_html( $s['title'] ); ?></h1><?php if ( $s['description'] ) : ?><p><?php echo esc_html( $s['description'] ); ?></p><?php endif; ?><?php if ( $has_actions ) : ?><div class="agris-actions"><?php if ( $s['primary_text'] ) : ?><a class="agris-button agris-button-primary" <?php echo self::link_attrs( $s['primary_link'] ); ?>><?php echo esc_html( $s['primary_text'] ); ?></a><?php endif; ?><?php if ( $s['secondary_text'] ) : ?><a class="agris-button agris-button-light" <?php echo self::link_attrs( $s['secondary_link'] ); ?>><?php echo esc_html( $s['secondary_text'] ); ?></a><?php endif; ?></div><?php endif; ?><?php if ( 'yes' === $s['show_search'] ) : ?><form class="agris-hero-search" role="search" action="<?php echo esc_url( home_url( '/' ) ); ?>"><?php if ( ! empty( $s['search_language'] ) ) : ?><input type="hidden" name="lang" value="<?php echo esc_attr( $s['search_language'] ); ?>"><?php endif; ?><label class="screen-reader-text" for="agris-s-<?php echo esc_attr( $this->get_id() ); ?>"><?php echo esc_html( $s['search_label'] ); ?></label><input id="agris-s-<?php echo esc_attr( $this->get_id() ); ?>" name="s" type="search" placeholder="<?php echo esc_attr( $s['search_placeholder'] ); ?>"><button><?php echo esc_html( $s['search_button'] ); ?></button></form><?php endif; ?></div><?php if ( $has_panel ) : ?><aside class="agris-hero-panel"><?php if ( $s['updates_title'] ) : ?><h2><?php echo esc_html( $s['updates_title'] ); ?></h2><?php endif; ?><?php foreach ( $updates as $item ) : ?><a class="agris-update" <?php echo self::link_attrs( $item['url'] ); ?>><b><?php echo esc_html( $item['day'] ); ?></b><span><strong><?php echo esc_html( $item['title'] ); ?></strong><small><?php echo esc_html( $item['meta'] ); ?></small></span></a><?php endforeach; ?></aside><?php endif; ?></div></section><?php
+	}
+
+	private function updates_for_display( array $settings ): array {
+		if ( 'manual' === ( $settings['updates_source'] ?? 'dynamic' ) ) {
+			return array_values( (array) ( $settings['updates_items'] ?? array() ) );
+		}
+
+		$language = $this->updates_language( $settings );
+		$count = max( 1, min( 5, (int) ( $settings['updates_count'] ?? 3 ) ) );
+		$args = array(
+			'post_type'           => 'post',
+			'post_status'         => 'publish',
+			'posts_per_page'      => $count * 3,
+			'orderby'             => 'date',
+			'order'               => 'DESC',
+			'ignore_sticky_posts' => true,
+			'suppress_filters'    => false,
+		);
+		if ( $language ) {
+			$args['lang'] = $language;
+		}
+
+		$items = array();
+		foreach ( get_posts( $args ) as $post ) {
+			if ( $language && function_exists( 'pll_get_post_language' ) ) {
+				$post_language = (string) pll_get_post_language( $post->ID, 'slug' );
+				if ( $post_language && $language !== $post_language ) {
+					continue;
+				}
+			}
+
+			$date_format = 'hu' === $language ? 'Y. m. d.' : 'd.m.Y';
+			$date_prefix = 'hu' === $language ? 'Közzétéve: ' : 'Publicat: ';
+			$items[] = array(
+				'day'   => get_the_date( 'd', $post ),
+				'title' => get_the_title( $post ),
+				'meta'  => $date_prefix . get_the_date( $date_format, $post ),
+				'url'   => array( 'url' => get_permalink( $post ) ),
+			);
+			if ( count( $items ) >= $count ) {
+				break;
+			}
+		}
+
+		return $items;
+	}
+
+	private function updates_language( array $settings ): string {
+		$selected = strtolower( (string) ( $settings['updates_language'] ?? '' ) );
+		if ( in_array( $selected, array( 'ro', 'hu' ), true ) ) {
+			return $selected;
+		}
+
+		$post_id = function_exists( 'get_the_ID' ) ? (int) get_the_ID() : 0;
+		if ( $post_id && function_exists( 'pll_get_post_language' ) ) {
+			$post_language = (string) pll_get_post_language( $post_id, 'slug' );
+			if ( in_array( $post_language, array( 'ro', 'hu' ), true ) ) {
+				return $post_language;
+			}
+		}
+
+		if ( function_exists( 'pll_current_language' ) ) {
+			$current_language = (string) pll_current_language( 'slug' );
+			if ( in_array( $current_language, array( 'ro', 'hu' ), true ) ) {
+				return $current_language;
+			}
+		}
+
+		$search_language = strtolower( (string) ( $settings['search_language'] ?? '' ) );
+		if ( in_array( $search_language, array( 'ro', 'hu' ), true ) ) {
+			return $search_language;
+		}
+
+		$locale = function_exists( 'determine_locale' ) ? strtolower( (string) determine_locale() ) : '';
+		return str_starts_with( $locale, 'hu' ) ? 'hu' : 'ro';
 	}
 }

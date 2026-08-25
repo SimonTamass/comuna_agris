@@ -12,7 +12,7 @@ $checks = array(
 	'same-slug page integration' => array( $applier, '$same_slug_content = $this->same_slug_post_content( $page, $language )' ),
 	'dynamic sitemap generation' => array( $applier, 'function sitemap_content' ),
 	'sitemap page integration' => array( $applier, "'sitemap' === sanitize_title( \$page->post_name )" ),
-	'Romanian dynamic homepage updates' => array( $applier, "\$this->recent_updates( 'ro', 3 )" ),
+	'Romanian dynamic homepage updates' => array( $applier, "'updates_source' => 'dynamic'" ),
 	'Romanian dynamic council decisions' => array( $applier, "'category'     => 'hotarari-ale-consiului-local'" ),
 	'official secondary phone setting' => array( $applier, "'phone_secondary' => '0261 878 111'" ),
 	'official secondary phone control' => array( $contact, "add_control( 'phone_secondary'" ),
