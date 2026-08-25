@@ -2,7 +2,6 @@
 namespace ComunaAgris\Widgets;
 
 use Elementor\Controls_Manager;
-use Elementor\Repeater;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -228,51 +227,13 @@ final class Post_Template extends Base {
 			)
 		);
 
-		$document_item = new Repeater();
-		$document_item->add_control(
-			'title',
-			array(
-				'label'       => __( 'Dokumentum címe', 'comuna-agris' ),
-				'type'        => Controls_Manager::TEXT,
-				'default'     => __( 'Dokumentum', 'comuna-agris' ),
-				'label_block' => true,
-			)
-		);
-		$document_item->add_control(
-			'file_url',
-			array(
-				'label'       => __( 'Fájl URL-címe', 'comuna-agris' ),
-				'type'        => Controls_Manager::URL,
-				'description' => __( 'Töltse fel a fájlt a WordPress Médiatárba, majd illessze be ide az URL-címét.', 'comuna-agris' ),
-				'label_block' => true,
-			)
-		);
-		$document_item->add_control(
-			'file_type',
-			array(
-				'label'       => __( 'Fájltípus jelölése', 'comuna-agris' ),
-				'type'        => Controls_Manager::TEXT,
-				'placeholder' => 'PDF',
-				'description' => __( 'Ha üres, a widget az URL-címből állapítja meg.', 'comuna-agris' ),
-			)
-		);
-		$document_item->add_control(
-			'meta',
-			array(
-				'label'       => __( 'Leírás / fájlméret', 'comuna-agris' ),
-				'type'        => Controls_Manager::TEXT,
-				'placeholder' => __( 'PDF · 1,2 MB', 'comuna-agris' ),
-				'label_block' => true,
-			)
-		);
-
 		$this->add_control(
 			'document_items',
 			array(
-				'label'       => __( 'Dokumentumok', 'comuna-agris' ),
-				'type'        => Controls_Manager::REPEATER,
-				'fields'      => $document_item->get_controls(),
-				'title_field' => '{{{ title }}}',
+				'label'       => __( 'Letölthető fájlok', 'comuna-agris' ),
+				'type'        => 'agris_media_files',
+				'default'     => array(),
+				'description' => __( 'A Médiatárból egyszerre több PDF, kép, Word-, Excel- vagy más engedélyezett fájl is kijelölhető.', 'comuna-agris' ),
 				'condition'   => array( 'show_documents' => 'yes' ),
 			)
 		);
@@ -404,18 +365,17 @@ final class Post_Template extends Base {
 			<div class="agris-post-template-documents agris-post-template-documents-<?php echo esc_attr( $columns ); ?>">
 				<?php foreach ( $documents as $item ) : ?>
 					<?php
-					$url       = (string) $item['file_url']['url'];
-					$file_type = $this->file_type( (string) ( $item['file_type'] ?? '' ), $url );
-					$attrs     = self::link_attrs( $item['file_url'] );
-					if ( 'yes' === ( $settings['force_download'] ?? '' ) ) {
+					$document = $this->document_data( $item );
+					$attrs    = self::link_attrs( $document['link'] );
+					if ( 'yes' === ( $settings['force_download'] ?? 'yes' ) ) {
 						$attrs .= ' download';
 					}
 					?>
-					<a class="agris-post-template-document"<?php echo $attrs; ?>>
-						<span class="agris-post-template-file-type" aria-hidden="true"><?php echo esc_html( $file_type ); ?></span>
+					<a class="agris-post-template-document"<?php echo $attrs; ?> aria-label="<?php echo esc_attr( sprintf( __( '%s letöltése', 'comuna-agris' ), $document['title'] ) ); ?>">
+						<span class="agris-post-template-file-type" aria-hidden="true"><?php echo esc_html( $document['type'] ); ?></span>
 						<span class="agris-post-template-document-body">
-							<strong><?php echo esc_html( $item['title'] ); ?></strong>
-							<?php if ( ! empty( $item['meta'] ) ) : ?><small><?php echo esc_html( $item['meta'] ); ?></small><?php endif; ?>
+							<strong><?php echo esc_html( $document['title'] ); ?></strong>
+							<?php if ( $document['meta'] ) : ?><small><?php echo esc_html( $document['meta'] ); ?></small><?php endif; ?>
 						</span>
 						<span class="agris-post-template-download"><span class="dashicons dashicons-download" aria-hidden="true"></span><span><?php echo esc_html( $settings['download_label'] ); ?></span></span>
 					</a>
@@ -438,9 +398,75 @@ final class Post_Template extends Base {
 		return array_values(
 			array_filter(
 				$items,
-				static fn( array $item ): bool => ! empty( $item['file_url']['url'] )
+				static fn( array $item ): bool => ! empty( $item['url'] ) || ! empty( $item['file_url']['url'] )
 			)
 		);
+	}
+
+	private function document_data( array $item ): array {
+		$attachment_id  = (int) ( $item['id'] ?? 0 );
+		$attachment_url = $attachment_id ? (string) wp_get_attachment_url( $attachment_id ) : '';
+		$legacy_link    = isset( $item['file_url'] ) && is_array( $item['file_url'] ) ? $item['file_url'] : array();
+		$url            = $attachment_url ?: (string) ( $item['url'] ?? $legacy_link['url'] ?? '' );
+		$filename       = $this->document_filename( $attachment_id, (string) ( $item['filename'] ?? '' ), $url );
+		$stored_title   = trim( (string) ( $item['title'] ?? '' ) );
+		$media_title    = $attachment_id ? trim( (string) get_the_title( $attachment_id ) ) : '';
+		$title          = $stored_title ?: $media_title;
+
+		if ( '' === $title || __( 'Dokumentum', 'comuna-agris' ) === $title ) {
+			$title = pathinfo( $filename, PATHINFO_FILENAME ) ?: __( 'Letölthető fájl', 'comuna-agris' );
+		}
+
+		$mime      = $attachment_id ? (string) get_post_mime_type( $attachment_id ) : (string) ( $item['mime'] ?? '' );
+		$file_type = $this->file_type( (string) ( $item['file_type'] ?? '' ), $url, $mime );
+		$file_size = $this->document_file_size( $attachment_id, (int) ( $item['filesize'] ?? 0 ) );
+		$meta      = trim( (string) ( $item['meta'] ?? '' ) );
+
+		if ( '' === $meta ) {
+			$meta = $file_type . ( $file_size > 0 ? ' · ' . size_format( $file_size, 1 ) : '' );
+		}
+
+		return array(
+			'link'  => array_merge( $legacy_link, array( 'url' => $url ) ),
+			'meta'  => $meta,
+			'title' => $title,
+			'type'  => $file_type,
+		);
+	}
+
+	private function document_filename( int $attachment_id, string $stored_filename, string $url ): string {
+		if ( '' !== trim( $stored_filename ) ) {
+			return wp_basename( trim( $stored_filename ) );
+		}
+
+		if ( $attachment_id ) {
+			$attached_file = (string) get_attached_file( $attachment_id );
+			if ( '' !== $attached_file ) {
+				return wp_basename( $attached_file );
+			}
+		}
+
+		$path = (string) wp_parse_url( $url, PHP_URL_PATH );
+		return rawurldecode( wp_basename( $path ) );
+	}
+
+	private function document_file_size( int $attachment_id, int $stored_size ): int {
+		if ( $attachment_id ) {
+			$metadata = wp_get_attachment_metadata( $attachment_id );
+			if ( is_array( $metadata ) && ! empty( $metadata['filesize'] ) ) {
+				return (int) $metadata['filesize'];
+			}
+
+			$attached_file = (string) get_attached_file( $attachment_id );
+			if ( '' !== $attached_file ) {
+				$file_size = wp_filesize( $attached_file );
+				if ( false !== $file_size ) {
+					return (int) $file_size;
+				}
+			}
+		}
+
+		return max( 0, $stored_size );
 	}
 
 	private function image_alt( int $image_id, string $custom_alt, string $caption ): string {
@@ -466,11 +492,29 @@ final class Post_Template extends Base {
 		return $image_id ? trim( (string) wp_get_attachment_caption( $image_id ) ) : '';
 	}
 
-	private function file_type( string $custom_type, string $url ): string {
+	private function file_type( string $custom_type, string $url, string $mime = '' ): string {
 		$type = strtoupper( trim( $custom_type ) );
 		if ( '' === $type ) {
 			$path = (string) wp_parse_url( $url, PHP_URL_PATH );
 			$type = strtoupper( (string) pathinfo( $path, PATHINFO_EXTENSION ) );
+		}
+		if ( '' === $type && '' !== $mime ) {
+			$mime_types = array(
+				'application/msword' => 'DOC',
+				'application/pdf' => 'PDF',
+				'application/rtf' => 'RTF',
+				'application/vnd.ms-excel' => 'XLS',
+				'application/vnd.ms-powerpoint' => 'PPT',
+				'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'PPTX',
+				'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'XLSX',
+				'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'DOCX',
+				'application/zip' => 'ZIP',
+				'image/jpeg' => 'JPG',
+				'image/png' => 'PNG',
+				'text/csv' => 'CSV',
+				'text/plain' => 'TXT',
+			);
+			$type = $mime_types[ strtolower( $mime ) ] ?? '';
 		}
 
 		$type = preg_replace( '/[^A-Z0-9]/', '', $type );

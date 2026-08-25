@@ -3,7 +3,7 @@ Contributors: comunaagris
 Tags: elementor, municipality, documents, accessibility, theme builder
 Requires at least: 6.4
 Requires PHP: 8.0
-Stable tag: 2.2.3
+Stable tag: 2.2.4
 License: GPLv2 or later
 
 A complete modular Elementor widget suite for the Comuna Agriș website.
@@ -52,6 +52,11 @@ Page-building widgets:
 6. Add official files under the new Documents menu.
 
 == Changelog ==
+
+= 2.2.4 =
+* Add a custom Elementor control for selecting multiple downloadable files from the WordPress Media Library in one operation.
+* Accept every attachment type allowed by WordPress, including PDF, images, Word, Excel, PowerPoint, text and archives.
+* Automatically resolve each selected file's title, URL, extension and size while preserving legacy document entries.
 
 = 2.2.3 =
 * Replace the post template's one-by-one image repeater with Elementor's multi-select gallery control.

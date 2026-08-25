@@ -18,8 +18,14 @@ final class Elementor_Integration {
 
 	private function __construct() {
 		add_action( 'elementor/elements/categories_registered', array( $this, 'register_category' ) );
+		add_action( 'elementor/controls/register', array( $this, 'register_controls' ) );
 		add_action( 'elementor/widgets/register', array( $this, 'register_widgets' ) );
 		add_filter( 'elementor/frontend/builder_content_data', array( $this, 'normalize_header_settings' ) );
+	}
+
+	public function register_controls( $controls_manager ): void {
+		require_once AGRIS_WIDGETS_PATH . 'includes/controls/class-media-files.php';
+		$controls_manager->register( new \ComunaAgris\Controls\Media_Files() );
 	}
 
 	public function normalize_header_settings( array $elements ): array {

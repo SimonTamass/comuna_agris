@@ -1,3 +1,13 @@
 .elementor-element .icon .eicon-site-identity,
 .elementor-element .icon .eicon-library-open { color: #1b5e20; }
 .elementor-panel-category-comuna-agris .elementor-element:hover .title { color: #1b5e20; }
+.agris-media-files-control .elementor-control-input-wrapper { width: 100%; }
+.agris-media-files-status { margin-bottom: 8px; color: #6d7882; font-size: 11px; }
+.agris-media-files-list { display: grid; gap: 6px; margin-bottom: 10px; }
+.agris-media-files-item { min-width: 0; display: grid; grid-template-columns: 42px minmax(0,1fr) 28px; align-items: center; gap: 8px; padding: 7px; border: 1px solid #d5dadf; border-radius: 4px; background: #fff; }
+.agris-media-files-type { padding: 5px 4px; border-radius: 3px; background: #e8f2e9; color: #1b5e20; font-size: 10px; font-weight: 700; text-align: center; }
+.agris-media-files-name { overflow: hidden; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.agris-media-files-remove { width: 28px; height: 28px; padding: 0; border: 0; background: transparent; color: #a4afb7; cursor: pointer; }
+.agris-media-files-remove:hover, .agris-media-files-remove:focus { color: #d30c5c; }
+.agris-media-files-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.agris-media-files-actions .elementor-button { display: inline-flex; align-items: center; gap: 5px; }
