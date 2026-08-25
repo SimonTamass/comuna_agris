@@ -3,7 +3,7 @@ Contributors: comunaagris
 Tags: elementor, municipality, documents, accessibility, theme builder
 Requires at least: 6.4
 Requires PHP: 8.0
-Stable tag: 2.2.7
+Stable tag: 2.2.8
 License: GPLv2 or later
 
 A complete modular Elementor widget suite for the Comuna Agriș website.
@@ -52,6 +52,11 @@ Page-building widgets:
 6. Add official files under the new Documents menu.
 
 == Changelog ==
+
+= 2.2.8 =
+* Add an eye-button PDF preview to post-template document cards while retaining the separate download action.
+* Open PDFs in an accessible responsive modal viewer with close, keyboard focus handling and a new-tab fallback.
+* Localize PDF preview controls in Romanian and Hungarian and allow the preview feature to be disabled in Elementor.
 
 = 2.2.7 =
 * Make the homepage portal-updates panel query the latest published posts on every page load instead of displaying a stale Elementor snapshot.

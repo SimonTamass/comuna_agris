@@ -276,6 +276,19 @@ final class Post_Template extends Base {
 				'condition'    => array( 'show_documents' => 'yes' ),
 			)
 		);
+		$this->add_control(
+			'enable_pdf_preview',
+			array(
+				'label'        => __( 'PDF előnézet szem ikonnal', 'comuna-agris' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => __( 'Be', 'comuna-agris' ),
+				'label_off'    => __( 'Ki', 'comuna-agris' ),
+				'default'      => 'yes',
+				'return_value' => 'yes',
+				'description'  => __( 'A PDF-fájlok a letöltés mellett egy felugró, beépített dokumentumnézőben is megnyithatók.', 'comuna-agris' ),
+				'condition'    => array( 'show_documents' => 'yes' ),
+			)
+		);
 
 		$this->end_controls_section();
 	}
@@ -375,9 +388,10 @@ final class Post_Template extends Base {
 	}
 
 	private function render_documents( array $settings, array $documents, array $texts ): void {
-		$columns     = in_array( (string) ( $settings['document_columns'] ?? '2' ), array( '1', '2' ), true ) ? (string) $settings['document_columns'] : '2';
-		$group       = 'agris-post-template-' . $this->get_id();
-		$count_label = sprintf( 1 === count( $documents ) ? $texts['document_count_one'] : $texts['document_count_many'], count( $documents ) );
+		$columns             = in_array( (string) ( $settings['document_columns'] ?? '2' ), array( '1', '2' ), true ) ? (string) $settings['document_columns'] : '2';
+		$group               = 'agris-post-template-' . $this->get_id();
+		$count_label         = sprintf( 1 === count( $documents ) ? $texts['document_count_one'] : $texts['document_count_many'], count( $documents ) );
+		$pdf_preview_enabled = 'yes' === ( $settings['enable_pdf_preview'] ?? 'yes' );
 		?>
 		<section class="agris-post-template-section agris-post-template-documents-section" aria-labelledby="<?php echo esc_attr( $group . '-documents-title' ); ?>">
 			<div class="agris-post-template-section-heading">
@@ -392,18 +406,26 @@ final class Post_Template extends Base {
 					<?php
 					$document = $this->document_data( $item, $texts );
 					$attrs    = self::link_attrs( $document['link'] );
+					$is_pdf   = 'PDF' === $document['type'];
 					if ( 'yes' === ( $settings['force_download'] ?? 'yes' ) ) {
 						$attrs .= ' download';
 					}
 					?>
-					<a class="agris-post-template-document"<?php echo $attrs; ?> data-agris-download-ready="true" aria-label="<?php echo esc_attr( sprintf( $texts['download_aria'], $document['title'] ) ); ?>">
+					<article class="agris-post-template-document">
 						<span class="agris-post-template-file-type" aria-hidden="true"><?php echo esc_html( $document['type'] ); ?></span>
 						<span class="agris-post-template-document-body">
 							<strong><?php echo esc_html( $document['title'] ); ?></strong>
 							<?php if ( $document['meta'] ) : ?><small><?php echo esc_html( $document['meta'] ); ?></small><?php endif; ?>
 						</span>
-						<span class="agris-post-template-download"><span class="dashicons dashicons-download" aria-hidden="true"></span><span><?php echo esc_html( $settings['download_label'] ); ?></span></span>
-					</a>
+						<span class="agris-post-template-document-actions">
+							<?php if ( $is_pdf && $pdf_preview_enabled ) : ?>
+								<button type="button" class="agris-post-template-preview" data-agris-pdf-preview data-agris-pdf-url="<?php echo esc_url( $document['link']['url'] ); ?>" data-agris-pdf-title="<?php echo esc_attr( $document['title'] ); ?>" aria-label="<?php echo esc_attr( sprintf( $texts['preview_aria'], $document['title'] ) ); ?>" title="<?php echo esc_attr( $texts['preview_label'] ); ?>">
+									<span class="dashicons dashicons-visibility" aria-hidden="true"></span><span class="screen-reader-text"><?php echo esc_html( $texts['preview_label'] ); ?></span>
+								</button>
+							<?php endif; ?>
+							<a class="agris-post-template-download"<?php echo $attrs; ?> data-agris-download-ready="true" aria-label="<?php echo esc_attr( sprintf( $texts['download_aria'], $document['title'] ) ); ?>"><span class="dashicons dashicons-download" aria-hidden="true"></span><span><?php echo esc_html( $settings['download_label'] ); ?></span></a>
+						</span>
+					</article>
 				<?php endforeach; ?>
 			</div>
 		</section>
@@ -479,6 +501,8 @@ final class Post_Template extends Base {
 				'document_count_many' => '%d dokumentum',
 				'download_aria'       => '%s letöltése',
 				'downloadable_file'   => 'Letölthető fájl',
+				'preview_label'       => 'Megtekintés',
+				'preview_aria'        => '%s megtekintése',
 			),
 			'ro' => array(
 				'kicker'              => 'Știri și comunicate',
@@ -495,6 +519,8 @@ final class Post_Template extends Base {
 				'document_count_many' => '%d documente',
 				'download_aria'       => 'Descarcă %s',
 				'downloadable_file'   => 'Fișier descărcabil',
+				'preview_label'       => 'Vizualizează',
+				'preview_aria'        => 'Vizualizează %s',
 			),
 		);
 

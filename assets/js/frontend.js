@@ -326,6 +326,82 @@
     });
   }
 
+  let pdfViewer = null;
+  let pdfViewerPreviousFocus = null;
+
+  function closePdfViewer() {
+    if (!pdfViewer || pdfViewer.hidden) return;
+    pdfViewer.hidden = true;
+    document.body.classList.remove('agris-pdf-viewer-open');
+    one('[data-agris-pdf-frame]', pdfViewer)?.setAttribute('src', 'about:blank');
+    pdfViewerPreviousFocus?.focus();
+  }
+
+  function ensurePdfViewer() {
+    if (pdfViewer) return pdfViewer;
+    const strings = window.agrisWidgets?.i18n || {};
+    pdfViewer = document.createElement('div');
+    pdfViewer.className = 'agris-pdf-viewer';
+    pdfViewer.hidden = true;
+    pdfViewer.setAttribute('role', 'dialog');
+    pdfViewer.setAttribute('aria-modal', 'true');
+    pdfViewer.setAttribute('aria-labelledby', 'agris-pdf-viewer-title');
+    pdfViewer.innerHTML = `
+      <div class="agris-pdf-viewer-dialog">
+        <header class="agris-pdf-viewer-header">
+          <div class="agris-pdf-viewer-title"><span aria-hidden="true">PDF</span><h2 id="agris-pdf-viewer-title" data-agris-pdf-viewer-title></h2></div>
+          <div class="agris-pdf-viewer-actions">
+            <a class="agris-pdf-viewer-new-tab" data-agris-pdf-new-tab target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-external" aria-hidden="true"></span><span data-agris-pdf-new-tab-text></span></a>
+            <button type="button" class="agris-pdf-viewer-close" data-agris-pdf-close><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
+          </div>
+        </header>
+        <div class="agris-pdf-viewer-frame"><iframe data-agris-pdf-frame loading="lazy"></iframe></div>
+      </div>`;
+    document.body.appendChild(pdfViewer);
+    const close = one('[data-agris-pdf-close]', pdfViewer);
+    const newTab = one('[data-agris-pdf-new-tab]', pdfViewer);
+    close.setAttribute('aria-label', strings.closePdfViewer || strings.closeLightbox || 'Close');
+    newTab.setAttribute('aria-label', strings.openPdfNewTab || 'Open PDF in a new tab');
+    one('[data-agris-pdf-new-tab-text]', pdfViewer).textContent = strings.openPdfNewTab || 'Open in a new tab';
+    close.addEventListener('click', closePdfViewer);
+    pdfViewer.addEventListener('click', (event) => { if (event.target === pdfViewer) closePdfViewer(); });
+    pdfViewer.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closePdfViewer();
+      if (event.key !== 'Tab') return;
+      const focusable = all('a[href], button', pdfViewer);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    });
+    return pdfViewer;
+  }
+
+  function openPdfViewer(button) {
+    const url = button.dataset.agrisPdfUrl || '';
+    if (!url) return;
+    const strings = window.agrisWidgets?.i18n || {};
+    const title = button.dataset.agrisPdfTitle || 'PDF';
+    ensurePdfViewer();
+    pdfViewerPreviousFocus = button;
+    one('[data-agris-pdf-viewer-title]', pdfViewer).textContent = title;
+    const frame = one('[data-agris-pdf-frame]', pdfViewer);
+    frame.title = `${strings.pdfViewer || 'PDF viewer'}: ${title}`;
+    frame.src = url;
+    one('[data-agris-pdf-new-tab]', pdfViewer).href = url;
+    pdfViewer.hidden = false;
+    document.body.classList.add('agris-pdf-viewer-open');
+    one('[data-agris-pdf-close]', pdfViewer)?.focus();
+  }
+
+  function initPdfPreview(root = document) {
+    all('[data-agris-pdf-preview]:not([data-agris-pdf-ready])', root).forEach((button) => {
+      button.dataset.agrisPdfReady = 'true';
+      button.addEventListener('click', () => openPdfViewer(button));
+    });
+  }
+
   const lightboxCandidateSelector = [
     '[data-agris-lightbox]',
     '.agris-gallery a',
@@ -505,7 +581,7 @@
   }
 
   function init(root = document) {
-    initHeader(root); initFilters(root); initContact(root); initAccessibility(root); initSearch(root); initDocumentLists(root); initLightbox(root);
+    initHeader(root); initFilters(root); initContact(root); initAccessibility(root); initSearch(root); initDocumentLists(root); initPdfPreview(root); initLightbox(root);
   }
 
   document.addEventListener('click', (event) => {
