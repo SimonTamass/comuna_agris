@@ -396,7 +396,7 @@ final class Post_Template extends Base {
 						$attrs .= ' download';
 					}
 					?>
-					<a class="agris-post-template-document"<?php echo $attrs; ?> aria-label="<?php echo esc_attr( sprintf( $texts['download_aria'], $document['title'] ) ); ?>">
+					<a class="agris-post-template-document"<?php echo $attrs; ?> data-agris-download-ready="true" aria-label="<?php echo esc_attr( sprintf( $texts['download_aria'], $document['title'] ) ); ?>">
 						<span class="agris-post-template-file-type" aria-hidden="true"><?php echo esc_html( $document['type'] ); ?></span>
 						<span class="agris-post-template-document-body">
 							<strong><?php echo esc_html( $document['title'] ); ?></strong>

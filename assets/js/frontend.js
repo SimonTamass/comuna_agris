@@ -320,7 +320,7 @@
       items.filter((item) => !item.classList.contains('agris-download-item')).forEach((item) => item.classList.add('agris-download-heading'));
     });
 
-    all('.agris-single-content a:not([data-agris-download-ready])', root).forEach((link) => {
+    all('.agris-single-content a:not([data-agris-download-ready]):not(.agris-post-template-document)', root).forEach((link) => {
       const extension = documentExtension(link);
       if (extension) decorateDocumentLink(link, extension);
     });

@@ -25,6 +25,7 @@ $checks = array(
 	'MIME type fallback'        => array( $widget, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ),
 	'document visibility switch' => array( $widget, "'show_documents'" ),
 	'download behavior'         => array( $widget, "\$attrs .= ' download'" ),
+	'PDF decorator opt-out'     => array( $widget, 'data-agris-download-ready="true"' ),
 	'download accessibility'    => array( $widget, "'download_aria'" ),
 	'automatic Polylang language' => array( $widget, "pll_get_post_language( \$post_id, 'slug' )" ),
 	'language override control' => array( $widget, "'content_language'" ),

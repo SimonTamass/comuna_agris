@@ -10,6 +10,7 @@ $checks = array(
 	'document classification' => array( $single, '$document_count' ),
 	'document extension detection' => array( $js, 'const documentExtension' ),
 	'document list enhancement' => array( $js, 'function initDocumentLists' ),
+	'structured card exclusion' => array( $js, ':not(.agris-post-template-document)' ),
 	'localized download label' => array( $assets, "'downloadFile'" ),
 	'download list grid' => array( $css, '.agris-download-list' ),
 	'download item design' => array( $css, '.agris-download-item' ),
