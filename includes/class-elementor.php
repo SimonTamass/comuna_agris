@@ -25,7 +25,9 @@ final class Elementor_Integration {
 
 	public function register_controls( $controls_manager ): void {
 		require_once AGRIS_WIDGETS_PATH . 'includes/controls/class-media-files.php';
+		require_once AGRIS_WIDGETS_PATH . 'includes/controls/class-media-images.php';
 		$controls_manager->register( new \ComunaAgris\Controls\Media_Files() );
+		$controls_manager->register( new \ComunaAgris\Controls\Media_Images() );
 	}
 
 	public function normalize_header_settings( array $elements ): array {

@@ -14,7 +14,7 @@ namespace {
 	function wp_filesize( string $file ): int|false { return false; }
 	function wp_parse_url( string $url, int $component = -1 ): string|array|false|null { return parse_url( $url, $component ); }
 	function wp_basename( string $path ): string { return basename( $path ); }
-	function size_format( int $bytes ): string { return 2097152 === $bytes ? '2 MB' : (string) $bytes; }
+	function number_format_i18n( float|int $number, int $decimals = 0 ): string { return number_format( $number, $decimals, '.', '' ); }
 }
 
 namespace Elementor {
@@ -33,6 +33,8 @@ namespace {
 	$reflection = new \ReflectionClass( \ComunaAgris\Widgets\Post_Template::class );
 	$widget     = $reflection->newInstanceWithoutConstructor();
 	$method     = $reflection->getMethod( 'document_data' );
+	$text_method = $reflection->getMethod( 'translations' );
+	$texts       = $text_method->invoke( $widget, 'hu' );
 
 	$docx = $method->invoke(
 		$widget,
@@ -42,7 +44,8 @@ namespace {
 			'title'    => 'Budget 2026',
 			'filename' => 'budget-2026.docx',
 			'mime'     => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-		)
+		),
+		$texts
 	);
 
 	if ( 'DOCX' !== $docx['type'] || 'Budget 2026' !== $docx['title'] || 'https://example.test/uploads/budget-2026.docx' !== $docx['link']['url'] || 'DOCX · 2 MB' !== $docx['meta'] ) {
@@ -55,7 +58,8 @@ namespace {
 			'url'      => 'https://example.test/uploads/meeting-photo.jpg?download=1',
 			'filename' => 'meeting-photo.jpg',
 			'mime'     => 'image/jpeg',
-		)
+		),
+		$texts
 	);
 
 	if ( 'JPG' !== $image['type'] || 'meeting-photo' !== $image['title'] || 'https://example.test/uploads/meeting-photo.jpg?download=1' !== $image['link']['url'] ) {
@@ -67,7 +71,8 @@ namespace {
 		array(
 			'title'    => 'Korábbi határozat',
 			'file_url' => array( 'url' => 'https://example.test/uploads/hatarozat.pdf' ),
-		)
+		),
+		$texts
 	);
 
 	if ( 'PDF' !== $legacy['type'] || 'Korábbi határozat' !== $legacy['title'] || 'https://example.test/uploads/hatarozat.pdf' !== $legacy['link']['url'] ) {

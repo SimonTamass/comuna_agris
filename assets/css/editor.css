@@ -11,3 +11,12 @@
 .agris-media-files-remove:hover, .agris-media-files-remove:focus { color: #d30c5c; }
 .agris-media-files-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .agris-media-files-actions .elementor-button { display: inline-flex; align-items: center; gap: 5px; }
+.agris-media-images-control .elementor-control-input-wrapper { width: 100%; }
+.agris-media-images-status { margin-bottom: 8px; color: #6d7882; font-size: 11px; }
+.agris-media-images-list { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; margin-bottom: 10px; }
+.agris-media-images-item { position: relative; overflow: hidden; aspect-ratio: 1; border: 1px solid #d5dadf; border-radius: 4px; background: #f1f3f5; }
+.agris-media-images-item img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.agris-media-images-remove { position: absolute; top: 3px; right: 3px; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: rgba(20,24,28,.82); color: #fff; cursor: pointer; }
+.agris-media-images-remove:hover, .agris-media-images-remove:focus { background: #d30c5c; }
+.agris-media-images-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.agris-media-images-actions .elementor-button { display: inline-flex; align-items: center; gap: 5px; }

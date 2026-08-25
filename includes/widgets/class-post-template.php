@@ -43,6 +43,21 @@ final class Post_Template extends Base {
 		);
 
 		$this->add_control(
+			'content_language',
+			array(
+				'label'       => __( 'Tartalom nyelve / Limba conținutului', 'comuna-agris' ),
+				'type'        => Controls_Manager::SELECT,
+				'options'     => array(
+					''   => __( 'Automatikus (Polylang) / Automat', 'comuna-agris' ),
+					'ro' => 'Română',
+					'hu' => 'Magyar',
+				),
+				'default'     => '',
+				'description' => __( 'Automatikus módban a widget a bejegyzés Polylang-nyelvét használja. Szükség esetén itt felülbírálható.', 'comuna-agris' ),
+			)
+		);
+
+		$this->add_control(
 			'show_title_section',
 			array(
 				'label'        => __( 'Címes rész megjelenítése', 'comuna-agris' ),
@@ -131,9 +146,9 @@ final class Post_Template extends Base {
 			'gallery_items',
 			array(
 				'label'       => __( 'Galéria képei', 'comuna-agris' ),
-				'type'        => Controls_Manager::GALLERY,
+				'type'        => 'agris_media_images',
 				'default'     => array(),
-				'description' => __( 'Egyszerre több képet is kijelölhet a Médiatárban, majd húzással rendezheti a sorrendjüket.', 'comuna-agris' ),
+				'description' => __( 'A Médiatár egyetlen ablakában egyszerre tetszőleges számú kép jelölhető ki.', 'comuna-agris' ),
 				'condition'   => array( 'show_gallery' => 'yes' ),
 			)
 		);
@@ -267,13 +282,21 @@ final class Post_Template extends Base {
 
 	protected function render(): void {
 		$settings           = $this->get_settings_for_display();
+		$language           = $this->content_language( $settings );
+		$texts              = $this->translations( $language );
+		$localized_settings = array( 'kicker', 'title', 'intro', 'content', 'gallery_title', 'documents_title', 'download_label' );
+
+		foreach ( $localized_settings as $setting_name ) {
+			$settings[ $setting_name ] = $this->localized_setting( $settings, $setting_name, $language );
+		}
+
 		$show_title_section = 'yes' === ( $settings['show_title_section'] ?? 'yes' );
 		$show_gallery       = 'yes' === ( $settings['show_gallery'] ?? 'yes' );
 		$show_documents     = 'yes' === ( $settings['show_documents'] ?? 'yes' );
 		$gallery            = $show_gallery ? $this->valid_gallery_items( (array) ( $settings['gallery_items'] ?? array() ) ) : array();
 		$documents          = $show_documents ? $this->valid_document_items( (array) ( $settings['document_items'] ?? array() ) ) : array();
 		?>
-		<article class="agris-post-template">
+		<article class="agris-post-template" lang="<?php echo esc_attr( $language ); ?>">
 			<?php if ( $show_title_section ) : ?>
 				<header class="agris-post-template-header">
 					<div class="agris-post-template-header-inner">
@@ -297,27 +320,28 @@ final class Post_Template extends Base {
 			<?php endif; ?>
 
 			<?php if ( $gallery ) : ?>
-				<?php $this->render_gallery( $settings, $gallery ); ?>
+				<?php $this->render_gallery( $settings, $gallery, $texts ); ?>
 			<?php endif; ?>
 
 			<?php if ( $documents ) : ?>
-				<?php $this->render_documents( $settings, $documents ); ?>
+				<?php $this->render_documents( $settings, $documents, $texts ); ?>
 			<?php endif; ?>
 		</article>
 		<?php
 	}
 
-	private function render_gallery( array $settings, array $gallery ): void {
+	private function render_gallery( array $settings, array $gallery, array $texts ): void {
 		$columns          = in_array( (string) ( $settings['gallery_columns'] ?? '3' ), array( '2', '3' ), true ) ? (string) $settings['gallery_columns'] : '3';
 		$is_highlight     = 'yes' === ( $settings['highlight_first_image'] ?? '' ) && count( $gallery ) > 2;
 		$lightbox_enabled = 'yes' === ( $settings['enable_gallery_lightbox'] ?? 'yes' );
 		$classes          = 'agris-post-template-gallery agris-post-template-gallery-' . $columns . ( $is_highlight ? ' has-featured-image' : '' );
 		$group            = 'agris-post-template-' . $this->get_id();
+		$count_label      = sprintf( 1 === count( $gallery ) ? $texts['image_count_one'] : $texts['image_count_many'], count( $gallery ) );
 		?>
 		<section class="agris-post-template-section agris-post-template-gallery-section" aria-labelledby="<?php echo esc_attr( $group . '-gallery-title' ); ?>">
 			<div class="agris-post-template-section-heading">
 				<h2 id="<?php echo esc_attr( $group . '-gallery-title' ); ?>"><?php echo esc_html( $settings['gallery_title'] ); ?></h2>
-				<span class="agris-post-template-count" aria-label="<?php echo esc_attr( sprintf( __( '%d kép', 'comuna-agris' ), count( $gallery ) ) ); ?>"><span class="dashicons dashicons-images-alt2" aria-hidden="true"></span><?php echo esc_html( (string) count( $gallery ) ); ?></span>
+				<span class="agris-post-template-count" aria-label="<?php echo esc_attr( $count_label ); ?>"><span class="dashicons dashicons-images-alt2" aria-hidden="true"></span><?php echo esc_html( (string) count( $gallery ) ); ?></span>
 			</div>
 			<div class="<?php echo esc_attr( $classes ); ?>">
 				<?php foreach ( $gallery as $item ) : ?>
@@ -329,7 +353,7 @@ final class Post_Template extends Base {
 					$alt       = $this->image_alt( $image_id, (string) ( $item['alt_text'] ?? '' ), $caption );
 					?>
 					<?php if ( $lightbox_enabled ) : ?>
-						<a class="agris-post-template-gallery-item has-lightbox" href="<?php echo esc_url( $image_url ); ?>" data-agris-lightbox data-agris-lightbox-group="<?php echo esc_attr( $group ); ?>" data-agris-lightbox-caption="<?php echo esc_attr( $caption ); ?>" aria-label="<?php echo esc_attr( $alt ?: __( 'Kép megnyitása', 'comuna-agris' ) ); ?>">
+						<a class="agris-post-template-gallery-item has-lightbox" href="<?php echo esc_url( $image_url ); ?>" data-agris-lightbox data-agris-lightbox-group="<?php echo esc_attr( $group ); ?>" data-agris-lightbox-caption="<?php echo esc_attr( $caption ); ?>" aria-label="<?php echo esc_attr( $alt ?: $texts['image_open'] ); ?>">
 					<?php else : ?>
 						<figure class="agris-post-template-gallery-item is-static">
 					<?php endif; ?>
@@ -350,9 +374,10 @@ final class Post_Template extends Base {
 		<?php
 	}
 
-	private function render_documents( array $settings, array $documents ): void {
-		$columns = in_array( (string) ( $settings['document_columns'] ?? '2' ), array( '1', '2' ), true ) ? (string) $settings['document_columns'] : '2';
-		$group   = 'agris-post-template-' . $this->get_id();
+	private function render_documents( array $settings, array $documents, array $texts ): void {
+		$columns     = in_array( (string) ( $settings['document_columns'] ?? '2' ), array( '1', '2' ), true ) ? (string) $settings['document_columns'] : '2';
+		$group       = 'agris-post-template-' . $this->get_id();
+		$count_label = sprintf( 1 === count( $documents ) ? $texts['document_count_one'] : $texts['document_count_many'], count( $documents ) );
 		?>
 		<section class="agris-post-template-section agris-post-template-documents-section" aria-labelledby="<?php echo esc_attr( $group . '-documents-title' ); ?>">
 			<div class="agris-post-template-section-heading">
@@ -360,18 +385,18 @@ final class Post_Template extends Base {
 					<h2 id="<?php echo esc_attr( $group . '-documents-title' ); ?>"><?php echo esc_html( $settings['documents_title'] ); ?></h2>
 					<?php if ( ! empty( $settings['documents_intro'] ) ) : ?><p><?php echo esc_html( $settings['documents_intro'] ); ?></p><?php endif; ?>
 				</div>
-				<span class="agris-post-template-count" aria-label="<?php echo esc_attr( sprintf( __( '%d dokumentum', 'comuna-agris' ), count( $documents ) ) ); ?>"><span class="dashicons dashicons-media-document" aria-hidden="true"></span><?php echo esc_html( (string) count( $documents ) ); ?></span>
+				<span class="agris-post-template-count" aria-label="<?php echo esc_attr( $count_label ); ?>"><span class="dashicons dashicons-media-document" aria-hidden="true"></span><?php echo esc_html( (string) count( $documents ) ); ?></span>
 			</div>
 			<div class="agris-post-template-documents agris-post-template-documents-<?php echo esc_attr( $columns ); ?>">
 				<?php foreach ( $documents as $item ) : ?>
 					<?php
-					$document = $this->document_data( $item );
+					$document = $this->document_data( $item, $texts );
 					$attrs    = self::link_attrs( $document['link'] );
 					if ( 'yes' === ( $settings['force_download'] ?? 'yes' ) ) {
 						$attrs .= ' download';
 					}
 					?>
-					<a class="agris-post-template-document"<?php echo $attrs; ?> aria-label="<?php echo esc_attr( sprintf( __( '%s letöltése', 'comuna-agris' ), $document['title'] ) ); ?>">
+					<a class="agris-post-template-document"<?php echo $attrs; ?> aria-label="<?php echo esc_attr( sprintf( $texts['download_aria'], $document['title'] ) ); ?>">
 						<span class="agris-post-template-file-type" aria-hidden="true"><?php echo esc_html( $document['type'] ); ?></span>
 						<span class="agris-post-template-document-body">
 							<strong><?php echo esc_html( $document['title'] ); ?></strong>
@@ -383,6 +408,97 @@ final class Post_Template extends Base {
 			</div>
 		</section>
 		<?php
+	}
+
+	private function content_language( array $settings ): string {
+		$manual_language = $this->normalize_language( (string) ( $settings['content_language'] ?? '' ) );
+		if ( in_array( $manual_language, array( 'ro', 'hu' ), true ) ) {
+			return $manual_language;
+		}
+
+		$post_id = function_exists( 'get_the_ID' ) ? (int) get_the_ID() : 0;
+		if ( ! $post_id && function_exists( 'get_queried_object_id' ) ) {
+			$post_id = (int) get_queried_object_id();
+		}
+
+		if ( $post_id && function_exists( 'pll_get_post_language' ) ) {
+			$post_language = $this->normalize_language( (string) pll_get_post_language( $post_id, 'slug' ) );
+			if ( in_array( $post_language, array( 'ro', 'hu' ), true ) ) {
+				return $post_language;
+			}
+		}
+
+		if ( function_exists( 'pll_current_language' ) ) {
+			$current_language = $this->normalize_language( (string) pll_current_language( 'slug' ) );
+			if ( in_array( $current_language, array( 'ro', 'hu' ), true ) ) {
+				return $current_language;
+			}
+		}
+
+		$locale = function_exists( 'determine_locale' ) ? (string) determine_locale() : ( function_exists( 'get_locale' ) ? (string) get_locale() : '' );
+		return 'hu' === $this->normalize_language( $locale ) ? 'hu' : 'ro';
+	}
+
+	private function normalize_language( string $language ): string {
+		$language = strtolower( trim( str_replace( '-', '_', $language ) ) );
+		return (string) strtok( $language, '_' );
+	}
+
+	private function localized_setting( array $settings, string $key, string $language ): string {
+		$texts = $this->translations( $language );
+		if ( ! array_key_exists( $key, $settings ) ) {
+			return (string) ( $texts[ $key ] ?? '' );
+		}
+
+		$value       = (string) $settings[ $key ];
+		$known_value = array();
+		foreach ( array( 'ro', 'hu' ) as $known_language ) {
+			$known_texts = $this->translations( $known_language );
+			if ( isset( $known_texts[ $key ] ) ) {
+				$known_value[] = trim( (string) $known_texts[ $key ] );
+			}
+		}
+
+		return in_array( trim( $value ), $known_value, true ) ? (string) ( $texts[ $key ] ?? $value ) : $value;
+	}
+
+	private function translations( string $language ): array {
+		$translations = array(
+			'hu' => array(
+				'kicker'              => 'Hírek és közlemények',
+				'title'               => 'A bejegyzés címe',
+				'intro'               => 'Itt röviden összefoglalhatja a bejegyzés legfontosabb információit.',
+				'content'             => '<p>Adja hozzá itt a bejegyzés részletes tartalmát. A galéria és a letölthető dokumentumok külön szakaszban jelennek meg alatta.</p>',
+				'gallery_title'       => 'Képgaléria',
+				'documents_title'     => 'Letölthető dokumentumok',
+				'download_label'      => 'Letöltés',
+				'image_open'          => 'Kép megnyitása',
+				'image_count_one'     => '%d kép',
+				'image_count_many'    => '%d kép',
+				'document_count_one'  => '%d dokumentum',
+				'document_count_many' => '%d dokumentum',
+				'download_aria'       => '%s letöltése',
+				'downloadable_file'   => 'Letölthető fájl',
+			),
+			'ro' => array(
+				'kicker'              => 'Știri și comunicate',
+				'title'               => 'Titlul articolului',
+				'intro'               => 'Prezentați pe scurt cele mai importante informații ale articolului.',
+				'content'             => '<p>Adăugați aici conținutul detaliat al articolului. Galeria și documentele descărcabile apar mai jos, în secțiuni separate.</p>',
+				'gallery_title'       => 'Galerie foto',
+				'documents_title'     => 'Documente descărcabile',
+				'download_label'      => 'Descarcă',
+				'image_open'          => 'Deschide imaginea',
+				'image_count_one'     => '%d imagine',
+				'image_count_many'    => '%d imagini',
+				'document_count_one'  => '%d document',
+				'document_count_many' => '%d documente',
+				'download_aria'       => 'Descarcă %s',
+				'downloadable_file'   => 'Fișier descărcabil',
+			),
+		);
+
+		return $translations[ 'hu' === $language ? 'hu' : 'ro' ];
 	}
 
 	private function valid_gallery_items( array $items ): array {
@@ -403,7 +519,7 @@ final class Post_Template extends Base {
 		);
 	}
 
-	private function document_data( array $item ): array {
+	private function document_data( array $item, array $texts ): array {
 		$attachment_id  = (int) ( $item['id'] ?? 0 );
 		$attachment_url = $attachment_id ? (string) wp_get_attachment_url( $attachment_id ) : '';
 		$legacy_link    = isset( $item['file_url'] ) && is_array( $item['file_url'] ) ? $item['file_url'] : array();
@@ -413,8 +529,8 @@ final class Post_Template extends Base {
 		$media_title    = $attachment_id ? trim( (string) get_the_title( $attachment_id ) ) : '';
 		$title          = $stored_title ?: $media_title;
 
-		if ( '' === $title || __( 'Dokumentum', 'comuna-agris' ) === $title ) {
-			$title = pathinfo( $filename, PATHINFO_FILENAME ) ?: __( 'Letölthető fájl', 'comuna-agris' );
+		if ( '' === $title || in_array( $title, array( 'Dokumentum', 'Document' ), true ) ) {
+			$title = pathinfo( $filename, PATHINFO_FILENAME ) ?: $texts['downloadable_file'];
 		}
 
 		$mime      = $attachment_id ? (string) get_post_mime_type( $attachment_id ) : (string) ( $item['mime'] ?? '' );
@@ -423,7 +539,7 @@ final class Post_Template extends Base {
 		$meta      = trim( (string) ( $item['meta'] ?? '' ) );
 
 		if ( '' === $meta ) {
-			$meta = $file_type . ( $file_size > 0 ? ' · ' . size_format( $file_size, 1 ) : '' );
+			$meta = $file_type . ( $file_size > 0 ? ' · ' . $this->file_size_label( $file_size ) : '' );
 		}
 
 		return array(
@@ -467,6 +583,20 @@ final class Post_Template extends Base {
 		}
 
 		return max( 0, $stored_size );
+	}
+
+	private function file_size_label( int $bytes ): string {
+		$units = array( 'B', 'KB', 'MB', 'GB', 'TB' );
+		$power = 0;
+		$value = max( 0, $bytes );
+
+		while ( $value >= 1024 && $power < count( $units ) - 1 ) {
+			$value /= 1024;
+			++$power;
+		}
+
+		$decimals = abs( $value - round( $value ) ) < 0.05 ? 0 : 1;
+		return number_format_i18n( $value, $decimals ) . ' ' . $units[ $power ];
 	}
 
 	private function image_alt( int $image_id, string $custom_alt, string $caption ): string {
