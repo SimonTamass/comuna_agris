@@ -11,6 +11,8 @@ $checks = array(
 	'localized open label'   => array( $assets, "'openImage'" ),
 	'localized close label'  => array( $assets, "'closeLightbox'" ),
 	'lightbox initializer'   => array( $js, 'function initLightbox' ),
+	'explicit trigger support' => array( $js, "'[data-agris-lightbox]'" ),
+	'post template grouping' => array( $js, '.agris-post-template-gallery' ),
 	'article image support'  => array( $js, '.agris-single-content img' ),
 	'native block image support' => array( $js, '.wp-block-image img' ),
 	'late initializer'       => array( $js, "window.setTimeout(() => init(), 500)" ),

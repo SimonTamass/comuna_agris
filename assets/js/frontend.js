@@ -327,6 +327,7 @@
   }
 
   const lightboxCandidateSelector = [
+    '[data-agris-lightbox]',
     '.agris-gallery a',
     '.agris-legacy-gallery img',
     '.agris-legacy-media > img',
@@ -384,7 +385,7 @@
   }
 
   function lightboxGroupRoot(trigger) {
-    return trigger.closest('.agris-gallery, .agris-legacy-gallery, .agris-single, .agris-content-media, .agris-person, .agris-cta') || trigger.parentElement;
+    return trigger.closest('.agris-gallery, .agris-post-template-gallery, .agris-legacy-gallery, .agris-single, .agris-content-media, .agris-person, .agris-cta') || trigger.parentElement;
   }
 
   function formatCounter(position, total) {

@@ -8,16 +8,27 @@ $checks = array(
 	'widget registration'       => array( $registry, "'Post_Template'       => 'post-template'" ),
 	'unique widget name'        => array( $widget, "return 'agris-post-template';" ),
 	'article title control'     => array( $widget, "'title'" ),
+	'title visibility switch'   => array( $widget, "'show_title_section'" ),
 	'editable rich content'     => array( $widget, 'Controls_Manager::WYSIWYG' ),
 	'gallery repeater'          => array( $widget, "'gallery_items'" ),
+	'gallery visibility switch' => array( $widget, "'show_gallery'" ),
+	'gallery lightbox switch'   => array( $widget, "'enable_gallery_lightbox'" ),
 	'accessible lightbox group' => array( $widget, 'data-agris-lightbox-group' ),
 	'document repeater'         => array( $widget, "'document_items'" ),
+	'document visibility switch' => array( $widget, "'show_documents'" ),
 	'download behavior'         => array( $widget, "\$attrs .= ' download'" ),
 	'responsive article shell'  => array( $css, '.agris-post-template {' ),
 	'featured gallery layout'   => array( $css, '.agris-post-template-gallery.has-featured-image' ),
 	'document card layout'      => array( $css, '.agris-post-template-document {' ),
 	'mobile gallery reset'      => array( $css, '.agris-post-template-gallery-item:first-child' ),
 );
+
+foreach ( array( 'show_title_section', 'show_gallery', 'show_documents' ) as $control ) {
+	if ( ! str_contains( $widget, "'yes' === ( \$settings['{$control}'] ?? 'yes' )" ) ) {
+		fwrite( STDERR, "Missing enabled-by-default render guard for {$control}.\n" );
+		exit( 1 );
+	}
+}
 
 foreach ( $checks as $label => $check ) {
 	list( $haystack, $needle ) = $check;

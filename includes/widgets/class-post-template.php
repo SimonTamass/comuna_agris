@@ -44,12 +44,25 @@ final class Post_Template extends Base {
 		);
 
 		$this->add_control(
+			'show_title_section',
+			array(
+				'label'        => __( 'Címes rész megjelenítése', 'comuna-agris' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => __( 'Be', 'comuna-agris' ),
+				'label_off'    => __( 'Ki', 'comuna-agris' ),
+				'default'      => 'yes',
+				'return_value' => 'yes',
+			)
+		);
+
+		$this->add_control(
 			'kicker',
 			array(
 				'label'       => __( 'Címke a cím felett', 'comuna-agris' ),
 				'type'        => Controls_Manager::TEXT,
 				'default'     => __( 'Hírek és közlemények', 'comuna-agris' ),
 				'label_block' => true,
+				'condition'   => array( 'show_title_section' => 'yes' ),
 			)
 		);
 		$this->add_control(
@@ -59,15 +72,17 @@ final class Post_Template extends Base {
 				'type'        => Controls_Manager::TEXT,
 				'default'     => __( 'A bejegyzés címe', 'comuna-agris' ),
 				'label_block' => true,
+				'condition'   => array( 'show_title_section' => 'yes' ),
 			)
 		);
 		$this->add_control(
 			'intro',
 			array(
-				'label'   => __( 'Rövid bevezető', 'comuna-agris' ),
-				'type'    => Controls_Manager::TEXTAREA,
-				'default' => __( 'Itt röviden összefoglalhatja a bejegyzés legfontosabb információit.', 'comuna-agris' ),
-				'rows'    => 4,
+				'label'     => __( 'Rövid bevezető', 'comuna-agris' ),
+				'type'      => Controls_Manager::TEXTAREA,
+				'default'   => __( 'Itt röviden összefoglalhatja a bejegyzés legfontosabb információit.', 'comuna-agris' ),
+				'rows'      => 4,
+				'condition' => array( 'show_title_section' => 'yes' ),
 			)
 		);
 		$this->add_control(
@@ -91,12 +106,25 @@ final class Post_Template extends Base {
 		);
 
 		$this->add_control(
+			'show_gallery',
+			array(
+				'label'        => __( 'Galéria megjelenítése', 'comuna-agris' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => __( 'Be', 'comuna-agris' ),
+				'label_off'    => __( 'Ki', 'comuna-agris' ),
+				'default'      => 'yes',
+				'return_value' => 'yes',
+			)
+		);
+
+		$this->add_control(
 			'gallery_title',
 			array(
 				'label'       => __( 'Szakasz címe', 'comuna-agris' ),
 				'type'        => Controls_Manager::TEXT,
 				'default'     => __( 'Képgaléria', 'comuna-agris' ),
 				'label_block' => true,
+				'condition'   => array( 'show_gallery' => 'yes' ),
 			)
 		);
 
@@ -133,6 +161,7 @@ final class Post_Template extends Base {
 				'type'        => Controls_Manager::REPEATER,
 				'fields'      => $gallery_item->get_controls(),
 				'title_field' => '{{{ caption }}}',
+				'condition'   => array( 'show_gallery' => 'yes' ),
 			)
 		);
 		$this->add_control(
@@ -144,7 +173,8 @@ final class Post_Template extends Base {
 					'2' => '2',
 					'3' => '3',
 				),
-				'default' => '3',
+				'default'   => '3',
+				'condition' => array( 'show_gallery' => 'yes' ),
 			)
 		);
 		$this->add_control(
@@ -154,6 +184,20 @@ final class Post_Template extends Base {
 				'type'         => Controls_Manager::SWITCHER,
 				'default'      => 'yes',
 				'return_value' => 'yes',
+				'condition'    => array( 'show_gallery' => 'yes' ),
+			)
+		);
+		$this->add_control(
+			'enable_gallery_lightbox',
+			array(
+				'label'        => __( 'Lightboxos képnézegető', 'comuna-agris' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => __( 'Be', 'comuna-agris' ),
+				'label_off'    => __( 'Ki', 'comuna-agris' ),
+				'default'      => 'yes',
+				'return_value' => 'yes',
+				'condition'    => array( 'show_gallery' => 'yes' ),
+				'description'  => __( 'Bekapcsolva a képek nagy méretben, előző/következő navigációval nyílnak meg.', 'comuna-agris' ),
 			)
 		);
 
@@ -169,20 +213,34 @@ final class Post_Template extends Base {
 		);
 
 		$this->add_control(
+			'show_documents',
+			array(
+				'label'        => __( 'Dokumentumok megjelenítése', 'comuna-agris' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => __( 'Be', 'comuna-agris' ),
+				'label_off'    => __( 'Ki', 'comuna-agris' ),
+				'default'      => 'yes',
+				'return_value' => 'yes',
+			)
+		);
+
+		$this->add_control(
 			'documents_title',
 			array(
 				'label'       => __( 'Szakasz címe', 'comuna-agris' ),
 				'type'        => Controls_Manager::TEXT,
 				'default'     => __( 'Letölthető dokumentumok', 'comuna-agris' ),
 				'label_block' => true,
+				'condition'   => array( 'show_documents' => 'yes' ),
 			)
 		);
 		$this->add_control(
 			'documents_intro',
 			array(
-				'label' => __( 'Rövid leírás', 'comuna-agris' ),
-				'type'  => Controls_Manager::TEXTAREA,
-				'rows'  => 3,
+				'label'     => __( 'Rövid leírás', 'comuna-agris' ),
+				'type'      => Controls_Manager::TEXTAREA,
+				'rows'      => 3,
+				'condition' => array( 'show_documents' => 'yes' ),
 			)
 		);
 		$this->add_control(
@@ -192,6 +250,7 @@ final class Post_Template extends Base {
 				'type'        => Controls_Manager::TEXT,
 				'default'     => __( 'Letöltés', 'comuna-agris' ),
 				'label_block' => true,
+				'condition'   => array( 'show_documents' => 'yes' ),
 			)
 		);
 
@@ -240,6 +299,7 @@ final class Post_Template extends Base {
 				'type'        => Controls_Manager::REPEATER,
 				'fields'      => $document_item->get_controls(),
 				'title_field' => '{{{ title }}}',
+				'condition'   => array( 'show_documents' => 'yes' ),
 			)
 		);
 		$this->add_control(
@@ -251,7 +311,8 @@ final class Post_Template extends Base {
 					'1' => '1',
 					'2' => '2',
 				),
-				'default' => '2',
+				'default'   => '2',
+				'condition' => array( 'show_documents' => 'yes' ),
 			)
 		);
 		$this->add_control(
@@ -262,6 +323,7 @@ final class Post_Template extends Base {
 				'default'      => 'yes',
 				'return_value' => 'yes',
 				'description'  => __( 'A böngésző az azonos domainen tárolt fájlokat közvetlenül letölti.', 'comuna-agris' ),
+				'condition'    => array( 'show_documents' => 'yes' ),
 			)
 		);
 
@@ -269,22 +331,29 @@ final class Post_Template extends Base {
 	}
 
 	protected function render(): void {
-		$settings  = $this->get_settings_for_display();
-		$gallery   = $this->valid_gallery_items( (array) ( $settings['gallery_items'] ?? array() ) );
-		$documents = $this->valid_document_items( (array) ( $settings['document_items'] ?? array() ) );
+		$settings           = $this->get_settings_for_display();
+		$show_title_section = 'yes' === ( $settings['show_title_section'] ?? 'yes' );
+		$show_gallery       = 'yes' === ( $settings['show_gallery'] ?? 'yes' );
+		$show_documents     = 'yes' === ( $settings['show_documents'] ?? 'yes' );
+		$gallery            = $show_gallery ? $this->valid_gallery_items( (array) ( $settings['gallery_items'] ?? array() ) ) : array();
+		$documents          = $show_documents ? $this->valid_document_items( (array) ( $settings['document_items'] ?? array() ) ) : array();
 		?>
 		<article class="agris-post-template">
-			<header class="agris-post-template-header">
-				<div class="agris-post-template-header-inner">
-					<?php if ( ! empty( $settings['kicker'] ) ) : ?>
-						<div class="agris-kicker"><?php echo esc_html( $settings['kicker'] ); ?></div>
-					<?php endif; ?>
-					<h1 class="agris-title"><?php echo esc_html( $settings['title'] ); ?></h1>
-					<?php if ( ! empty( $settings['intro'] ) ) : ?>
-						<p class="agris-post-template-intro"><?php echo wp_kses_post( nl2br( $settings['intro'] ) ); ?></p>
-					<?php endif; ?>
-				</div>
-			</header>
+			<?php if ( $show_title_section ) : ?>
+				<header class="agris-post-template-header">
+					<div class="agris-post-template-header-inner">
+						<?php if ( ! empty( $settings['kicker'] ) ) : ?>
+							<div class="agris-kicker"><?php echo esc_html( $settings['kicker'] ); ?></div>
+						<?php endif; ?>
+						<?php if ( ! empty( $settings['title'] ) ) : ?>
+							<h1 class="agris-title"><?php echo esc_html( $settings['title'] ); ?></h1>
+						<?php endif; ?>
+						<?php if ( ! empty( $settings['intro'] ) ) : ?>
+							<p class="agris-post-template-intro"><?php echo wp_kses_post( nl2br( $settings['intro'] ) ); ?></p>
+						<?php endif; ?>
+					</div>
+				</header>
+			<?php endif; ?>
 
 			<?php if ( ! empty( $settings['content'] ) ) : ?>
 				<div class="agris-post-template-content agris-richtext">
@@ -304,10 +373,11 @@ final class Post_Template extends Base {
 	}
 
 	private function render_gallery( array $settings, array $gallery ): void {
-		$columns      = in_array( (string) ( $settings['gallery_columns'] ?? '3' ), array( '2', '3' ), true ) ? (string) $settings['gallery_columns'] : '3';
-		$is_highlight = 'yes' === ( $settings['highlight_first_image'] ?? '' ) && count( $gallery ) > 2;
-		$classes      = 'agris-post-template-gallery agris-post-template-gallery-' . $columns . ( $is_highlight ? ' has-featured-image' : '' );
-		$group        = 'agris-post-template-' . $this->get_id();
+		$columns          = in_array( (string) ( $settings['gallery_columns'] ?? '3' ), array( '2', '3' ), true ) ? (string) $settings['gallery_columns'] : '3';
+		$is_highlight     = 'yes' === ( $settings['highlight_first_image'] ?? '' ) && count( $gallery ) > 2;
+		$lightbox_enabled = 'yes' === ( $settings['enable_gallery_lightbox'] ?? 'yes' );
+		$classes          = 'agris-post-template-gallery agris-post-template-gallery-' . $columns . ( $is_highlight ? ' has-featured-image' : '' );
+		$group            = 'agris-post-template-' . $this->get_id();
 		?>
 		<section class="agris-post-template-section agris-post-template-gallery-section" aria-labelledby="<?php echo esc_attr( $group . '-gallery-title' ); ?>">
 			<div class="agris-post-template-section-heading">
@@ -322,14 +392,22 @@ final class Post_Template extends Base {
 					$caption   = (string) ( $item['caption'] ?? '' );
 					$alt       = $this->image_alt( $image_id, (string) ( $item['alt_text'] ?? '' ), $caption );
 					?>
-					<a class="agris-post-template-gallery-item" href="<?php echo esc_url( $image_url ); ?>" data-agris-lightbox data-agris-lightbox-group="<?php echo esc_attr( $group ); ?>" data-agris-lightbox-caption="<?php echo esc_attr( $caption ); ?>" aria-label="<?php echo esc_attr( $alt ?: __( 'Kép megnyitása', 'comuna-agris' ) ); ?>">
+					<?php if ( $lightbox_enabled ) : ?>
+						<a class="agris-post-template-gallery-item has-lightbox" href="<?php echo esc_url( $image_url ); ?>" data-agris-lightbox data-agris-lightbox-group="<?php echo esc_attr( $group ); ?>" data-agris-lightbox-caption="<?php echo esc_attr( $caption ); ?>" aria-label="<?php echo esc_attr( $alt ?: __( 'Kép megnyitása', 'comuna-agris' ) ); ?>">
+					<?php else : ?>
+						<figure class="agris-post-template-gallery-item is-static">
+					<?php endif; ?>
 						<?php if ( $image_id ) : ?>
 							<?php echo wp_get_attachment_image( $image_id, 'large', false, array( 'alt' => $alt, 'loading' => 'lazy' ) ); ?>
 						<?php else : ?>
 							<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $alt ); ?>" loading="lazy">
 						<?php endif; ?>
 						<?php if ( $caption ) : ?><span><?php echo esc_html( $caption ); ?></span><?php endif; ?>
-					</a>
+					<?php if ( $lightbox_enabled ) : ?>
+						</a>
+					<?php else : ?>
+						</figure>
+					<?php endif; ?>
 				<?php endforeach; ?>
 			</div>
 		</section>
