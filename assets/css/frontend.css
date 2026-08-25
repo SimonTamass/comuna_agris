@@ -323,6 +323,59 @@ body.agris-lightbox-open { overflow: hidden; }
 .agris-inline-download { display: inline-flex; align-items: center; gap: 8px; margin: 5px 0; padding: 10px 14px; border: 1px solid #cbdccb; border-radius: var(--agris-radius); background: #fff; color: var(--agris-brand) !important; font-weight: 800; text-decoration: none !important; }
 .agris-inline-download:hover { border-color: var(--agris-brand); background: var(--agris-brand-soft); }
 
+/* Standalone post template */
+.agris-post-template { width: min(1120px,100%); margin-inline: auto; color: var(--agris-ink); font-family: var(--agris-body); }
+.agris-post-template-header { position: relative; isolation: isolate; overflow: hidden; padding: clamp(36px,6vw,72px); border-radius: var(--agris-radius-lg); background: linear-gradient(135deg,var(--agris-title-bg) 0%,var(--agris-brand-dark) 100%); box-shadow: 0 18px 45px rgba(15,47,31,.16); color: #fff; }
+.agris-post-template-header::before, .agris-post-template-header::after { position: absolute; z-index: -1; border-radius: 999px; background: rgba(184,244,194,.08); content: ""; pointer-events: none; }
+.agris-post-template-header::before { width: 330px; height: 330px; top: -220px; right: -70px; }
+.agris-post-template-header::after { width: 190px; height: 190px; right: 120px; bottom: -150px; border: 34px solid rgba(184,244,194,.045); background: transparent; }
+.agris-post-template-header-inner { position: relative; z-index: 1; max-width: 870px; }
+.agris-post-template-header .agris-kicker { margin-bottom: 14px; color: var(--agris-cyan); }
+.agris-post-template-header .agris-title { max-width: 900px; margin: 0; color: #fff; font-size: clamp(2.15rem,5.4vw,4.4rem); line-height: 1.06; letter-spacing: 0; overflow-wrap: anywhere; }
+.agris-post-template-intro { max-width: 760px; margin: 24px 0 0; color: rgba(255,255,255,.82); font-size: clamp(1.05rem,2vw,1.25rem); line-height: 1.65; }
+.agris-post-template-content { max-width: 880px; margin: clamp(38px,6vw,64px) auto 0; color: #294637; font-size: 1.08rem; line-height: 1.78; }
+.agris-post-template-content > :first-child { margin-top: 0; }
+.agris-post-template-content > :last-child { margin-bottom: 0; }
+.agris-post-template-content h2, .agris-post-template-content h3 { margin: 1.8em 0 .7em; color: var(--agris-ink); font-family: var(--agris-heading); line-height: 1.2; }
+.agris-post-template-content h2 { font-size: 2rem; }
+.agris-post-template-content h3 { font-size: 1.5rem; }
+.agris-post-template-content a { color: var(--agris-brand); text-underline-offset: 3px; }
+.agris-post-template-content img { max-width: 100%; height: auto; border-radius: var(--agris-radius); }
+.agris-post-template-content blockquote { margin: 28px 0; padding: 5px 0 5px 22px; border-left: 4px solid var(--agris-brand); color: var(--agris-ink-soft); font-size: 1.14rem; }
+.agris-post-template-section { margin-top: clamp(48px,7vw,76px); }
+.agris-post-template-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+.agris-post-template-section-heading h2 { margin: 0; color: var(--agris-ink); font: 800 clamp(1.55rem,3vw,2.1rem)/1.2 var(--agris-heading); letter-spacing: 0; }
+.agris-post-template-section-heading p { max-width: 720px; margin: 9px 0 0; color: var(--agris-muted); font-size: 1rem; line-height: 1.55; }
+.agris-post-template-count { min-width: 48px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 0 0 auto; padding: 7px 11px; border: 1px solid #cfe0d1; border-radius: 999px; background: var(--agris-brand-soft); color: var(--agris-brand); font-size: .85rem; font-weight: 900; }
+.agris-post-template-count .dashicons { width: 17px; height: 17px; font-size: 17px; }
+.agris-post-template-gallery { display: grid; grid-auto-flow: dense; grid-auto-rows: 184px; gap: 14px; }
+.agris-post-template-gallery-2 { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.agris-post-template-gallery-3 { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.agris-post-template-gallery.has-featured-image .agris-post-template-gallery-item:first-child { grid-column: span 2; grid-row: span 2; }
+.agris-post-template-gallery-item { position: relative; min-width: 0; overflow: hidden; border-radius: var(--agris-radius); background: var(--agris-brand-soft); box-shadow: 0 8px 25px rgba(15,47,31,.08); color: #fff !important; cursor: zoom-in; text-decoration: none !important; }
+.agris-post-template-gallery-item::after { position: absolute; inset: 0; background: linear-gradient(to top,rgba(3,22,12,.72),transparent 48%); content: ""; opacity: 0; transition: opacity .25s ease; pointer-events: none; }
+.agris-post-template-gallery-item img { width: 100%; height: 100%; display: block; object-fit: cover; transition: transform .4s ease; }
+.agris-post-template-gallery-item > span { position: absolute; z-index: 1; left: 18px; right: 18px; bottom: 16px; color: #fff; font-size: .9rem; font-weight: 700; line-height: 1.35; opacity: 0; transform: translateY(6px); transition: opacity .25s ease,transform .25s ease; }
+.agris-post-template-gallery-item:hover::after, .agris-post-template-gallery-item:focus-visible::after, .agris-post-template-gallery-item:hover > span, .agris-post-template-gallery-item:focus-visible > span { opacity: 1; }
+.agris-post-template-gallery-item:hover > span, .agris-post-template-gallery-item:focus-visible > span { transform: none; }
+.agris-post-template-gallery-item:hover img { transform: scale(1.045); }
+.agris-post-template-gallery-item:focus-visible { outline: 3px solid #f6c344; outline-offset: 4px; }
+.agris-post-template-documents-section { padding: clamp(24px,4vw,38px); border: 1px solid var(--agris-line); border-radius: var(--agris-radius-lg); background: linear-gradient(145deg,#fff 0%,#f7faf8 100%); box-shadow: 0 12px 35px rgba(15,47,31,.06); }
+.agris-post-template-documents { display: grid; gap: 13px; }
+.agris-post-template-documents-1 { grid-template-columns: 1fr; }
+.agris-post-template-documents-2 { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.agris-post-template-document { min-width: 0; min-height: 106px; display: grid; grid-template-columns: 58px minmax(0,1fr) auto; align-items: center; gap: 15px; padding: 16px; border: 1px solid var(--agris-line); border-radius: var(--agris-radius); background: #fff; color: var(--agris-ink) !important; box-shadow: 0 5px 16px rgba(15,47,31,.035); text-decoration: none !important; transition: border-color .2s ease,box-shadow .2s ease,transform .2s ease; }
+.agris-post-template-document:hover, .agris-post-template-document:focus-visible { border-color: #b4d2b8; box-shadow: 0 13px 30px rgba(15,47,31,.11); transform: translateY(-2px); }
+.agris-post-template-document:focus-visible { outline: 3px solid rgba(27,94,32,.24); outline-offset: 3px; }
+.agris-post-template-file-type { width: 58px; height: 58px; display: grid; place-items: center; border-radius: 12px; background: var(--agris-brand-soft); color: var(--agris-brand); font-size: .78rem; font-weight: 900; letter-spacing: .025em; }
+.agris-post-template-document-body { min-width: 0; }
+.agris-post-template-document-body strong, .agris-post-template-document-body small { display: block; }
+.agris-post-template-document-body strong { color: var(--agris-ink); font: 750 1rem/1.3 var(--agris-body); overflow-wrap: anywhere; }
+.agris-post-template-document-body small { margin-top: 7px; color: var(--agris-muted); font-size: .79rem; font-weight: 650; }
+.agris-post-template-download { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 8px; color: var(--agris-brand); font-size: .79rem; font-weight: 850; white-space: nowrap; transition: background .2s ease; }
+.agris-post-template-document:hover .agris-post-template-download, .agris-post-template-document:focus-visible .agris-post-template-download { background: var(--agris-brand-soft); }
+.agris-post-template-download .dashicons { width: 18px; height: 18px; font-size: 18px; }
+
 /* Search modal */
 .agris-search-widget { font-family: var(--agris-body); }
 .agris-search-widget.is-modal { position: fixed; z-index: 99999; inset: 0; padding: 8vh 20px 20px; background: rgba(5,26,17,.78); backdrop-filter: blur(7px); }
@@ -406,6 +459,7 @@ body.agris-high-contrast { --agris-ink:#000;--agris-muted:#222;--agris-line:#000
 
 @media (max-width: 1040px) {
   .agris-hero-grid { grid-template-columns: 1fr; gap: 35px; }.agris-hero-panel { align-self: auto; margin: 0; }.agris-grid-4 { grid-template-columns: repeat(2,minmax(0,1fr)); }.agris-footer-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.agris-content-media, .agris-contact-layout { grid-template-columns: 1fr; }.agris-content-media.is-left > div:first-child { order: 0; }
+	.agris-post-template-documents-2 { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 680px) {
@@ -450,6 +504,22 @@ body.agris-high-contrast { --agris-ink:#000;--agris-muted:#222;--agris-line:#000
 	.agris-download-list { grid-template-columns: 1fr; }
 	.agris-download-item { min-height: 82px; grid-template-columns: 42px minmax(0,1fr) 24px; gap: 12px; padding: 14px; }
 	.agris-file-icon { width: 42px; height: 42px; }
+	.agris-post-template-header { padding: 34px 24px; border-radius: var(--agris-radius); }
+	.agris-post-template-header .agris-title { font-size: clamp(2rem,10vw,3rem); }
+	.agris-post-template-intro { margin-top: 18px; font-size: 1rem; }
+	.agris-post-template-content { margin-top: 34px; font-size: 1.02rem; line-height: 1.7; }
+	.agris-post-template-section { margin-top: 46px; }
+	.agris-post-template-section-heading { gap: 14px; }
+	.agris-post-template-gallery { grid-template-columns: 1fr; grid-auto-rows: minmax(220px,65vw); }
+	.agris-post-template-gallery.has-featured-image .agris-post-template-gallery-item:first-child { grid-column: auto; grid-row: auto; }
+	.agris-post-template-gallery-item:first-child { grid-column: auto; grid-row: auto; }
+	.agris-post-template-gallery-item::after, .agris-post-template-gallery-item > span { opacity: 1; }
+	.agris-post-template-gallery-item > span { transform: none; }
+	.agris-post-template-documents-section { padding: 22px 16px; }
+	.agris-post-template-document { min-height: 96px; grid-template-columns: 50px minmax(0,1fr) 32px; gap: 12px; padding: 14px 12px; }
+	.agris-post-template-file-type { width: 50px; height: 50px; border-radius: 10px; }
+	.agris-post-template-download { padding: 7px; }
+	.agris-post-template-download > span:last-child { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 }
 
 @media (min-width: 721px) and (max-width: 1040px) {

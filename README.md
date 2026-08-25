@@ -17,7 +17,7 @@ A plugin nem tartalmaz saját GitHub- vagy WordPress-frissítőt. Ez szándékos
 
 ## Tartalom
 
-- 24 külön Elementor widget
+- 25 külön Elementor widget
 - widgetenként külön PHP komponensfájl és központi widget-regiszter
 - minden widgeten egységes Elementor Style fül szín-, térköz-, sarok- és tipográfiavezérléssel
 - külön Elementor-integrációs és asset-kezelő szolgáltatás
@@ -25,7 +25,7 @@ A plugin nem tartalmaz saját GitHub- vagy WordPress-frissítőt. Ez szándékos
 - nyitóoldali és belső oldali hero elemek
 - szolgáltatás-, hír-, dokumentum-, galéria- és tartalmi widgetek
 - vezetői profil, fogadóórák és helyi tanács
-- blog-, kategória- és egyedi bejegyzéssablonok
+- blog-, kategória- és egyedi bejegyzéssablonok, valamint kézzel szerkeszthető bejegyzés-sablon galériával és dokumentumletöltésekkel
 - biztonságos kapcsolatfelvételi űrlap
 - szerveroldali Elementor rebuild automatikus mentéssel és visszaállítással
 - dinamikusan feloldott meglévő permalinkek; új slug nem készül

@@ -32,8 +32,8 @@ namespace {
 	\ComunaAgris\Widget_Registry::register( $manager );
 	$names = array_map( static fn( object $widget ): string => $widget->get_name(), $manager->widgets );
 
-	if ( 24 !== count( $names ) ) {
-		throw new RuntimeException( sprintf( 'Expected 24 widgets, got %d.', count( $names ) ) );
+	if ( 25 !== count( $names ) ) {
+		throw new RuntimeException( sprintf( 'Expected 25 widgets, got %d.', count( $names ) ) );
 	}
 	if ( count( $names ) !== count( array_unique( $names ) ) ) {
 		throw new RuntimeException( 'Widget names must be unique.' );

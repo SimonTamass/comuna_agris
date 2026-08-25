@@ -30,6 +30,7 @@ final class Widget_Registry {
 		'Document_Library'    => 'document-library',
 		'Post_Archive'        => 'post-archive',
 		'Single_Post'         => 'single-post',
+		'Post_Template'       => 'post-template',
 		'Search_Box'          => 'search-box',
 	);
 

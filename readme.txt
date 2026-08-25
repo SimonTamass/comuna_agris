@@ -3,14 +3,14 @@ Contributors: comunaagris
 Tags: elementor, municipality, documents, accessibility, theme builder
 Requires at least: 6.4
 Requires PHP: 8.0
-Stable tag: 2.1.18
+Stable tag: 2.2.0
 License: GPLv2 or later
 
 A complete modular Elementor widget suite for the Comuna Agriș website.
 
 == Description ==
 
-Adds 24 purpose-built widgets under the “Comuna Agriș” Elementor category, plus a structured Document post type and document categories.
+Adds 25 purpose-built widgets under the “Comuna Agriș” Elementor category, plus a structured Document post type and document categories.
 
 Global and Theme Builder widgets:
 
@@ -40,6 +40,7 @@ Page-building widgets:
 * Dynamic news grid
 * Manual document cards
 * Dynamic filterable document library
+* Manually editable post template with an accessible gallery and document downloads
 
 == Installation ==
 
@@ -51,6 +52,10 @@ Page-building widgets:
 6. Add official files under the new Documents menu.
 
 == Changelog ==
+
+= 2.2.0 =
+* Add a standalone Elementor post-template widget with an editable title, introduction and rich content.
+* Add a responsive lightbox gallery and accessible document download cards to the new post template.
 
 = 2.1.18 =
 * Remove closed nested desktop flyouts from document layout so invisible menu levels cannot create horizontal page overflow.

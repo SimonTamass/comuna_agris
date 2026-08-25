@@ -29,7 +29,7 @@ A kategória-, taxonómia-, keresési, blog- és egyedi bejegyzésnézeteket a p
 
 ## Elementor widgetek
 
-A 24 widget az Elementor bal oldali paneljén, a **Comuna Agriș** kategóriában található. A készlet tartalmaz globális headert és footert, keresőt, akadálymentesítést, hero elemeket, tartalmi blokkokat, szolgáltatásokat, vezetői profilt, fogadóórákat, tanácstagokat, kapcsolati elemeket, galériát, adattáblát, híreket, dokumentumtárat, blogarchívumot és egyedi bejegyzéssablont.
+A 25 widget az Elementor bal oldali paneljén, a **Comuna Agriș** kategóriában található. A készlet tartalmaz globális headert és footert, keresőt, akadálymentesítést, hero elemeket, tartalmi blokkokat, szolgáltatásokat, vezetői profilt, fogadóórákat, tanácstagokat, kapcsolati elemeket, galériát, adattáblát, híreket, dokumentumtárat, blogarchívumot, dinamikus egyedi bejegyzést és egy kézzel szerkeszthető bejegyzés-sablont beépített galériával és dokumentumletöltésekkel.
 
 Minden widget önálló komponensfájlban található, és saját **Megjelenés** füllel rendelkezik. Itt widgetenként állítható a kiemelő-, cím-, szöveg- és háttérszín, a sarokkerekítés, a belső térköz és a címtipográfia. A widgetazonosítók változatlanok, ezért a korábban felépített Elementor-oldalak kompatibilisek maradnak.
 
