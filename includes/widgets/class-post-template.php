@@ -128,39 +128,13 @@ final class Post_Template extends Base {
 			)
 		);
 
-		$gallery_item = new Repeater();
-		$gallery_item->add_control(
-			'image',
-			array(
-				'label' => __( 'Kép', 'comuna-agris' ),
-				'type'  => Controls_Manager::MEDIA,
-			)
-		);
-		$gallery_item->add_control(
-			'caption',
-			array(
-				'label'       => __( 'Képaláírás', 'comuna-agris' ),
-				'type'        => Controls_Manager::TEXT,
-				'label_block' => true,
-			)
-		);
-		$gallery_item->add_control(
-			'alt_text',
-			array(
-				'label'       => __( 'Alternatív szöveg', 'comuna-agris' ),
-				'type'        => Controls_Manager::TEXT,
-				'description' => __( 'Ha üres, a Médiatár alternatív szövege vagy a képaláírás lesz használva.', 'comuna-agris' ),
-				'label_block' => true,
-			)
-		);
-
 		$this->add_control(
 			'gallery_items',
 			array(
-				'label'       => __( 'Képek', 'comuna-agris' ),
-				'type'        => Controls_Manager::REPEATER,
-				'fields'      => $gallery_item->get_controls(),
-				'title_field' => '{{{ caption }}}',
+				'label'       => __( 'Galéria képei', 'comuna-agris' ),
+				'type'        => Controls_Manager::GALLERY,
+				'default'     => array(),
+				'description' => __( 'Egyszerre több képet is kijelölhet a Médiatárban, majd húzással rendezheti a sorrendjüket.', 'comuna-agris' ),
 				'condition'   => array( 'show_gallery' => 'yes' ),
 			)
 		);
@@ -387,9 +361,10 @@ final class Post_Template extends Base {
 			<div class="<?php echo esc_attr( $classes ); ?>">
 				<?php foreach ( $gallery as $item ) : ?>
 					<?php
-					$image_id = (int) ( $item['image']['id'] ?? 0 );
-					$image_url = (string) $item['image']['url'];
-					$caption   = (string) ( $item['caption'] ?? '' );
+					$image     = isset( $item['image'] ) && is_array( $item['image'] ) ? $item['image'] : $item;
+					$image_id  = (int) ( $image['id'] ?? 0 );
+					$image_url = (string) ( $image['url'] ?? '' );
+					$caption   = $this->image_caption( $image_id, (string) ( $item['caption'] ?? '' ) );
 					$alt       = $this->image_alt( $image_id, (string) ( $item['alt_text'] ?? '' ), $caption );
 					?>
 					<?php if ( $lightbox_enabled ) : ?>
@@ -454,7 +429,7 @@ final class Post_Template extends Base {
 		return array_values(
 			array_filter(
 				$items,
-				static fn( array $item ): bool => ! empty( $item['image']['url'] )
+				static fn( array $item ): bool => ! empty( $item['url'] ) || ! empty( $item['image']['url'] )
 			)
 		);
 	}
@@ -481,6 +456,14 @@ final class Post_Template extends Base {
 		}
 
 		return trim( $caption );
+	}
+
+	private function image_caption( int $image_id, string $custom_caption ): string {
+		if ( '' !== trim( $custom_caption ) ) {
+			return trim( $custom_caption );
+		}
+
+		return $image_id ? trim( (string) wp_get_attachment_caption( $image_id ) ) : '';
 	}
 
 	private function file_type( string $custom_type, string $url ): string {
